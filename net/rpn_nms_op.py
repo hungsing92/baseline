@@ -13,6 +13,55 @@ from net.rpn_target_op import make_bases, make_anchors
 #
 
 
+def draw_rpn_before_nms(image, probs, deltas, anchors, inside_inds, threshold=0.75):
+
+    ## yellow (thick): box regression results
+    ## red: box classification results
+    height,width=image.shape[0:2]
+
+    probs = probs.reshape(-1,2)
+    probs = probs[:,1]
+
+    deltas = deltas.reshape(-1,4)
+    inds = np.argsort(probs)[::-1]       #sort ascend #[::-1]
+
+    num_anchors = len(anchors)
+    insides = np.zeros((num_anchors),dtype=np.int32)
+    insides[inside_inds]=1
+    for j in range(100):
+        i = inds[j]
+        if insides[i]==0:
+            continue
+
+        a = anchors[i]
+        t = deltas[i]
+        b = box_transform_inv(a.reshape(1,4), t.reshape(1,4))
+        b = clip_boxes(b, width, height)  ##<todo> clip here if you have drawing error
+
+        b = b.reshape(-1)
+        s = probs[i]
+        if s<threshold:
+            continue
+
+        v = s*255
+        cv2.rectangle(image,(a[0], a[1]), (a[2], a[3]), (0,0,v), 1)
+        cv2.rectangle(image,(b[0], b[1]), (b[2], b[3]), (0,v,v), 1)
+
+
+
+def draw_rpn_after_nms(image, rois, roi_scores):
+
+
+    scores = roi_scores
+    inds = np.argsort(scores)       #sort ascend #[::-1]
+    num = len(inds)
+    for n in range(0, num):
+        i   = inds[n]
+        box = rois[i,1:5].astype(np.int)
+        v=(255-100)*n/num+100
+        color = (0,v,v)
+        cv2.rectangle(image,(box[0], box[1]), (box[2], box[3]), color, 1)
+
 #nms for rpn (region proposal net) ----------------------------
 def draw_rpn(image, probs, deltas, anchors, inside_inds, threshold=0.75, darker=0.7):
 
@@ -94,6 +143,11 @@ def rpn_nms_generator(
         scores = scores[inside_inds]
         deltas = deltas[inside_inds]
         anchors = anchors[inside_inds]
+        # keep = np.where(scores>0.2)[0]
+        # scores = scores[keep]
+        # deltas = deltas[keep]
+        # anchors = anchors[keep]
+
 
         # Convert anchors into proposals via box transformations
         proposals = box_transform_inv(anchors, deltas)
@@ -110,7 +164,7 @@ def rpn_nms_generator(
         # 4. sort all (proposal, score) pairs by score from highest to lowest
         # 5. take top pre_nms_topN (e.g. 6000)
         order = scores.ravel().argsort()[::-1]
-        if nms_pre_topn > 0:
+        if (nms_pre_topn > 0) and (len(scores)>nms_pre_topn):
             order = order[:nms_pre_topn]
             proposals = proposals[order, :]
             scores = scores[order]
@@ -119,7 +173,7 @@ def rpn_nms_generator(
         # 7. take after_nms_topN (e.g. 300)
         # 8. return the top proposals
         keep = nms(np.hstack((proposals, scores)), nms_thresh)
-        if nms_post_topn > 0:
+        if (nms_post_topn > 0) and (len(keep)>nms_post_topn):
             keep = keep[:nms_post_topn]
             proposals = proposals[keep, :]
             scores = scores[keep]

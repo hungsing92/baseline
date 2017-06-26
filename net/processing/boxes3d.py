@@ -26,13 +26,12 @@ def top_box_to_box3d(boxes):
     boxes3d = np.zeros((num,8,3),dtype=np.float32)
     for n in range(num):
         x1,y1,x2,y2 = boxes[n]
-
-        points = [ (x1,y1), (x1,y2), (x2,y2), (x2,y1) ]
+        points = [ (x1,y2), (x2,y2), (x2,y1), (x1,y1) ]
         for k in range(4):
             xx,yy = points[k]
             x,y  = top_to_lidar_coords(xx,yy)
-            boxes3d[n,k,  :] = x,y, -2  ## <todo>
-            boxes3d[n,4+k,:] = x,y,0.4
+            boxes3d[n,k,  :] = x,y, -1.7  ## <todo>-2
+            boxes3d[n,4+k,:] = x,y,0.2  #0.4
 
     return boxes3d
 
@@ -118,6 +117,7 @@ def draw_rgb_projections(image, projections, color=(255,255,255), thickness=2, d
     num=len(projections)
     for n in range(num):
         qs = projections[n]
+        # cv2.putText(image,"%d"%n, (qs[6,0],qs[6,1]), cv2.CV_FONT_HERSHEY_SIMPLEX, 2, 255)
         for k in range(0,4):
             #http://docs.enthought.com/mayavi/mayavi/auto/mlab_helper_functions.html
             i,j=k,(k+1)%4
@@ -157,7 +157,7 @@ def draw_box3d_on_top(image, boxes3d,color=(255,255,255), thickness=1, darken=0.
 
     return  img
 
-def draw_boxes(image, boxes, color=(0,255,255), thickness=1, darken=0.7):
+def draw_boxes(image, boxes, color=(0,0,255), thickness=1, darken=0.7):
 
     img = image.copy()*darken
     num =len(boxes)
@@ -186,18 +186,41 @@ def box3d_transform_inv0(et_boxes3d, deltas):
 
     return boxes3d
 
-def box3d_transform(et_boxes3d, gt_boxes3d):
+# rotMat = np.array([\
+#               [np.cos(np.pi/2), +np.sin(np.pi/2), 0.0], \
+#               [-np.sin(np.pi/2),  np.cos(np.pi/2), 0.0], \
+#               [        0.0,          0.0, 1.0]])
 
+def box3d_transform(et_boxes3d, gt_boxes3d):
     num=len(et_boxes3d)
     deltas=np.zeros((num,8,3),dtype=np.float32)
     for n in range(num):
         e=et_boxes3d[n]
         center = np.sum(e,axis=0, keepdims=True)/8
         scale = (np.sum((e-center)**2)/8)**0.5
+        g=[]
+        g.append(gt_boxes3d[n])
+        g.append(np.vstack([g[0][1:4,:],g[0][0,:],g[0][5:8,:],g[0][4,:]]))
+        g.append(np.vstack([g[1][1:4,:],g[1][0,:],g[1][5:8,:],g[1][4,:]]))
+        g.append(np.vstack([g[2][1:4,:],g[2][0,:],g[2][5:8,:],g[2][4,:]]))
+        min0=np.inf
+        for i in range(4):
+            if (np.sum((g[i]-e)**2)/8)**0.5 <min0:
+                min_idx=i
+                min0=(np.sum((g[i]-e)**2)/8)**0.5
 
-        g=gt_boxes3d[n]
-        deltas[n]= (g-e)/scale
+        deltas[n]= (g[min_idx]-e)/scale
     return deltas
+    # num=len(et_boxes3d)
+    # deltas=np.zeros((num,8,3),dtype=np.float32)
+    # for n in range(num):
+    #     e=et_boxes3d[n]
+    #     center = np.sum(e,axis=0, keepdims=True)/8
+    #     scale = (np.sum((e-center)**2)/8)**0.5
+
+    #     g=gt_boxes3d[n]
+    #     deltas[n]= (g-e)/scale
+    # return deltas
 
 
 def box3d_transform_inv(et_boxes3d, deltas):

@@ -30,6 +30,7 @@ def rcnn_loss(scores, deltas, rcnn_labels, rcnn_targets):
     idx = tf.range(num)*num_class + rcnn_labels
     deltas1      = tf.reshape(deltas,[-1, dim])
     rcnn_deltas  = tf.gather(deltas1,  idx)  # remove ignore label
+    tf.summary.histogram('rcnn_deltas', rcnn_deltas)
     rcnn_targets =  tf.reshape(rcnn_targets,[-1, dim])
 
     rcnn_smooth_l1 = modified_smooth_l1(rcnn_deltas, rcnn_targets, sigma=3.0)
