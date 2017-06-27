@@ -282,7 +282,7 @@ def run_train():
 
     num_ratios=len(ratios)
     num_scales=len(scales)
-    fig, axs = plt.subplots(num_ratios,num_scales)
+    #fig, axs = plt.subplots(num_ratios,num_scales)
 
     merged = tf.summary.merge_all()
 
