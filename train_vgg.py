@@ -5,7 +5,7 @@ from net.processing.boxes3d import *
 from net.utility.draw import *
 
 # from dummynet import *
-from data import *
+# from data import *
 
 from net.rpn_loss_op import *
 from net.rcnn_loss_op import *
