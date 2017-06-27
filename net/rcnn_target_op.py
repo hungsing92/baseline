@@ -96,7 +96,7 @@ def draw_rcnn_labels(image, rois,  labels, darker=0.7):
     return img_label
 
 def draw_rcnn_targets(image, rois, labels,  targets, darker=0.7):
-    is_print=0
+    is_print=1
 
     #draw +ve targets ......
     boxes = rois[:,1:5]

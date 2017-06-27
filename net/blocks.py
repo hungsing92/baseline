@@ -3,7 +3,7 @@ building blocks of network
 #http://programtalk.com/vs2/python/3069/image_captioning/utils/nn.py/
 '''
 from net.common import *
-
+import pdb
 
 
 
@@ -115,10 +115,14 @@ def print_macs_to_file(log=None):
 def l2_regulariser(decay):
 
     variables = tf.get_collection(tf.GraphKeys.GLOBAL_VARIABLES)
+    # pdb.set_trace()
     for v in variables:
         name = v.name
         if 'weight' in name:  #this is weight
-            l2 = decay * tf.nn.l2_loss(v)
+            if 'fuse' in name:
+               l2 = 2*decay * tf.nn.l2_loss(v) 
+            else:
+                l2 = decay * tf.nn.l2_loss(v)
             tf.add_to_collection('losses', l2)
         elif 'bias' in name:  #this is bias
             pass
@@ -157,6 +161,7 @@ def conv2d(input, num_kernels=1, kernel_size=(1,1), stride=[1,1,1,1], padding='S
 
     ##[filter_height, filter_width, in_channels, out_channels]
     w    = tf.get_variable(name=name+'_weight', shape=[H, W, C, K], initializer=tf.truncated_normal_initializer(stddev=0.1))
+    tf.add_to_collection(w.name, w)
     conv = tf.nn.conv2d(input, w, strides=stride, padding=padding, name=name)
     if has_bias:
         b = tf.get_variable(name=name + '_bias', shape=[K], initializer=tf.constant_initializer(0.0))

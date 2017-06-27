@@ -54,7 +54,7 @@ def top_feature_net(input, anchors, inds_inside, num_bases):
         img_scale = 1
         rois, roi_scores = tf_rpn_nms( probs, deltas, anchors, inds_inside,
                                        stride, img_width, img_height, img_scale,
-                                       nms_thresh=0.7, min_size=stride, nms_pre_topn=500, nms_post_topn=100,
+                                       nms_thresh=0.3, min_size=stride, nms_pre_topn=6000, nms_post_topn=15,
                                        name ='nms')
 
     #<todo> feature = upsample2d(block, factor = 4,  ...)

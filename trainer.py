@@ -18,10 +18,13 @@ from net.rpn_target_op  import draw_rpn_gt, draw_rpn_targets, draw_rpn_labels
 from net.rcnn_target_op import draw_rcnn_targets, draw_rcnn_labels
 
 import mayavi.mlab as mlab
+import time
+import glob
 # os.environ["QT_API"] = "pyqt"
 
 #http://3dimage.ee.tsinghua.edu.cn/cxz
 # "Multi-View 3D Object Detection Network for Autonomous Driving" - Xiaozhi Chen, CVPR 2017
+vis=0
 
 def load_dummy_data():
     rgb   = np.load('/home/hhs/4T/datasets/dummy_datas/one_frame/rgb.npy')
@@ -45,30 +48,35 @@ def load_dummy_data():
 
 def load_dummy_datas():
 
-    num_frames = 154
+    num_frames = 15
     rgbs      =[]
     lidars    =[]
     tops      =[]
     fronts    =[]
     gt_labels =[]
     gt_boxes3d=[]
+    rgbs_norm =[]
 
     top_images  =[]
     front_images=[]
 
     fig = mlab.figure(figure=None, bgcolor=(0,0,0), fgcolor=None, engine=None, size=(1000, 500))
+    files_list=glob.glob("/home/hhs/4T/datasets/dummy_datas/seg/gt_labels/gt_labels_*.npy")
+    index=[file_index.strip().split('/')[-1][10:10+5] for file_index in files_list ]
+    index=sorted(index)
+
     for n in range(num_frames):
         print(n)
-
-        rgb   = cv2.imread('/home/hhs/4T/datasets/dummy_datas/seg/rgb/rgb_%05d.png'%n,1)
-        lidar = np.load('/home/hhs/4T/datasets/dummy_datas/seg/lidar/lidar_%05d.npy'%n)
-        top   = np.load('/home/hhs/4T/datasets/dummy_datas/seg/top/top_%05d.npy'%n)
+        rgb   = cv2.imread('/home/hhs/4T/datasets/KITTI/object/training/image_2/0%s.png'%str(index[n]),1).astype(np.float32, copy=False)
+        rgbs_norm0=(rgb-PIXEL_MEANS)/255
+        lidar = np.load('/home/hhs/4T/datasets/dummy_datas/seg/lidar/lidar_%s.npy'%str(index[n]))
+        top   = np.load('/home/hhs/4T/datasets/dummy_datas/seg/top/top_%s.npy'%str(index[n]))
         front = np.zeros((1,1),dtype=np.float32)
-        gt_label  = np.load('/home/hhs/4T/datasets/dummy_datas/seg/gt_labels/gt_labels_%05d.npy'%n)
-        gt_box3d = np.load('/home/hhs/4T/datasets/dummy_datas/seg/gt_boxes3d/gt_boxes3d_%05d.npy'%n)
+        gt_label  = np.load('/home/hhs/4T/datasets/dummy_datas/seg/gt_labels/gt_labels_%s.npy'%str(index[n]))
+        gt_box3d = np.load('/home/hhs/4T/datasets/dummy_datas/seg/gt_boxes3d/gt_boxes3d_%s.npy'%str(index[n]))
 
 
-        top_image   = cv2.imread('/home/hhs/4T/datasets/dummy_datas/seg/top_image/top_image_%05d.png'%n,1)
+        top_image   = cv2.imread('/home/hhs/4T/datasets/dummy_datas/seg/top_image/top_image_%s.png'%str(index[n]),1)
         front_image = np.zeros((1,1,3),dtype=np.float32)
 
         rgbs.append(rgb)
@@ -79,6 +87,7 @@ def load_dummy_datas():
         gt_boxes3d.append(gt_box3d)
         top_images.append(top_image)
         front_images.append(front_image)
+        rgbs_norm.append(rgbs_norm0)
 
 
         # explore dataset:
@@ -96,14 +105,14 @@ def load_dummy_datas():
             draw_lidar(lidar, fig=fig)
             draw_gt_boxes3d(gt_box3d, fig=fig)
             mlab.show(1)
-            cv2.waitKey(1)
+            cv2.waitKey(0)
 
             pass
-
-
+    # pdb.set_trace()
+    # rgbs=np.array(rgbs)
     ##exit(0)
     mlab.close(all=True)
-    return  rgbs, tops, fronts, gt_labels, gt_boxes3d, top_images, front_images, lidars
+    return  rgbs, tops, fronts, gt_labels, gt_boxes3d, top_images, front_images, lidars,rgbs_norm
 
 
 
@@ -143,7 +152,7 @@ def run_train():
     out_dir = './outputs'
     makedirs(out_dir +'/tf')
     makedirs(out_dir +'/check_points')
-    log = Logger(out_dir+'/log.txt',mode='a')
+    log = Logger(out_dir+'/log_%s.txt'%(time.strftime('%Y-%m-%d %H:%M:%S')),mode='a')
 
     #lidar data -----------------
     if 1:
@@ -157,7 +166,7 @@ def run_train():
         num_bases = len(bases)
         stride = 8
 
-        rgbs, tops, fronts, gt_labels, gt_boxes3d, top_imgs, front_imgs, lidars = load_dummy_datas()
+        rgbs, tops, fronts, gt_labels, gt_boxes3d, top_imgs, front_imgs, lidars, rgbs_norm = load_dummy_datas()
         num_frames = len(rgbs)
 
         top_shape   = tops[0].shape
@@ -232,10 +241,10 @@ def run_train():
     solver_step = solver.minimize(top_cls_loss+top_reg_loss+fuse_cls_loss+0.1*fuse_reg_loss+l2)
 
     max_iter = 10000
-    iter_debug=8
+    iter_debug=1
 
     # start training here  #########################################################################################
-    log.write('epoch     iter    rate   |  top_cls_loss   reg_loss   |  fuse_cls_loss  reg_loss  |  \n')
+    log.write('epoch     iter    speed   rate   |  top_cls_loss   reg_loss   |  fuse_cls_loss  reg_loss  |  \n')
     log.write('-------------------------------------------------------------------------------------\n')
 
     num_ratios=len(ratios)
@@ -246,9 +255,9 @@ def run_train():
     with sess.as_default():
         sess.run( tf.global_variables_initializer(), { IS_TRAIN_PHASE : True } )
         summary_writer = tf.summary.FileWriter(out_dir+'/tf', sess.graph)
-        saver  = tf.train.Saver()
-        
-        saver.restore(sess, './0outputs/check_points/snap.ckpt')
+        saver  = tf.train.Saver() 
+        pdb.set_trace()   
+        # v=saver.restore(sess, './outputs/check_points/snap.ckpt')
 
         batch_top_cls_loss =0
         batch_top_reg_loss =0
@@ -256,20 +265,27 @@ def run_train():
         batch_fuse_reg_loss=0
         for iter in range(max_iter):
             epoch=1.0*iter
-            rate=0.05
+            rate=0.001
+            start_time=time.time()
 
 
             ## generate train image -------------
             # idx = np.random.choice(num_frames)     #*10   #num_frames)  #0
             frame_range = np.arange(num_frames)
             idx = frame_range[iter%num_frames]    #*10   #num_frames)  #0
+
             batch_top_images    = tops[idx].reshape(1,*top_shape)
             batch_front_images  = fronts[idx].reshape(1,*front_shape)
-            batch_rgb_images    = rgbs[idx].reshape(1,*rgb_shape)
+            # pdb.set_trace()
+            print(rgbs[idx].shape)
+            batch_rgb_images    =cv2.resize(rgbs_norm[idx],(rgb_shape[0],rgb_shape[1])).reshape(1,*rgb_shape)
 
             batch_gt_labels    = gt_labels[idx]
             batch_gt_boxes3d   = gt_boxes3d[idx]
+            # pdb.set_trace()
             batch_gt_top_boxes = box3d_to_top_box(batch_gt_boxes3d)
+
+
 
 
 			## run propsal generation ------------
@@ -296,7 +312,7 @@ def run_train():
 
 
             ##debug gt generation
-            if 1 and iter%iter_debug==0:
+            if vis and iter%iter_debug==0:
                 top_image = top_imgs[idx]
                 rgb       = rgbs[idx]
 
@@ -310,13 +326,14 @@ def run_train():
                 img_label  = draw_rcnn_labels (top_image, batch_top_rois, batch_fuse_labels )
                 img_target = draw_rcnn_targets(top_image, batch_top_rois, batch_fuse_labels, batch_fuse_targets)
                 #imshow('img_rcnn_label',img_label)
-                imshow('img_rcnn_target',img_target)
+                if vis :
+                    imshow('img_rcnn_target',img_target)
 
 
                 img_rgb_rois = draw_boxes(rgb, batch_rgb_rois[:,1:5], color=(255,0,255), thickness=1)
-                imshow('img_rgb_rois',img_rgb_rois)
-
-                cv2.waitKey(1)
+                if vis :
+                    imshow('img_rgb_rois',img_rgb_rois)
+                    cv2.waitKey(1)
 
             ## run classification and regression loss -----------
             fd2={
@@ -344,15 +361,16 @@ def run_train():
             _, batch_top_cls_loss, batch_top_reg_loss, batch_fuse_cls_loss, batch_fuse_reg_loss = \
                sess.run([solver_step, top_cls_loss, top_reg_loss, fuse_cls_loss, fuse_reg_loss],fd2)
 
-            log.write('%3.1f   %d   %0.4f   |   %0.5f   %0.5f   |   %0.5f   %0.5f  \n' %\
-				(epoch, iter, rate, batch_top_cls_loss, batch_top_reg_loss, batch_fuse_cls_loss, batch_fuse_reg_loss))
+            speed=time.time()-start_time
+            log.write('%5.1f   %5d    %0.4fs   %0.4f   |   %0.5f   %0.5f   |   %0.5f   %0.5f  \n' %\
+				(epoch, iter, speed, rate, batch_top_cls_loss, batch_top_reg_loss, batch_fuse_cls_loss, batch_fuse_reg_loss))
 
 
 
             #print('ok')
             # debug: ------------------------------------
 
-            if iter%iter_debug==0:
+            if vis and iter%iter_debug==0:
                 top_image = top_imgs[idx]
                 rgb       = rgbs[idx]
 
@@ -373,27 +391,30 @@ def run_train():
                     s=n//num_scales
                     pn = p[:,:,2*n+1]*255
                     axs[s,r].cla()
-                    axs[s,r].imshow(pn, cmap='gray', vmin=0, vmax=255)
-                plt.pause(0.01)
+                    if vis :
+                        axs[s,r].imshow(pn, cmap='gray', vmin=0, vmax=255)
+                        plt.pause(0.01)
 
 				## show rpn(top) nms
                 img_rpn     = draw_rpn    (top_image, batch_top_probs, batch_top_deltas, anchors, inside_inds)
                 img_rpn_nms = draw_rpn_nms(top_image, batch_proposals, batch_proposal_scores)
                 #imshow('img_rpn',img_rpn)
-                imshow('img_rpn_nms',img_rpn_nms)
-                cv2.waitKey(1)
+                if vis :
+                    imshow('img_rpn_nms',img_rpn_nms)
+                    cv2.waitKey(1)
 
                 ## show rcnn(fuse) nms
                 img_rcnn     = draw_rcnn (top_image, batch_fuse_probs, batch_fuse_deltas, batch_top_rois, batch_rois3d,darker=1)
                 img_rcnn_nms = draw_rcnn_nms(rgb, boxes3d, probs)
-                imshow('img_rcnn',img_rcnn)
-                imshow('img_rcnn_nms',img_rcnn_nms)
-                cv2.waitKey(1)
+                if vis :
+                    imshow('img_rcnn',img_rcnn)
+                    imshow('img_rcnn_nms',img_rcnn_nms)
+                    cv2.waitKey(0)
 
             # save: ------------------------------------
             if iter%500==0:
                 #saver.save(sess, out_dir + '/check_points/%06d.ckpt'%iter)  #iter
-                # saver.save(sess, out_dir + '/check_points/snap.ckpt')  #iter
+                saver.save(sess, out_dir + '/check_points/snap_%05d.ckpt'%iter)  #iter
                 pass
 
 

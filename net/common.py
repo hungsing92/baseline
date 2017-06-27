@@ -13,6 +13,13 @@ TOP_X_DIVISION=0.1  #0.1
 TOP_Y_DIVISION=0.1
 TOP_Z_DIVISION=0.4
 
+Top_Y0, Top_Yn = 0, int((TOP_X_MAX-TOP_X_MIN)//TOP_X_DIVISION)+1
+Top_X0, Top_Xn = 0, int((TOP_Y_MAX-TOP_Y_MIN)//TOP_Y_DIVISION)+1
+
+
+
+import numpy as np
+PIXEL_MEANS = np.array([[[95.8814, 98.7743, 93.8549]]])
 
 #rgb camera
 MATRIX_Mt = ([[  2.34773698e-04,   1.04494074e-02,   9.99945389e-01,  0.00000000e+00],

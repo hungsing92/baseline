@@ -10,9 +10,9 @@ import os
 import numpy
 # run functions --------------------------------------------------------------------------
 
-
-
-
+import pdb
+from time import time
+import tensorflow as tf
 
 ## objs to gt boxes ##
 def obj_to_gt_boxes3d(objs):
@@ -53,8 +53,114 @@ def lidar_to_top(lidar):
 
     print('height,width,channel=%d,%d,%d'%(height,width,channel))
     top = np.zeros(shape=(height,width,channel), dtype=np.float32)
+    # pdb.set_trace()
+
+    filter_x=np.where((pxs>=TOP_X_MIN) & (pxs<=TOP_X_MAX))[0]
+    filter_y=np.where((pys>=TOP_Y_MIN) & (pys<=TOP_Y_MAX))[0]
+    filter_z=np.where((pzs>=TOP_Z_MIN) & (pzs<=TOP_Z_MAX))[0]
+    filter_xy=np.intersect1d(filter_x,filter_y)
+    filter_xyz=np.intersect1d(filter_xy,filter_z)
+    pxs=pxs[filter_xyz]
+    pys=pys[filter_xyz]
+    pzs=pzs[filter_xyz]
+    prs=prs[filter_xyz]   
+    qxs=qxs[filter_xyz]
+    qys=qys[filter_xyz]
+    qzs=qzs[filter_xyz]
+
+    # pzs_sort=np.sort(pzs)
+    # pzs_sort_ind=np.argsort(pzs)
+
+    # pxs=pxs[pzs_sort_ind]
+    # pys=pys[pzs_sort_ind]
+    # pzs=pzs[pzs_sort_ind]
+    # prs=prs[pzs_sort_ind]   
+    # qxs=qxs[pzs_sort_ind]
+    # qys=qys[pzs_sort_ind]
+    # qzs=qzs[pzs_sort_ind]
+
+    # pxs_sort=np.sort(pxs)
+    # pxs_sort_ind=np.argsort(pxs)
+    # pys_sort=np.sort(pys)
+    # pys_sort_ind=np.argsort(pys)
+    # pzs_sort=np.sort(pzs)
+    # pzs_sort_ind=np.argsort(pzs)
+
+
+
+    # # pdb.set_trace()
+
+    # j=TOP_X_MIN+TOP_X_DIVISION
+    # indx=[]
+    # last_Ixs=0
+    # last_index=0
+    # for i in range(len(pxs_sort)):
+    #     if j<pxs_sort[i]:
+    #         indx.append([last_Ixs,last_index,i])
+    #         last_Ixs=((pxs_sort[i]-TOP_X_MIN)//TOP_X_DIVISION).astype(np.int32)
+    #         last_index=i
+    #         j=j+TOP_X_DIVISION
+
+    # j=TOP_Y_MIN+TOP_Y_DIVISION
+    # indy=[]
+    # last_Iys=0
+    # last_index=0
+    # for i in range(len(pys_sort)):
+    #     if j<pys_sort[i]:
+    #         indy.append([last_Iys,last_index,i])
+    #         last_Iys=((pys_sort[i]-TOP_Y_MIN)//TOP_Y_DIVISION).astype(np.int32)
+    #         last_index=i
+    #         j=j+TOP_Y_DIVISION
+
+    # j=TOP_Z_MIN+TOP_Z_DIVISION
+    # indz=[]
+    # last_Izs=0
+    # last_index=0
+    # for i in range(len(pzs_sort)):
+    #     if j<pzs_sort[i]:
+    #         indz.append([last_Izs,last_index,i])
+    #         last_Izs=((pzs_sort[i]-TOP_Z_MIN)//TOP_Z_DIVISION).astype(np.int32)
+    #         last_index=i
+    #         j=j+TOP_Z_DIVISION
+          
+    # # pdb.set_trace()
+    
+    # for i in range(len(indz)):
+        
+    #     for j in range(len(indy)):
+    #         start=time()
+    #         for k in range(len(indx)):
+    #             zi,li,ri=indz[i]
+    #             # pdb.set_trace()
+    #             Iz=pzs_sort_ind[li:ri]
+    #             yj,lj,rj=indy[j]
+    #             Iy=pys_sort_ind[lj:rj]
+    #             xk,lk,rk=indx[k]
+    #             Ix=pxs_sort_ind[lk:rk]
+    #             # pdb.set_trace()
+    #             index_xy=np.intersect1d(Ix,Iy)
+    #             index=np.intersect1d(index_xy,Iz)
+
+
+    #             if len(index)>0:
+    #                 # pdb.set_trace()
+    #                 # max_height = max(0,np.max(pzs[index])-TOP_Z_MIN)
+    #                 max_height = max(0,pzs[index[-1]]-TOP_Z_MIN)
+    #                 yy,xx,zz = -(xk-X0),-(yj-Y0),zi-Z0
+    #                 top[yy,xx,zz]=max_height
+    #                 # pdb.set_trace()
+    #                 max_intensity = prs[index[-1]]
+    #                 top[yy,xx,Zn]=max_intensity
+    #                 count = len(index)
+    #                 top[yy,xx,Zn+1]+=count
+    #             pass
+    #         # print("speed:%fs"%(time()-start))
+    #     print("speed:%fs"%(time()-start))
+    #     pass
+    
 
     ## start to make top  here !!!
+    start=time()
     for z in range(Z0,Zn):
         iz = np.where (qzs==z)
         for y in range(Y0,Yn):
@@ -71,7 +177,6 @@ def lidar_to_top(lidar):
                 if len(idx)>0:
                     yy,xx,zz = -(x-X0),-(y-Y0),z-Z0
 
-
                     #height per slice
                     max_height = max(0,np.max(pzs[idx])-TOP_Z_MIN)
                     top[yy,xx,zz]=max_height
@@ -87,6 +192,8 @@ def lidar_to_top(lidar):
                 pass
             pass
         pass
+    print("speed:%fs"%(time()-start))
+
     top[:,:,Zn+1] = np.log(top[:,:,Zn+1]+1)/math.log(64)
 
     if 1:
@@ -185,7 +292,29 @@ def draw_lidar(lidar, is_grid=False, is_top_region=True, fig=None):
 
 
 
-def draw_gt_boxes3d(gt_boxes3d, fig, color=(1,1,1), line_width=2):
+def draw_gt_boxes3d(gt_boxes3d, fig, color=(1,0,0), line_width=2):
+
+    num = len(gt_boxes3d)
+    for n in range(num):
+        b = gt_boxes3d[n]
+
+        mlab.text3d(b[0,0], b[0,1], b[0,2], '%d'%n, scale=(1, 1, 1), color=color, figure=fig)
+        for k in range(0,4):
+
+            #http://docs.enthought.com/mayavi/mayavi/auto/mlab_helper_functions.html
+            i,j=k,(k+1)%4
+            mlab.plot3d([b[i,0], b[j,0]], [b[i,1], b[j,1]], [b[i,2], b[j,2]], color=color, tube_radius=None, line_width=line_width, figure=fig)
+            mlab.text3d(b[i,0], b[i,1], b[i,2], '%d'%i, scale=(1, 1, 1), color=color, figure=fig)
+            i,j=k+4,(k+1)%4 + 4
+            mlab.plot3d([b[i,0], b[j,0]], [b[i,1], b[j,1]], [b[i,2], b[j,2]], color=color, tube_radius=None, line_width=line_width, figure=fig)
+
+            i,j=k,k+4
+            mlab.plot3d([b[i,0], b[j,0]], [b[i,1], b[j,1]], [b[i,2], b[j,2]], color=color, tube_radius=None, line_width=line_width, figure=fig)
+
+    mlab.view(azimuth=180,elevation=None,distance=50,focalpoint=[ 12.0909996 , -1.04700089, -2.03249991])#2.0909996 , -1.04700089, -2.03249991
+
+
+def draw_target_boxes3d(gt_boxes3d, fig, color=(1,1,1), line_width=1):
 
     num = len(gt_boxes3d)
     for n in range(num):
@@ -207,6 +336,11 @@ def draw_gt_boxes3d(gt_boxes3d, fig, color=(1,1,1), line_width=2):
     mlab.view(azimuth=180,elevation=None,distance=50,focalpoint=[ 12.0909996 , -1.04700089, -2.03249991])#2.0909996 , -1.04700089, -2.03249991
 
 
+
+
+
+
+
 # main #################################################################33
 if __name__ == '__main__':
     print( '%s: calling main function ... ' % os.path.basename(__file__))
@@ -225,6 +359,8 @@ if __name__ == '__main__':
     #dataset.load_gray()         # Left/right images are accessible as named tuples
     dataset.load_rgb()          # Left/right images are accessible as named tuples
     dataset.load_velo()          # Each scan is a Nx4 array of [x,y,z,reflectance]
+
+    pdb.set_trace()
 
     tracklet_file = '/home/hhs/4T/datasets/raw data/2011_09_26_drive_0005_sync/tracklet_labels.xml'
 
@@ -252,27 +388,34 @@ if __name__ == '__main__':
         os.makedirs('/home/hhs/4T/datasets/dummy_datas/seg/top',exist_ok=True)
         os.makedirs('/home/hhs/4T/datasets/dummy_datas/seg/top_image',exist_ok=True)
 
+        
         for n in range(num_frames):
             print(n)
             lidar = dataset.velo[n]
-            top, top_image = lidar_to_top(lidar)
+            lidar_o= tf.placeholder(shape=lidar.shape, dtype=tf.float32, name='lidar'  )
+            tops, top_images =tf.py_func(lidar_to_top,[lidar_o],[tf.float32, tf.uint8])
+            sess=tf.InteractiveSession()
+            sess.run( tf.global_variables_initializer())
+            with sess.as_default():        
+                fd={lidar_o:lidar}
+                top,top_image=sess.run([tops,top_images],fd)
 
-            np.save('/home/hhs/4T/datasets/dummy_datas/seg/lidar/lidar_%05d.npy'%n,lidar)
-            np.save('/home/hhs/4T/datasets/dummy_datas/seg/top/top_%05d.npy'%n,top)
-            cv2.imwrite('/home/hhs/4T/datasets/dummy_datas/seg/top_image/top_image_%05d.png'%n,top_image)
+                np.save('/home/hhs/4T/datasets/dummy_datas/seg/lidar/lidar_new_%05d.npy'%n,lidar)
+                np.save('/home/hhs/4T/datasets/dummy_datas/seg/top/top_new_%05d.npy'%n,top)
+                cv2.imwrite('/home/hhs/4T/datasets/dummy_datas/seg/top_image/top_image_new_%05d.png'%n,top_image)
 
         exit(0)
 
 
 
-    if 0:  ## boxes3d  --------------------#1
+    if 1:  ## boxes3d  --------------------#1
         os.makedirs('/home/hhs/4T/datasets/dummy_datas/seg/gt_boxes3d',exist_ok=True)
         os.makedirs('/home/hhs/4T/datasets/dummy_datas/seg/gt_labels',exist_ok=True)
         for n in range(num_frames):
             print(n)
             objs = objects[n]
             gt_boxes3d, gt_labels = obj_to_gt_boxes3d(objs)
-
+            pdb.set_trace()
             np.save('/home/hhs/4T/datasets/dummy_datas/seg/gt_boxes3d/gt_boxes3d_%05d.npy'%n,gt_boxes3d)
             np.save('/home/hhs/4T/datasets/dummy_datas/seg/gt_labels/gt_labels_%05d.npy'%n,gt_labels)
 
@@ -339,7 +482,7 @@ if __name__ == '__main__':
 
     #----------------------------------------------------------
     #----------------------------------------------------------
-    # exit(0)
+    exit(0)
 
 
 

@@ -63,6 +63,19 @@ def make_bases(
         [make_bases_given_scales(ratio_bases[i, :], scales) for i in range(ratio_bases.shape[0])])
     return bases
 
+# def make_car_bases(
+#     base_size = 16,
+#     ratios=[0.5, 1, 2],
+#     scales=2**np.arange(3, 6)):
+
+#     """  Generate bases by enumerating aspect ratios * scales, wrt a reference (0, 0, 15, 15)  base (box). """
+
+#     base        = np.array([1, 1, base_size, base_size]) - 1
+#     ratio_bases = make_bases_given_ratios(base, ratios)
+#     bases = np.vstack(
+#         [make_bases_given_scales(ratio_bases[i, :], scales) for i in range(ratio_bases.shape[0])])
+#     return bases
+
 
 
 # ## rpn layer op ##
@@ -109,6 +122,17 @@ def make_anchors(bases, stride, image_shape, feature_shape, allowed_border=0):
     )[0].astype(np.int32)
 
     return anchors, inside_inds
+
+def anchor_filter(top_img, anchors, inside_inds):
+    img_integral=cv2.integral(top_img)
+    anchors_=anchors[inside_inds,:]
+    elements_count=img_integral[anchors_[:,3],anchors_[:,2]]+img_integral[anchors_[:,1],anchors_[:,0]]-img_integral[anchors_[:,3],anchors_[:,0]]-img_integral[anchors_[:,1], anchors_[:,2]]
+    keep=np.where(elements_count>0)
+
+    return inside_inds[keep[0]]
+
+
+
 
 
 
@@ -187,7 +211,7 @@ def draw_rpn_gt(image, gt_boxes, gt_labels=None, darken=0.7):
     num =len(gt_boxes)
     for n in range(num):
         b = gt_boxes[n]
-        cv2.rectangle(img_gt,(b[0],b[1]),(b[2],b[3]),(0,255,255),2)
+        cv2.rectangle(img_gt,(b[0],b[1]),(b[2],b[3]),(255,0,255),2)
 
     return img_gt
 
@@ -207,20 +231,21 @@ def draw_rpn_labels(image, anchors, inds, labels, darken=0.7):
 
     fg_label_inds = inds[np.where(labels == 1)[0]]
     bg_label_inds = inds[np.where(labels == 0)[0]]
+
     num_pos_label = len(fg_label_inds)
     num_neg_label = len(bg_label_inds)
     if is_print: print ('rpn label : num_pos=%d num_neg=%d,  all = %d'  %(num_pos_label, num_neg_label,num_pos_label+num_neg_label))
 
     img_label = image.copy()*darken
-    for i in bg_label_inds:
-        a = anchors[i]
-        cv2.rectangle(img_label,(a[0], a[1]), (a[2], a[3]), (32,32,32), 1)
-        cv2.circle(img_label,(a[0], a[1]),2, (32,32,32), -1)
+    # for i in bg_label_inds:
+    #     a = anchors[i]
+    #     cv2.rectangle(img_label,(a[0], a[1]), (a[2], a[3]), (32,32,32), 1)
+    #     cv2.circle(img_label,(a[0], a[1]),2, (32,32,32), -1)
 
     for i in fg_label_inds:
         a = anchors[i]
-        cv2.rectangle(img_label,(a[0], a[1]), (a[2], a[3]), (0,0,255), 1)
-        cv2.circle(img_label,(a[0], a[1]),2, (0,0,255), -1)
+        cv2.rectangle(img_label,(a[0], a[1]), (a[2], a[3]), (0,0,255), 2)
+        # cv2.circle(img_label,(a[0], a[1]),2, (0,0,255), -1)
 
     return img_label
 
