@@ -1,11 +1,3 @@
-<<<<<<< HEAD
-model_checkpoint_path: "snap_ResNet_vgg_NGT_060000.ckpt"
-all_model_checkpoint_paths: "snap_ResNet_vgg_NGT_052000.ckpt"
-all_model_checkpoint_paths: "snap_ResNet_vgg_NGT_054000.ckpt"
-all_model_checkpoint_paths: "snap_ResNet_vgg_NGT_056000.ckpt"
-all_model_checkpoint_paths: "snap_ResNet_vgg_NGT_058000.ckpt"
-all_model_checkpoint_paths: "snap_ResNet_vgg_NGT_060000.ckpt"
-=======
-model_checkpoint_path: "snap_vgg16_fixed_005000.ckpt"
-all_model_checkpoint_paths: "snap_vgg16_fixed_005000.ckpt"
->>>>>>> b1fdc5079c168082545d255921543a309448dcc5
+model_checkpoint_path: "snap_ResNet_vgg_double_up_NGT_006000.ckpt"
+all_model_checkpoint_paths: "snap_ResNet_vgg_double_up_NGT_002000.ckpt"
+all_model_checkpoint_paths: "snap_ResNet_vgg_double_up_NGT_006000.ckpt"

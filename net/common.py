@@ -87,7 +87,7 @@ np.random.seed(SEED)
 
 import cv2
 import matplotlib.pyplot as plt
-#import mayavi.mlab as mlab
+import mayavi.mlab as mlab
 
 
 # my libs

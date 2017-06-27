@@ -24,7 +24,7 @@ import glob
 import tensorflow as tf
 slim = tf.contrib.slim
 # from mobilenet import *
-from ResNet50_vgg_c import *
+from ResNet50_vgg_double_up_c import *
 from tensorflow.python import debug as tf_debug
 # os.environ["QT_API"] = "pyqt"
 
@@ -244,7 +244,7 @@ def run_train():
         fusion_net(
 			( [top_features,     top_rois,     6,6,1./stride],
 			  [front_features,   front_rois,   0,0,1./stride],  #disable by 0,0
-			  [rgb_features,     rgb_rois,     6,6,1./(2*stride)],),
+			  [rgb_features,     rgb_rois,     6,6,1./(1*stride)],),
             num_class, out_shape) #<todo>  add non max suppression
 
 
@@ -287,24 +287,25 @@ def run_train():
     merged = tf.summary.merge_all()
 
     sess = tf.InteractiveSession()
-    train_writer = tf.summary.FileWriter( './outputs/tensorboard/Res_Vgg_up',
+    train_writer = tf.summary.FileWriter( './outputs/tensorboard/Res_Vgg_double_up',
                                       sess.graph)
     with sess.as_default():
         sess.run( tf.global_variables_initializer(), { IS_TRAIN_PHASE : True } )
         # sess = tf_debug.LocalCLIDebugWrapperSession(sess)
         # summary_writer = tf.summary.FileWriter(out_dir+'/tf', sess.graph)
         saver  = tf.train.Saver() 
-        # saver.restore(sess, './outputs/check_points/snap_vgg16_newGT_062000.ckpt') 
+        # saver.restore(sess, './outputs/check_points/snap_ResNet_vgg_NGT_060000.ckpt') 
         # # saver.restore(sess, './outputs/check_points/MobileNet.ckpt')  
-        var_lt_res=[v for v in tf.trainable_variables() if v.name.startswith('res')]#resnet_v1_50
-        # pdb.set_trace()
-        ## var_lt=[v for v in tf.trainable_variables() if not(v.name.startswith('fuse-block-1')) and not(v.name.startswith('fuse')) and not(v.name.startswith('fuse-input'))]
 
-        # # var_lt.pop(0)
-        # # var_lt.pop(0)
+        var_lt_res=[v for v in tf.trainable_variables() if v.name.startswith('res')]#resnet_v1_50
         # # pdb.set_trace()
+        # ## var_lt=[v for v in tf.trainable_variables() if not(v.name.startswith('fuse-block-1')) and not(v.name.startswith('fuse')) and not(v.name.startswith('fuse-input'))]
+
+        # # # var_lt.pop(0)
+        # # # var_lt.pop(0)
+        # # # pdb.set_trace()
         saver_0=tf.train.Saver(var_lt_res)        
-        # # 
+        # # # 
         saver_0.restore(sess, './outputs/check_points/resnet_v1_50.ckpt')
         # # pdb.set_trace()
         # top_lt=[v for v in tf.trainable_variables() if v.name.startswith('top_base')]
@@ -320,7 +321,7 @@ def run_train():
         var_lt_vgg.pop(0)
         saver_1=tf.train.Saver(var_lt_vgg)
         
-        # pdb.set_trace()
+        # # pdb.set_trace()
         saver_1.restore(sess, './outputs/check_points/vgg_16.ckpt')
 
         batch_top_cls_loss =0
@@ -537,7 +538,7 @@ def run_train():
             # save: ------------------------------------
             if (iter)%2000==0 and (iter!=0):
                 #saver.save(sess, out_dir + '/check_points/%06d.ckpt'%iter)  #iter
-                saver.save(sess, out_dir + '/check_points/snap_ResNet_vgg_NGT_%06d.ckpt'%iter)  #iter
+                saver.save(sess, out_dir + '/check_points/snap_ResNet_vgg_double_up_NGT_%06d.ckpt'%iter)  #iter
                 # saver.save(sess, out_dir + '/check_points/MobileNet.ckpt')  #iter
                 # pdb.set_trace()
                 pass

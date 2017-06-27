@@ -6,3 +6,10 @@ net/r*
 *.so
 *.egg
 *.egg-info
+*.pyc
+__pycache__/
+kitti_data/
+net/__pycache__/
+net/processing/
+net/utility/
+outputs/

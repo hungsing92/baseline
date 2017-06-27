@@ -30,7 +30,7 @@ def top_box_to_box3d(boxes):
         for k in range(4):
             xx,yy = points[k]
             x,y  = top_to_lidar_coords(xx,yy)
-            boxes3d[n,k,  :] = x,y, -1.7  ## <todo>-2
+            boxes3d[n,k,  :] = x,y, -1.9  ## <todo>-2
             boxes3d[n,4+k,:] = x,y,0.2  #0.4
 
     return boxes3d
@@ -192,35 +192,35 @@ def box3d_transform_inv0(et_boxes3d, deltas):
 #               [        0.0,          0.0, 1.0]])
 
 def box3d_transform(et_boxes3d, gt_boxes3d):
-    num=len(et_boxes3d)
-    deltas=np.zeros((num,8,3),dtype=np.float32)
-    for n in range(num):
-        e=et_boxes3d[n]
-        center = np.sum(e,axis=0, keepdims=True)/8
-        scale = (np.sum((e-center)**2)/8)**0.5
-        g=[]
-        g.append(gt_boxes3d[n])
-        g.append(np.vstack([g[0][1:4,:],g[0][0,:],g[0][5:8,:],g[0][4,:]]))
-        g.append(np.vstack([g[1][1:4,:],g[1][0,:],g[1][5:8,:],g[1][4,:]]))
-        g.append(np.vstack([g[2][1:4,:],g[2][0,:],g[2][5:8,:],g[2][4,:]]))
-        min0=np.inf
-        for i in range(4):
-            if (np.sum((g[i]-e)**2)/8)**0.5 <min0:
-                min_idx=i
-                min0=(np.sum((g[i]-e)**2)/8)**0.5
-
-        deltas[n]= (g[min_idx]-e)/scale
-    return deltas
     # num=len(et_boxes3d)
     # deltas=np.zeros((num,8,3),dtype=np.float32)
     # for n in range(num):
     #     e=et_boxes3d[n]
     #     center = np.sum(e,axis=0, keepdims=True)/8
     #     scale = (np.sum((e-center)**2)/8)**0.5
+    #     g=[]
+    #     g.append(gt_boxes3d[n])
+    #     g.append(np.vstack([g[0][1:4,:],g[0][0,:],g[0][5:8,:],g[0][4,:]]))
+    #     g.append(np.vstack([g[1][1:4,:],g[1][0,:],g[1][5:8,:],g[1][4,:]]))
+    #     g.append(np.vstack([g[2][1:4,:],g[2][0,:],g[2][5:8,:],g[2][4,:]]))
+    #     min0=np.inf
+    #     for i in range(4):
+    #         if (np.sum((g[i]-e)**2)/8)**0.5 <min0:
+    #             min_idx=i
+    #             min0=(np.sum((g[i]-e)**2)/8)**0.5
 
-    #     g=gt_boxes3d[n]
-    #     deltas[n]= (g-e)/scale
+    #     deltas[n]= (g[min_idx]-e)/scale
     # return deltas
+    num=len(et_boxes3d)
+    deltas=np.zeros((num,8,3),dtype=np.float32)
+    for n in range(num):
+        e=et_boxes3d[n]
+        center = np.sum(e,axis=0, keepdims=True)/8
+        scale = (np.sum((e-center)**2)/8)**0.5
+
+        g=gt_boxes3d[n]
+        deltas[n]= (g-e)/scale
+    return deltas
 
 
 def box3d_transform_inv(et_boxes3d, deltas):

@@ -13,6 +13,7 @@ import numpy
 import pdb
 from time import time
 import tensorflow as tf
+import mayavi.mlab as mlab
 
 ## objs to gt boxes ##
 def obj_to_gt_boxes3d(objs):
