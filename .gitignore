@@ -1,4 +1,6 @@
 outputs/*
+net/r*
+0outputs/*
 *.py[cod]
 # Python:
 *.so
@@ -11,4 +13,3 @@ net/__pycache__/
 net/processing/
 net/utility/
 outputs/
-

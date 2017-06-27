@@ -11,6 +11,44 @@ from net.rpn_nms_op import tf_rpn_nms
 from net.roipooling_op import roi_pool as tf_roipooling
 import pdb
 from tensorflow.contrib.slim.python.slim.nets import resnet_v1
+<<<<<<< HEAD
+from tensorflow.contrib.slim.python.slim.nets import vgg
+
+keep_prob=0.5
+nms_pre_topn_=5000
+nms_post_topn_=2000
+def top_feature_net(input, anchors, inds_inside, num_bases):
+  stride=8
+    # arg_scope = resnet_v1.resnet_arg_scope(weight_decay=0.0)
+    # with slim.arg_scope(arg_scope) :
+  with slim.arg_scope(vgg.vgg_arg_scope()):
+    # net, end_points = resnet_v1.resnet_v1_50(input, None, global_pool=False, output_stride=8)
+    block5, end_points = vgg.vgg_16(input)
+    block3 = end_points['conv3/conv3_3']
+    # block   = conv2d_bn_relu(block, num_kernels=512, kernel_size=(1,1), stride=[1,1,1,1], padding='SAME', name='2')
+    tf.summary.histogram('rpn_top_block', block) 
+    # tf.summary.histogram('rpn_top_block_weights', tf.get_collection('2/conv_weight')[0])
+  with tf.variable_scope('top') as scope:
+    #up     = upsample2d(block, factor = 2, has_bias=True, trainable=True, name='1')
+    #up     = block
+    up      = conv2d_bn_relu(block, num_kernels=128, kernel_size=(3,3), stride=[1,1,1,1], padding='SAME', name='2')
+    scores  = conv2d(up, num_kernels=2*num_bases, kernel_size=(1,1), stride=[1,1,1,1], padding='SAME', name='score')
+    probs   = tf.nn.softmax( tf.reshape(scores,[-1,2]), name='prob')
+    deltas  = conv2d(up, num_kernels=4*num_bases, kernel_size=(1,1), stride=[1,1,1,1], padding='SAME', name='delta')
+
+  #<todo> flip to train and test mode nms (e.g. different nms_pre_topn values): use tf.cond
+  with tf.variable_scope('top-nms') as scope:    #non-max
+    batch_size, img_height, img_width, img_channel = input.get_shape().as_list()
+    img_scale = 1
+    # pdb.set_trace()
+    rois, roi_scores = tf_rpn_nms( probs, deltas, anchors, inds_inside,
+                                     stride, img_width, img_height, img_scale,
+                                     nms_thresh=0.7, min_size=stride, nms_pre_topn=nms_pre_topn_, nms_post_topn=nms_post_topn_,
+                                     name ='nms')
+
+  #<todo> feature = upsample2d(block, factor = 4,  ...)
+  feature = block
+=======
 # from tensorflow.contrib.slim.python.slim.nets import vgg
 
 keep_prob=0.5
@@ -45,6 +83,7 @@ def top_feature_net(input, anchors, inds_inside, num_bases):
   
     #<todo> feature = upsample2d(block, factor = 4,  ...)
     feature = block
+>>>>>>> b1fdc5079c168082545d255921543a309448dcc5
   
     # print ('top: scale=%f, stride=%d'%(1./stride, stride))
     return feature, scores, probs, deltas, rois, roi_scores

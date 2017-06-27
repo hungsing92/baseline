@@ -120,7 +120,7 @@ def l2_regulariser(decay):
         name = v.name
         if 'weight' in name:  #this is weight
             if 'fuse' in name:
-               l2 = 5*decay * tf.nn.l2_loss(v) 
+               l2 = 2*decay * tf.nn.l2_loss(v) 
             else:
                 l2 = decay * tf.nn.l2_loss(v)
             tf.add_to_collection('losses', l2)

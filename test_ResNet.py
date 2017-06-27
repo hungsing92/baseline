@@ -23,7 +23,11 @@ import glob
 import tensorflow as tf
 slim = tf.contrib.slim
 # from mobilenet import *
-from ResNet50 import *
+
+# from vgg16 import *
+
+# from ResNet50 import *
+from ResNet50_vgg_c import *
 from tensorflow.python import debug as tf_debug
 
 
@@ -186,7 +190,7 @@ def run_test():
                         [-3, -5, 3, 5]
                         ])
         num_bases = len(bases)
-        stride = 8
+        stride = 4
 
         rgbs, tops, fronts, gt_labels, gt_boxes3d, top_imgs, front_imgs, lidars,rgbs_norm0 = load_dummy_datas()
         num_frames = len(rgbs)
@@ -238,7 +242,7 @@ def run_test():
         fusion_net(
             ( [top_features,     top_rois,     6,6,1./stride],
               [front_features,   front_rois,   0,0,1./stride],  #disable by 0,0
-              [rgb_features,     rgb_rois,     6,6,1./stride],),
+              [rgb_features,     rgb_rois,     6,6,1./(2*stride)],),
             num_class, out_shape) #<todo>  add non max suppression
 
 
@@ -253,7 +257,10 @@ def run_test():
         # sess = tf_debug.LocalCLIDebugWrapperSession(sess)
         summary_writer = tf.summary.FileWriter(out_dir+'/tf', sess.graph)
         saver  = tf.train.Saver()  
-        saver.restore(sess, './outputs/check_points/snap_vgg16_newGT_062000.ckpt')  
+
+
+        saver.restore(sess, './outputs/check_points/snap_ResNet_vgg_NGT_060000.ckpt')  
+
 
         batch_top_cls_loss =0
         batch_top_reg_loss =0
@@ -276,7 +283,8 @@ def run_test():
 
             batch_top_images    = tops[idx].reshape(1,*top_shape)
             batch_front_images  = fronts[idx].reshape(1,*front_shape)
-            batch_rgb_images    = rgbs[idx].reshape(1,*rgb_shape)
+            batch_rgb_images    = rgbs_norm0[idx].reshape(1,*rgb_shape)
+
 
             batch_gt_labels    = gt_labels[idx]
             batch_gt_boxes3d   = gt_boxes3d[idx]
