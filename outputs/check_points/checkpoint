@@ -1,2 +1,6 @@
-model_checkpoint_path: "snap_vgg16_fixed_005000.ckpt"
-all_model_checkpoint_paths: "snap_vgg16_fixed_005000.ckpt"
+model_checkpoint_path: "snap_vgg16_fixed_080000.ckpt"
+all_model_checkpoint_paths: "snap_vgg16_fixed_060000.ckpt"
+all_model_checkpoint_paths: "snap_vgg16_fixed_065000.ckpt"
+all_model_checkpoint_paths: "snap_vgg16_fixed_070000.ckpt"
+all_model_checkpoint_paths: "snap_vgg16_fixed_075000.ckpt"
+all_model_checkpoint_paths: "snap_vgg16_fixed_080000.ckpt"
