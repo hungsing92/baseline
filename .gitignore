@@ -1,3 +1,8 @@
 outputs/*
 net/r*
 0outputs/*
+*.py[cod]
+# Python:
+*.so
+*.egg
+*.egg-info

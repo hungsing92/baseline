@@ -23,7 +23,11 @@ import glob
 import tensorflow as tf
 slim = tf.contrib.slim
 # from mobilenet import *
+<<<<<<< HEAD
 from vgg16 import *
+=======
+from ResNet50 import *
+>>>>>>> b1fdc5079c168082545d255921543a309448dcc5
 from tensorflow.python import debug as tf_debug
 
 
@@ -253,7 +257,11 @@ def run_test():
         # sess = tf_debug.LocalCLIDebugWrapperSession(sess)
         summary_writer = tf.summary.FileWriter(out_dir+'/tf', sess.graph)
         saver  = tf.train.Saver()  
+<<<<<<< HEAD
         saver.restore(sess, './outputs/check_points/snap_vgg16_fixed_065000.ckpt')  
+=======
+        saver.restore(sess, './outputs/check_points/snap_vgg16_newGT_062000.ckpt')  
+>>>>>>> b1fdc5079c168082545d255921543a309448dcc5
 
         batch_top_cls_loss =0
         batch_top_reg_loss =0
@@ -276,7 +284,11 @@ def run_test():
 
             batch_top_images    = tops[idx].reshape(1,*top_shape)
             batch_front_images  = fronts[idx].reshape(1,*front_shape)
+<<<<<<< HEAD
             batch_rgb_images    = rgbs_norm0[idx].reshape(1,*rgb_shape)
+=======
+            batch_rgb_images    = rgbs[idx].reshape(1,*rgb_shape)
+>>>>>>> b1fdc5079c168082545d255921543a309448dcc5
 
             batch_gt_labels    = gt_labels[idx]
             batch_gt_boxes3d   = gt_boxes3d[idx]
