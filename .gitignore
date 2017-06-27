@@ -1,5 +1,5 @@
 outputs/*
-net/r*
+net/roipooling_op/
 0outputs/*
 *.py[cod]
 # Python:
