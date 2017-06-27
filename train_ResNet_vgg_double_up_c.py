@@ -418,12 +418,14 @@ def run_train():
             batch_rgb_rois   = project_to_rgb_roi  (batch_rois3d  )
 
 
-            # keep = np.where((batch_rgb_rois[:,1]>=-200) & (batch_rgb_rois[:,2]>=-200) & (batch_rgb_rois[:,3]<=(rgb_shape[1]+200)) & (batch_rgb_rois[:,4]<=(rgb_shape[0]+200)))[0]
-            # batch_rois3d        = batch_rois3d[keep]      
-            # batch_front_rois    = batch_front_rois[keep]
-            # batch_rgb_rois      = batch_rgb_rois[keep]  
-            # batch_proposal_scores=batch_proposal_scores[keep]
-            # batch_top_rois      =batch_top_rois[keep]
+            keep = np.where((batch_rgb_rois[:,1]>=-100) & (batch_rgb_rois[:,2]>=-100) & (batch_rgb_rois[:,3]<=(rgb_shape[1]+100)) & (batch_rgb_rois[:,4]<=(rgb_shape[0]+100)))[0]
+            batch_rois3d        = batch_rois3d[keep]      
+            batch_front_rois    = batch_front_rois[keep]
+            batch_rgb_rois      = batch_rgb_rois[keep]  
+            batch_proposal_scores=batch_proposal_scores[keep]
+            batch_top_rois      =batch_top_rois[keep]
+            batch_fuse_labels   =batch_fuse_labels[keep]
+            batch_fuse_targets  =batch_fuse_targets[keep]
 
             if len(batch_rois3d)==0:
                 # pdb.set_trace()

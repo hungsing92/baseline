@@ -1,2 +1,4 @@
-model_checkpoint_path: "snap_ResNet_vgg_double_up_NGT_002000.ckpt"
+model_checkpoint_path: "snap_ResNet_vgg_double_up_NGT_008000.ckpt"
 all_model_checkpoint_paths: "snap_ResNet_vgg_double_up_NGT_002000.ckpt"
+all_model_checkpoint_paths: "snap_ResNet_vgg_double_up_NGT_006000.ckpt"
+all_model_checkpoint_paths: "snap_ResNet_vgg_double_up_NGT_008000.ckpt"
