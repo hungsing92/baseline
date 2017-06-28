@@ -27,13 +27,14 @@ slim = tf.contrib.slim
 # from vgg16 import *
 
 # from ResNet50 import *
-from ResNet50_vgg_c import *
+# from ResNet50_vgg_c import *
+from ResNet50_vgg_double_up_c import *
 from tensorflow.python import debug as tf_debug
 
 
 is_show=1
 # MM_PER_VIEW1 = 120, 30, 70, [1,1,0]
-MM_PER_VIEW1 = 180, None, 70, [1,1,0]#[ 12.0909996 , -1.04700089, -2.03249991]
+MM_PER_VIEW1 = 180, None, 60, [1,1,0]#[ 12.0909996 , -1.04700089, -2.03249991]
 #---------------------------------------------------------------------------------------------
 #  todo:
 #    -- fix anchor index
@@ -242,7 +243,7 @@ def run_test():
         fusion_net(
             ( [top_features,     top_rois,     6,6,1./stride],
               [front_features,   front_rois,   0,0,1./stride],  #disable by 0,0
-              [rgb_features,     rgb_rois,     6,6,1./(2*stride)],),
+              [rgb_features,     rgb_rois,     6,6,1./(1*stride)],),
             num_class, out_shape) #<todo>  add non max suppression
 
 
@@ -259,7 +260,7 @@ def run_test():
         saver  = tf.train.Saver()  
 
 
-        saver.restore(sess, './outputs/check_points/snap_ResNet_vgg_up_NGT_060000.ckpt')  
+        saver.restore(sess, './outputs/check_points/snap_ResNet_vgg_double_up_NGT_076000.ckpt')  
 
 
         batch_top_cls_loss =0

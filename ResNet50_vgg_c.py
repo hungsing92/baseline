@@ -13,9 +13,9 @@ import pdb
 from tensorflow.contrib.slim.python.slim.nets import resnet_v1
 from tensorflow.contrib.slim.python.slim.nets import vgg
 
-keep_prob=0.5
+keep_prob=1
 nms_pre_topn_=5000
-nms_post_topn_=2000
+nms_post_topn_=200
 def top_feature_net(input, anchors, inds_inside, num_bases):
   stride=4
     # arg_scope = resnet_v1.resnet_arg_scope(weight_decay=0.0)
