@@ -282,7 +282,7 @@ def run_train():
 
     num_ratios=len(ratios)
     num_scales=len(scales)
-    fig, axs = plt.subplots(num_ratios,num_scales)
+    #fig, axs = plt.subplots(num_ratios,num_scales)
 
     merged = tf.summary.merge_all()
 
@@ -294,41 +294,41 @@ def run_train():
         # sess = tf_debug.LocalCLIDebugWrapperSession(sess)
         # summary_writer = tf.summary.FileWriter(out_dir+'/tf', sess.graph)
         saver  = tf.train.Saver() 
-        # saver.restore(sess, './outputs/check_points/snap_ResNet_vgg_NGT_060000.ckpt') 
+        saver.restore(sess, './outputs/check_points/snap_ResNet_vgg_double_up_NGT_076000.ckpt') 
         # # saver.restore(sess, './outputs/check_points/MobileNet.ckpt')  
 
-        var_lt_res=[v for v in tf.trainable_variables() if v.name.startswith('res')]#resnet_v1_50
-        # # pdb.set_trace()
-        # ## var_lt=[v for v in tf.trainable_variables() if not(v.name.startswith('fuse-block-1')) and not(v.name.startswith('fuse')) and not(v.name.startswith('fuse-input'))]
-
-        # # # var_lt.pop(0)
-        # # # var_lt.pop(0)
+        # var_lt_res=[v for v in tf.trainable_variables() if v.name.startswith('res')]#resnet_v1_50
         # # # pdb.set_trace()
-        saver_0=tf.train.Saver(var_lt_res)        
-        # # # 
-        saver_0.restore(sess, './outputs/check_points/resnet_v1_50.ckpt')
-        # # pdb.set_trace()
-        # top_lt=[v for v in tf.trainable_variables() if v.name.startswith('top_base')]
-        # top_lt.pop(0)
-        # # # top_lt.pop(0)
-        # for v in top_lt:
-        #     # pdb.set_trace()
-        #     for v_rgb in var_lt:
-        #         if v.name[9:]==v_rgb.name:
-        #             print ("assign weights:%s"%v.name)
-        #             v.assign(v_rgb)
-        var_lt_vgg=[v for v in tf.trainable_variables() if v.name.startswith('vgg')]
-        var_lt_vgg.pop(0)
-        saver_1=tf.train.Saver(var_lt_vgg)
+        # # ## var_lt=[v for v in tf.trainable_variables() if not(v.name.startswith('fuse-block-1')) and not(v.name.startswith('fuse')) and not(v.name.startswith('fuse-input'))]
+
+        # # # # var_lt.pop(0)
+        # # # # var_lt.pop(0)
+        # # # # pdb.set_trace()
+        # saver_0=tf.train.Saver(var_lt_res)        
+        # # # # 
+        # saver_0.restore(sess, './outputs/check_points/resnet_v1_50.ckpt')
+        # # # pdb.set_trace()
+        # # top_lt=[v for v in tf.trainable_variables() if v.name.startswith('top_base')]
+        # # top_lt.pop(0)
+        # # # # top_lt.pop(0)
+        # # for v in top_lt:
+        # #     # pdb.set_trace()
+        # #     for v_rgb in var_lt:
+        # #         if v.name[9:]==v_rgb.name:
+        # #             print ("assign weights:%s"%v.name)
+        # #             v.assign(v_rgb)
+        # var_lt_vgg=[v for v in tf.trainable_variables() if v.name.startswith('vgg')]
+        # var_lt_vgg.pop(0)
+        # saver_1=tf.train.Saver(var_lt_vgg)
         
-        # # pdb.set_trace()
-        saver_1.restore(sess, './outputs/check_points/vgg_16.ckpt')
+        # # # pdb.set_trace()
+        # saver_1.restore(sess, './outputs/check_points/vgg_16.ckpt')
 
         batch_top_cls_loss =0
         batch_top_reg_loss =0
         batch_fuse_cls_loss=0
         batch_fuse_reg_loss=0
-        rate=0.0001
+        rate=0.00001
         frame_range = np.arange(num_frames)
         idx=0
         frame=0
@@ -540,7 +540,7 @@ def run_train():
             # save: ------------------------------------
             if (iter)%5000==0 and (iter!=0):
                 #saver.save(sess, out_dir + '/check_points/%06d.ckpt'%iter)  #iter
-                saver.save(sess, out_dir + '/check_points/snap_ResNet_vgg_double_up_s_NGT_%06d.ckpt'%iter)  #iter
+                saver.save(sess, out_dir + '/check_points/snap_ResNet_vgg_double_up_NGT_%06d.ckpt'%iter)  #iter
                 # saver.save(sess, out_dir + '/check_points/MobileNet.ckpt')  #iter
                 # pdb.set_trace()
                 pass
