@@ -238,13 +238,13 @@ def run_train():
         top_feature_net(top_images, top_anchors, top_inside_inds, num_bases)
     # pdb.set_trace()
     front_features = front_feature_net(front_images)
-    rgb_features   = rgb_feature_net(rgb_images)
+    rgb_features   = rgb_feature_net(rgb_images) 
 
     fuse_scores, fuse_probs, fuse_deltas = \
         fusion_net(
-			( [top_features,     top_rois,     6,6,1./stride],
+			( [top_features,     top_rois,     7,7,1./stride],
 			  [front_features,   front_rois,   0,0,1./stride],  #disable by 0,0
-			  [rgb_features,     rgb_rois,     6,6,1./(1*stride)],),
+			  [rgb_features,     rgb_rois,     7,7,1./(1*stride)],),
             num_class, out_shape) #<todo>  add non max suppression
 
 
@@ -268,6 +268,7 @@ def run_train():
     l2 = l2_regulariser(decay=0.000005)
     tf.summary.scalar('l2', l2)
     learning_rate = tf.placeholder(tf.float32, shape=[])
+    rate=0.0001
     solver = tf.train.AdamOptimizer(learning_rate)
     # solver = tf.train.MomentumOptimizer(learning_rate=learning_rate, momentum=0.9)
     #solver_step = solver.minimize(top_cls_loss+top_reg_loss+l2)
@@ -286,15 +287,15 @@ def run_train():
 
     merged = tf.summary.merge_all()
 
-    sess = tf.InteractiveSession()
-    train_writer = tf.summary.FileWriter( './outputs/tensorboard/Res_Vgg_double_up',
+    sess = tf.InteractiveSession()  
+    train_writer = tf.summary.FileWriter( './outputs/tensorboard/Res_Vgg_double_up_rm_fc',
                                       sess.graph)
     with sess.as_default():
         sess.run( tf.global_variables_initializer(), { IS_TRAIN_PHASE : True } )
         # sess = tf_debug.LocalCLIDebugWrapperSession(sess)
         # summary_writer = tf.summary.FileWriter(out_dir+'/tf', sess.graph)
         saver  = tf.train.Saver() 
-        # saver.restore(sess, './outputs/check_points/snap_ResNet_vgg_NGT_060000.ckpt') 
+        # saver.restore(sess, './outputs/check_points/snap_ResNet_vgg_double_up_rm_fc_NGT_010000.ckpt') 
         # # saver.restore(sess, './outputs/check_points/MobileNet.ckpt')  
 
         var_lt_res=[v for v in tf.trainable_variables() if v.name.startswith('res')]#resnet_v1_50
@@ -328,10 +329,11 @@ def run_train():
         batch_top_reg_loss =0
         batch_fuse_cls_loss=0
         batch_fuse_reg_loss=0
-        rate=0.00005
+        # rate=0.00005
         frame_range = np.arange(num_frames)
         idx=0
         frame=0
+        rate=0.00005
         for iter in range(max_iter):
             epoch=iter//num_frames+1
             # rate=0.001
@@ -538,9 +540,9 @@ def run_train():
                 summary = sess.run(merged,fd2)
                 train_writer.add_summary(summary, iter)
             # save: ------------------------------------
-            if (iter)%2000==0 and (iter!=0):
+            if (iter)%5000==0 and (iter!=0):
                 #saver.save(sess, out_dir + '/check_points/%06d.ckpt'%iter)  #iter
-                saver.save(sess, out_dir + '/check_points/snap_ResNet_vgg_double_up_NGT_%06d.ckpt'%iter)  #iter
+                saver.save(sess, out_dir + '/check_points/snap_ResNet_vgg_double_up_rm_fc_NGT_%06d.ckpt'%iter)  #iter
                 # saver.save(sess, out_dir + '/check_points/MobileNet.ckpt')  #iter
                 # pdb.set_trace()
                 pass

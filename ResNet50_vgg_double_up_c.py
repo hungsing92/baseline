@@ -16,6 +16,7 @@ from tensorflow.contrib.slim.python.slim.nets import vgg
 keep_prob=0.5
 nms_pre_topn_=5000
 nms_post_topn_=2000
+is_training=True
 def top_feature_net(input, anchors, inds_inside, num_bases):
   stride=4
     # arg_scope = resnet_v1.resnet_arg_scope(weight_decay=0.0)
@@ -63,7 +64,7 @@ def top_feature_net(input, anchors, inds_inside, num_bases):
     
 def rgb_feature_net(input):
 
-    arg_scope = resnet_v1.resnet_arg_scope(weight_decay=0.0)
+    arg_scope = resnet_v1.resnet_arg_scope(is_training=is_training, weight_decay=0.0)
     with slim.arg_scope(arg_scope):
       net, end_points = resnet_v1.resnet_v1_50(input, None, global_pool=False, output_stride=8)
       # pdb.set_trace()
@@ -116,14 +117,14 @@ def fusion_net(feature_list, num_class, out_shape=(8,3)):
         roi_features=flatten(roi_features)
         with tf.variable_scope('fuse-block-1-%d'%n):
           tf.summary.histogram('fuse-block_input_%d'%n, roi_features)
-          block = linear_bn_relu(roi_features, num_hiddens=512, name='1')#512, so small?
+          block = linear_bn_relu(roi_features, num_hiddens=2048, name='1')#512, so small?
           tf.summary.histogram('fuse-block1_%d'%n, block)
           block = tf.nn.dropout(block, keep_prob, name='drop1')
-          block = linear_bn_relu(block, num_hiddens=512, name='2')
+          block = linear_bn_relu(block, num_hiddens=2048, name='2')
           tf.summary.histogram('fuse-block2_%d'%n, block)
           block = tf.nn.dropout(block, keep_prob, name='drop2')
-          block = linear_bn_relu(block, num_hiddens=512, name='3')#512, so small?
-          block = tf.nn.dropout(block, keep_prob, name='drop3')
+          # block = linear_bn_relu(block, num_hiddens=512, name='3')#512, so small?
+          # block = tf.nn.dropout(block, keep_prob, name='drop3')
           
 
         if input is None:
@@ -157,7 +158,7 @@ def fusion_net(feature_list, num_class, out_shape=(8,3)):
   #include background class
   with tf.variable_scope('fuse') as scope:
     block = linear_bn_relu(input, num_hiddens=512, name='4')#512, so small?
-    block = tf.nn.dropout(block, keep_prob, name='drop4')
+    # block = tf.nn.dropout(block, keep_prob, name='drop4')
     dim = np.product([*out_shape])
     scores  = linear(block, num_hiddens=num_class,     name='score')
     probs   = tf.nn.softmax (scores, name='prob')
