@@ -211,7 +211,7 @@ def box3d_transform(et_boxes3d, gt_boxes3d):
 
     #     deltas[n]= (g[min_idx]-e)/scale
     # return deltas
-    # num=len(et_boxes3d)
+    num=len(et_boxes3d)
     deltas=np.zeros((num,8,3),dtype=np.float32)
     for n in range(num):
         e=et_boxes3d[n]
