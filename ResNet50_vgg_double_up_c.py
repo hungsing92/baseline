@@ -41,7 +41,7 @@ def top_feature_net(input, anchors, inds_inside, num_bases):
     with tf.variable_scope('top') as scope:
       #up     = upsample2d(block, factor = 2, has_bias=True, trainable=True, name='1')
       #up     = block
-      up      = conv2d_relu(block, num_kernels=256, kernel_size=(3,3), stride=[1,1,1,1], padding='SAME', name='2')
+      up      = conv2d_relu(block, num_kernels=128, kernel_size=(3,3), stride=[1,1,1,1], padding='SAME', name='2')
       scores  = conv2d(up, num_kernels=2*num_bases, kernel_size=(1,1), stride=[1,1,1,1], padding='SAME', name='score')
       probs   = tf.nn.softmax( tf.reshape(scores,[-1,2]), name='prob')
       deltas  = conv2d(up, num_kernels=4*num_bases, kernel_size=(1,1), stride=[1,1,1,1], padding='SAME', name='delta')
@@ -120,7 +120,7 @@ def fusion_net(feature_list, num_class, out_shape=(8,3)):
           block = linear_bn_relu(roi_features, num_hiddens=2048, name='1')#512, so small?
           tf.summary.histogram('fuse-block1_%d'%n, block)
           block = tf.nn.dropout(block, keep_prob, name='drop1')
-          block = linear_bn_relu(block, num_hiddens=1024, name='2')
+          block = linear_bn_relu(block, num_hiddens=2048, name='2')
           tf.summary.histogram('fuse-block2_%d'%n, block)
           block = tf.nn.dropout(block, keep_prob, name='drop2')
           # block = linear_bn_relu(block, num_hiddens=512, name='3')#512, so small?
