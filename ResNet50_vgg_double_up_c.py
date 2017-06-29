@@ -16,7 +16,7 @@ from tensorflow.contrib.slim.python.slim.nets import vgg
 keep_prob=0.5
 nms_pre_topn_=5000
 nms_post_topn_=2000
-is_training=True
+is_training=False
 def top_feature_net(input, anchors, inds_inside, num_bases):
   stride=4
     # arg_scope = resnet_v1.resnet_arg_scope(weight_decay=0.0)
@@ -64,7 +64,7 @@ def top_feature_net(input, anchors, inds_inside, num_bases):
     
 def rgb_feature_net(input):
 
-    arg_scope = resnet_v1.resnet_arg_scope(is_training=is_training, weight_decay=0.0)
+    arg_scope = resnet_v1.resnet_arg_scope(is_training=is_training)
     with slim.arg_scope(arg_scope):
       net, end_points = resnet_v1.resnet_v1_50(input, None, global_pool=False, output_stride=8)
       # pdb.set_trace()
@@ -120,9 +120,9 @@ def fusion_net(feature_list, num_class, out_shape=(8,3)):
           block = linear_bn_relu(roi_features, num_hiddens=2048, name='1')#512, so small?
           tf.summary.histogram('fuse-block1_%d'%n, block)
           block = tf.nn.dropout(block, keep_prob, name='drop1')
-          block = linear_bn_relu(block, num_hiddens=1024, name='2')
-          tf.summary.histogram('fuse-block2_%d'%n, block)
-          block = tf.nn.dropout(block, keep_prob, name='drop2')
+          # block = linear_bn_relu(block, num_hiddens=1024, name='2')
+          # tf.summary.histogram('fuse-block2_%d'%n, block)
+          # block = tf.nn.dropout(block, keep_prob, name='drop2')
           # block = linear_bn_relu(block, num_hiddens=512, name='3')#512, so small?
           # block = tf.nn.dropout(block, keep_prob, name='drop3')
           
