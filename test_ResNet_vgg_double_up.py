@@ -46,10 +46,9 @@ MM_PER_VIEW1 = 180, None, 60, [1,1,0]#[ 12.0909996 , -1.04700089, -2.03249991]
 #http://3dimage.ee.tsinghua.edu.cn/cxz
 # "Multi-View 3D Object Detection Network for Autonomous Driving" - Xiaozhi Chen, CVPR 2017
 
-
 def load_dummy_datas():
 
-    num_frames = 30
+    num_frames = []
     rgbs      =[]
     lidars    =[]
     tops      =[]
@@ -62,8 +61,10 @@ def load_dummy_datas():
     front_images=[]
 
     fig = mlab.figure(figure=None, bgcolor=(0,0,0), fgcolor=None, engine=None, size=(1000, 500))
-    index=np.load('/home/hhs/4T/datasets/dummy_datas/seg/val_list.npy')
-    index=sorted(index)[60:100]
+    files_list=glob.glob(data_root+'seg/rgb/*.png')
+    index=np.array([file_index.strip().split('/')[-1][10:10+5] for file_index in files_list ])
+    num_frames=len(files_list)
+    index=sorted(index)
     print('len(index):%d'%len(index))
     # pdb.set_trace()
     if num_frames==[]:
@@ -71,31 +72,33 @@ def load_dummy_datas():
         print('num_frames:%d'%num_frames)
     for n in range(num_frames):
         print(n)
-        rgb   = cv2.imread('/home/hhs/4T/datasets/KITTI/object/training/image_2/0%s.png'%str(index[n]),1).astype(np.float32, copy=False)
+        rgb   = cv2.imread(data_root+'seg/rgb/rgb_%05d.png'%n,1)
+        rgb=np.float32(rgb)
         rgbs_norm0=(rgb-PIXEL_MEANS)/255
-        lidar = np.load('/home/hhs/4T/datasets/dummy_datas/seg/lidar/lidar_%s.npy'%str(index[n]))
-        top   = np.load('/home/hhs/4T/datasets/dummy_datas/seg/top/top_%s.npy'%str(index[n]))
+        lidar = np.load(data_root+'seg/lidar/lidar_%05d.npy'%n)
+        top   = np.load(data_root+'seg/top/top_%05d.npy'%n)
         front = np.zeros((1,1),dtype=np.float32)
-        gt_label  = np.load('/home/hhs/4T/datasets/dummy_datas/seg/gt_labels/gt_labels_%s.npy'%str(index[n]))
-        gt_box3d = np.load('/home/hhs/4T/datasets/dummy_datas/seg/gt_boxes3d/gt_boxes3d_%s.npy'%str(index[n]))
+        # gt_label  = np.load('/home/hhs/4T/datasets/dummy_datas/seg/gt_labels/gt_labels_%s.npy'%str(index[n]))
+        # gt_box3d = np.load('/home/hhs/4T/datasets/dummy_datas/seg/gt_boxes3d/gt_boxes3d_%s.npy'%str(index[n]))
 
 
-        rgb_shape   = rgb.shape
-        gt_rgb   = project_to_rgb_roi  (gt_box3d  )
-        keep = np.where((gt_rgb[:,1]>=-200) & (gt_rgb[:,2]>=-200) & (gt_rgb[:,3]<=(rgb_shape[1]+200)) & (gt_rgb[:,4]<=(rgb_shape[0]+200)))[0]
-        gt_label=gt_label[keep]
-        gt_box3d=gt_box3d[keep]
+        # rgb_shape   = rgb.shape
+        # gt_rgb   = project_to_rgb_roi  (gt_box3d  )
+        # keep = np.where((gt_rgb[:,1]>=-200) & (gt_rgb[:,2]>=-200) & (gt_rgb[:,3]<=(rgb_shape[1]+200)) & (gt_rgb[:,4]<=(rgb_shape[0]+200)))[0]
+        # gt_label=gt_label[keep]
+        # gt_box3d=gt_box3d[keep]
 
 
-        top_image   = cv2.imread('/home/hhs/4T/datasets/dummy_datas/seg/top_image/top_image_%s.png'%str(index[n]),1)
+        top_image   = cv2.imread(data_root+'seg/top_image/top_image_%05d.png'%n,1)
+        # top_image   = np.int32(top_image)
         front_image = np.zeros((1,1,3),dtype=np.float32)
 
         rgbs.append(rgb)
         lidars.append(lidar)
         tops.append(top)
         fronts.append(front)
-        gt_labels.append(gt_label)
-        gt_boxes3d.append(gt_box3d)
+        # gt_labels.append(gt_label)
+        # gt_boxes3d.append(gt_box3d)
         top_images.append(top_image)
         front_images.append(front_image)
         rgbs_norm.append(rgbs_norm0)
@@ -103,7 +106,7 @@ def load_dummy_datas():
 
         # explore dataset:
 
-        print (gt_box3d)
+        # print (gt_box3d)
         if 0:
             projections=box3d_to_rgb_projections(gt_box3d)
             rgb1 = draw_rgb_projections(rgb, projections, color=(255,255,255), thickness=2)
@@ -123,7 +126,7 @@ def load_dummy_datas():
     # rgbs=np.array(rgbs)
     ##exit(0)
     mlab.close(all=True)
-    return  rgbs, tops, fronts, gt_labels, gt_boxes3d, top_images, front_images, lidars, rgbs_norm
+    return  rgbs, tops, fronts, top_images, front_images, lidars, rgbs_norm
 
 
 
@@ -165,6 +168,9 @@ def  project_to_front_roi(rois3d):
 #     rois[:,1:5] = box3d_to_surround_box(rois3d)
 #     return rois
 
+data_root='/home/hhs/4T/datasets/dummy_datas_005/'
+kitti_img_root='/home/hhs/4T/datasets/KITTI/'
+
 
 def run_test():
 
@@ -193,7 +199,7 @@ def run_test():
         num_bases = len(bases)
         stride = 4
 
-        rgbs, tops, fronts, gt_labels, gt_boxes3d, top_imgs, front_imgs, lidars,rgbs_norm0 = load_dummy_datas()
+        rgbs, tops, fronts, top_imgs, front_imgs, lidars,rgbs_norm0 = load_dummy_datas()
         num_frames = len(rgbs)
 
         top_shape   = tops[0].shape
@@ -287,10 +293,10 @@ def run_test():
             batch_rgb_images    = rgbs_norm0[idx].reshape(1,*rgb_shape)
 
 
-            batch_gt_labels    = gt_labels[idx]
-            batch_gt_boxes3d   = gt_boxes3d[idx]
+            # batch_gt_labels    = gt_labels[idx]
+            # batch_gt_boxes3d   = gt_boxes3d[idx]
             # pdb.set_trace()
-            batch_gt_top_boxes = box3d_to_top_box(batch_gt_boxes3d)
+            # batch_gt_top_boxes = box3d_to_top_box(batch_gt_boxes3d)
 
             inside_inds_filtered=anchor_filter(batch_top_images[0,:,:,-1], anchors, inside_inds)
 
@@ -363,10 +369,11 @@ def run_test():
                 if len(boxes3d)!=0:
                     # draw_didi_boxes3d(mfig, boxes3d)
                     draw_target_boxes3d(boxes3d, fig=mfig)
-                    draw_gt_boxes3d(batch_gt_boxes3d, fig=mfig)
+                    # draw_gt_boxes3d(batch_gt_boxes3d, fig=mfig)
                 # azimuth,elevation,distance,focalpoint = MM_PER_VIEW1
                 # mlab.view(azimuth,elevation,distance,focalpoint)
                 mlab.show(1)
+                mlab.savefig(data_root+'seg/mayavi_fig/mayavi_%05d.png'%iter)
                 # cv2.waitKey(0)
                 # mlab.close()
 
@@ -386,8 +393,9 @@ def run_test():
                 #         axs[r,s].imshow(pn, cmap='gray', vmin=0, vmax=255)
                 plt.pause(0.01)
                 # pdb.set_trace()
-                img_gt     = draw_rpn_gt(top_image, batch_gt_top_boxes, batch_gt_labels)
-                img_rpn_nms = draw_rpn_nms(img_gt, batch_proposals, batch_proposal_scores)
+                # img_gt     = draw_rpn_gt(top_image, batch_gt_top_boxes, batch_gt_labels)
+                img_rpn_nms = draw_rpn_nms(top_image, batch_proposals, batch_proposal_scores)
+                # pdb.set_trace()
                 imshow('img_rpn_nms',img_rpn_nms)
                 cv2.waitKey(1)
                 # imshow('img_rpn_gt',img_gt)
@@ -402,8 +410,9 @@ def run_test():
                 img_rgb_2d_detection = draw_boxes(rgb, rgb_boxes[:,1:5], color=(255,0,255), thickness=1)
 
                 imshow('draw_rcnn_nms',rgb1)
+                cv2.imwrite(data_root+'seg/result_rgb/rgb_%05d.png'%iter,rgb1)
                 # imshow('img_rgb_2d_detection',img_rgb_2d_detection)
-                cv2.waitKey(0)
+                cv2.waitKey(1)
 
 
                 #save
