@@ -13,9 +13,10 @@ import pdb
 from tensorflow.contrib.slim.python.slim.nets import resnet_v1
 from tensorflow.contrib.slim.python.slim.nets import vgg
 
-keep_prob=1
+keep_prob=0.5
 nms_pre_topn_=5000
-nms_post_topn_=200
+nms_post_topn_=2000
+is_training=True
 def top_feature_net(input, anchors, inds_inside, num_bases):
   stride=4
     # arg_scope = resnet_v1.resnet_arg_scope(weight_decay=0.0)
@@ -63,7 +64,7 @@ def top_feature_net(input, anchors, inds_inside, num_bases):
     
 def rgb_feature_net(input):
 
-    arg_scope = resnet_v1.resnet_arg_scope(weight_decay=0.0)
+    arg_scope = resnet_v1.resnet_arg_scope(is_training=is_training, weight_decay=0.0)
     with slim.arg_scope(arg_scope):
       net, end_points = resnet_v1.resnet_v1_50(input, None, global_pool=False, output_stride=8)
       block=end_points['resnet_v1_50/block4']

@@ -16,6 +16,7 @@ from tensorflow.contrib.slim.python.slim.nets import vgg
 keep_prob=0.5
 nms_pre_topn_=5000
 nms_post_topn_=2000
+is_training=True
 def top_feature_net(input, anchors, inds_inside, num_bases):
   stride=4
     # arg_scope = resnet_v1.resnet_arg_scope(weight_decay=0.0)
@@ -27,20 +28,20 @@ def top_feature_net(input, anchors, inds_inside, num_bases):
     block3 = end_points['vgg_16/conv3/conv3_3']
     block4 = end_points['vgg_16/conv4/conv4_3']
   with tf.variable_scope("top_base") as sc:
-    block5_   = conv2d_bn_relu(block5, num_kernels=256, kernel_size=(1,1), stride=[1,1,1,1], padding='SAME', name='5')
+    block5_   = conv2d_relu(block5, num_kernels=256, kernel_size=(1,1), stride=[1,1,1,1], padding='SAME', name='5')
     up5     = upsample2d(block5_, factor = 2, has_bias=True, trainable=True, name='up1')
-    block4_   = conv2d_bn_relu(block4, num_kernels=256, kernel_size=(1,1), stride=[1,1,1,1], padding='SAME', name='4')
+    block4_   = conv2d_relu(block4, num_kernels=256, kernel_size=(1,1), stride=[1,1,1,1], padding='SAME', name='4')
     up4     = upsample2d(block4_, factor = 2, has_bias=True, trainable=True, name='up2')
     up_      =tf.add(up4, up5, name="up_add")
-    block3_   = conv2d_bn_relu(block3, num_kernels=256, kernel_size=(1,1), stride=[1,1,1,1], padding='SAME', name='3')
+    block3_   = conv2d_relu(block3, num_kernels=256, kernel_size=(1,1), stride=[1,1,1,1], padding='SAME', name='3')
     up       = tf.add(up_,block3_, name='fpn_up_')
-    block    = conv2d_bn_relu(up, num_kernels=256, kernel_size=(3,3), stride=[1,1,1,1], padding='SAME', name='fpn_up')
+    block    = conv2d_relu(up, num_kernels=256, kernel_size=(3,3), stride=[1,1,1,1], padding='SAME', name='fpn_up')
     tf.summary.histogram('rpn_top_block', block) 
     # tf.summary.histogram('rpn_top_block_weights', tf.get_collection('2/conv_weight')[0])
     with tf.variable_scope('top') as scope:
       #up     = upsample2d(block, factor = 2, has_bias=True, trainable=True, name='1')
       #up     = block
-      up      = conv2d_bn_relu(block, num_kernels=128, kernel_size=(3,3), stride=[1,1,1,1], padding='SAME', name='2')
+      up      = conv2d_relu(block, num_kernels=256, kernel_size=(3,3), stride=[1,1,1,1], padding='SAME', name='2')
       scores  = conv2d(up, num_kernels=2*num_bases, kernel_size=(1,1), stride=[1,1,1,1], padding='SAME', name='score')
       probs   = tf.nn.softmax( tf.reshape(scores,[-1,2]), name='prob')
       deltas  = conv2d(up, num_kernels=4*num_bases, kernel_size=(1,1), stride=[1,1,1,1], padding='SAME', name='delta')
@@ -63,7 +64,7 @@ def top_feature_net(input, anchors, inds_inside, num_bases):
     
 def rgb_feature_net(input):
 
-    arg_scope = resnet_v1.resnet_arg_scope(weight_decay=0.0)
+    arg_scope = resnet_v1.resnet_arg_scope(is_training=is_training, weight_decay=0.0)
     with slim.arg_scope(arg_scope):
       net, end_points = resnet_v1.resnet_v1_50(input, None, global_pool=False, output_stride=8)
       # pdb.set_trace()
@@ -72,15 +73,15 @@ def rgb_feature_net(input):
       block2=end_points['resnet_v1_50/block2']
       # block1=end_points['resnet_v1_50/block1/unit_3/bottleneck_v1/conv1']
       with tf.variable_scope("rgb_up") as sc:
-        block4_   = conv2d_bn_relu(block4, num_kernels=256, kernel_size=(1,1), stride=[1,1,1,1], padding='SAME', name='4')
+        block4_   = conv2d_relu(block4, num_kernels=256, kernel_size=(1,1), stride=[1,1,1,1], padding='SAME', name='4')
         up4     = upsample2d(block4_, factor = 2, has_bias=True, trainable=True, name='up4')
-        block3_   = conv2d_bn_relu(block3, num_kernels=256, kernel_size=(1,1), stride=[1,1,1,1], padding='SAME', name='3')
+        block3_   = conv2d_relu(block3, num_kernels=256, kernel_size=(1,1), stride=[1,1,1,1], padding='SAME', name='3')
         up3     = upsample2d(block3_, factor = 2, has_bias=True, trainable=True, name='up3')
-        block2_   = conv2d_bn_relu(block2, num_kernels=256, kernel_size=(1,1), stride=[1,1,1,1], padding='SAME', name='2')
+        block2_   = conv2d_relu(block2, num_kernels=256, kernel_size=(1,1), stride=[1,1,1,1], padding='SAME', name='2')
         up2     = upsample2d(block2_, factor = 2, has_bias=True, trainable=True, name='up2')
         up_34      =tf.add(up4, up3, name="up_add_3_4")
         up      =tf.add(up_34, up2, name="up_add_3_4_2")
-        block    = conv2d_bn_relu(up, num_kernels=256, kernel_size=(3,3), stride=[1,1,1,1], padding='SAME', name='rgb_ft')
+        block    = conv2d_relu(up, num_kernels=256, kernel_size=(3,3), stride=[1,1,1,1], padding='SAME', name='rgb_ft')
         # block1_   = conv2d_bn_relu(block1, num_kernels=256, kernel_size=(1,1), stride=[1,1,1,1], padding='SAME', name='1')
         # up      =tf.add(block1_, up_, name="up_add")
       # block   = conv2d_bn_relu(block, num_kernels=512, kernel_size=(1,1), stride=[1,1,1,1], padding='SAME', name='2')
@@ -116,14 +117,14 @@ def fusion_net(feature_list, num_class, out_shape=(8,3)):
         roi_features=flatten(roi_features)
         with tf.variable_scope('fuse-block-1-%d'%n):
           tf.summary.histogram('fuse-block_input_%d'%n, roi_features)
-          block = linear_bn_relu(roi_features, num_hiddens=512, name='1')#512, so small?
+          block = linear_bn_relu(roi_features, num_hiddens=2048, name='1')#512, so small?
           tf.summary.histogram('fuse-block1_%d'%n, block)
           block = tf.nn.dropout(block, keep_prob, name='drop1')
-          block = linear_bn_relu(block, num_hiddens=512, name='2')
+          block = linear_bn_relu(block, num_hiddens=1024, name='2')
           tf.summary.histogram('fuse-block2_%d'%n, block)
           block = tf.nn.dropout(block, keep_prob, name='drop2')
-          block = linear_bn_relu(block, num_hiddens=512, name='3')#512, so small?
-          block = tf.nn.dropout(block, keep_prob, name='drop3')
+          # block = linear_bn_relu(block, num_hiddens=512, name='3')#512, so small?
+          # block = tf.nn.dropout(block, keep_prob, name='drop3')
           
 
         if input is None:
@@ -157,7 +158,7 @@ def fusion_net(feature_list, num_class, out_shape=(8,3)):
   #include background class
   with tf.variable_scope('fuse') as scope:
     block = linear_bn_relu(input, num_hiddens=512, name='4')#512, so small?
-    block = tf.nn.dropout(block, keep_prob, name='drop4')
+    # block = tf.nn.dropout(block, keep_prob, name='drop4')
     dim = np.product([*out_shape])
     scores  = linear(block, num_hiddens=num_class,     name='score')
     probs   = tf.nn.softmax (scores, name='prob')
