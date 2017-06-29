@@ -260,7 +260,7 @@ def run_test():
         saver  = tf.train.Saver()  
 
 
-        saver.restore(sess, './outputs/check_points/snap_ResNet_vgg_double_up_NGT_076000.ckpt')  
+        saver.restore(sess, './outputs/check_points/snap_ResNet_vgg_double_up_rm_fc_NGT_070000.ckpt')  
 
 
         batch_top_cls_loss =0
@@ -311,14 +311,20 @@ def run_test():
             batch_front_rois = project_to_front_roi(batch_rois3d )
             batch_rgb_rois      = project_to_rgb_roi     (batch_rois3d  )
             # pdb.set_trace()
-            keep = np.where((batch_rgb_rois[:,1]>=-200) & (batch_rgb_rois[:,2]>=-200) & (batch_rgb_rois[:,3]<=(rgb_shape[1]+200)) & (batch_rgb_rois[:,4]<=(rgb_shape[0]+200)))[0]
-            batch_rois3d        = batch_rois3d[keep]      
-            batch_front_rois    = batch_front_rois[keep]
-            batch_rgb_rois      = batch_rgb_rois[keep]  
-            batch_proposal_scores=batch_proposal_scores[keep]
-            batch_top_rois      =batch_top_rois[keep]
+            # keep = np.where((batch_rgb_rois[:,1]>=-200) & (batch_rgb_rois[:,2]>=-200) & (batch_rgb_rois[:,3]<=(rgb_shape[1]+200)) & (batch_rgb_rois[:,4]<=(rgb_shape[0]+200)))[0]
+            # batch_rois3d        = batch_rois3d[keep]      
+            # batch_front_rois    = batch_front_rois[keep]
+            # batch_rgb_rois      = batch_rgb_rois[keep]  
+            # batch_proposal_scores=batch_proposal_scores[keep]
+            # batch_top_rois      =batch_top_rois[keep]
 
             ## run classification and regression  -----------
+            fd1={
+                top_images:      batch_top_images,
+                top_anchors:     anchors,
+                top_inside_inds: inside_inds_filtered,
+                IS_TRAIN_PHASE:  False
+            }
 
             fd2={
                 **fd1,
