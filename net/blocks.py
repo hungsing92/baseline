@@ -160,7 +160,7 @@ def conv2d(input, num_kernels=1, kernel_size=(1,1), stride=[1,1,1,1], padding='S
     K = num_kernels
 
     ##[filter_height, filter_width, in_channels, out_channels]
-    w    = tf.get_variable(name=name+'_weight', shape=[H, W, C, K], initializer=tf.truncated_normal_initializer(stddev=0.1))
+    w    = tf.get_variable(name=name+'_weight', shape=[H, W, C, K], initializer=tf.contrib.layers.xavier_initializer())
     tf.add_to_collection(w.name, w)
     conv = tf.nn.conv2d(input, w, strides=stride, padding=padding, name=name)
     if has_bias:
@@ -240,7 +240,7 @@ def linear(input, num_hiddens=1,  has_bias=True, name='linear'):
     C = input_shape[1]
     K = num_hiddens
 
-    w = tf.get_variable(name=name + '_weight', shape=[C,K], initializer=tf.truncated_normal_initializer(stddev=0.1))
+    w = tf.get_variable(name=name + '_weight', shape=[C,K], initializer=tf.contrib.layers.xavier_initializer())
     dense = tf.matmul(input, w, name=name)
     if has_bias:
         b = tf.get_variable(name=name + '_bias', shape=[K], initializer=tf.constant_initializer(0.0))

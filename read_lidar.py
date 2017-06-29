@@ -73,7 +73,7 @@ def lidar_to_top(lidar):
                     #density
                     count = len(idx)
                     top[yy,xx,Zn+1]+=count
-w
+
                 pass
             pass
         pass
@@ -103,14 +103,14 @@ w
 
     return top, top_image
 
-root_dir = "/home/hhs/4T/datasets/KITTI/object/training"
-velodyne = os.path.join(root_dir, "velodyne/")
+root_dir = "/home/hhs/4T/datasets/raw data/2011_09_26_drive_0064_sync/2011_09_26/2011_09_26_drive_0064_sync"
+velodyne = os.path.join(root_dir, "velodyne_points/data/")
 bird = os.path.join(root_dir, "lidar_bv/")
 
 
-for i in range(300):
-    i=i+7253
-    filename = velodyne + str(i).zfill(6) + ".bin"
+for i in range(571):
+    i=i+33
+    filename = velodyne + str(i).zfill(10) + ".bin"
     print("Processing: ", filename)
     lidar = np.fromfile(filename, dtype=np.float32)
     lidar = lidar.reshape((-1, 4))
@@ -121,9 +121,9 @@ for i in range(300):
     with sess.as_default(): 
         fd={lidar_o:lidar}
         top,top_image=sess.run([tops,top_images],fd)
-        np.save('/home/hhs/4T/datasets/dummy_datas/seg/lidar/lidar_%05d.npy'%i,lidar)
-        np.save('/home/hhs/4T/datasets/dummy_datas/seg/top/top_%05d.npy'%i,top)
-        cv2.imwrite('/home/hhs/4T/datasets/dummy_datas/seg/top_image/top_image_%05d.png'%i,top_image)
+        np.save('/home/hhs/4T/datasets/dummy_datas_064/seg/lidar/lidar_%05d.npy'%i,lidar)
+        np.save('/home/hhs/4T/datasets/dummy_datas_064/seg/top/top_%05d.npy'%i,top)
+        cv2.imwrite('/home/hhs/4T/datasets/dummy_datas_064/seg/top_image/top_image_%05d.png'%i,top_image)
    
    
     

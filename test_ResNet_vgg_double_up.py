@@ -241,9 +241,9 @@ def run_test():
 
     fuse_scores, fuse_probs, fuse_deltas = \
         fusion_net(
-            ( [top_features,     top_rois,     6,6,1./stride],
+            ( [top_features,     top_rois,     7,7,1./stride],
               [front_features,   front_rois,   0,0,1./stride],  #disable by 0,0
-              [rgb_features,     rgb_rois,     6,6,1./(1*stride)],),
+              [rgb_features,     rgb_rois,     7,7,1./(1*stride)],),
             num_class, out_shape) #<todo>  add non max suppression
 
 
