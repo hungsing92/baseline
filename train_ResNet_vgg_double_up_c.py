@@ -265,7 +265,7 @@ def run_train():
     tf.summary.scalar('rcnn_reg_loss', fuse_reg_loss)
 
     #solver
-    l2 = l2_regulariser(decay=0.000005)
+    l2 = l2_regulariser(decay=0.00001)
     tf.summary.scalar('l2', l2)
     learning_rate = tf.placeholder(tf.float32, shape=[])
     rate=0.0001
@@ -484,14 +484,14 @@ def run_train():
             #_, batch_top_cls_loss, batch_top_reg_loss = sess.run([solver_step, top_cls_loss, top_reg_loss],fd2)
 
 
-            _, batch_top_cls_loss, batch_top_reg_loss, batch_fuse_cls_loss, batch_fuse_reg_loss = \
-               sess.run([solver_step, top_cls_loss, top_reg_loss, fuse_cls_loss, fuse_reg_loss],fd2)
+            _, rcnn_probs, batch_top_cls_loss, batch_top_reg_loss, batch_fuse_cls_loss, batch_fuse_reg_loss = \
+               sess.run([solver_step, fuse_probs, top_cls_loss, top_reg_loss, fuse_cls_loss, fuse_reg_loss],fd2)
 
             speed=time.time()-start_time
             log.write('%5.1f   %5d    %0.4fs   %0.4f   |   %0.5f   %0.5f   |   %0.5f   %0.5f  \n' %\
 				(epoch, iter, speed, rate, batch_top_cls_loss, batch_top_reg_loss, batch_fuse_cls_loss, batch_fuse_reg_loss))
 
-
+            print (rcnn_probs[:10,1])
 
             #print('ok')
             # debug: ------------------------------------
