@@ -266,7 +266,7 @@ def run_test():
         saver  = tf.train.Saver()  
 
 
-        saver.restore(sess, './outputs/check_points/snap_ResNet_vgg_double_up_rm_fc_NGT_070000.ckpt')  
+        saver.restore(sess, './outputs/check_points/snap_RVD_FreezeBN_NGT_s_040000.ckpt')  
 
 
         batch_top_cls_loss =0
