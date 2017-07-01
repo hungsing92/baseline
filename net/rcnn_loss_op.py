@@ -89,6 +89,6 @@ def rcnn_loss_ohem(scores, deltas, rcnn_labels, rcnn_targets):
     # rcnn_reg_loss  = tf.reduce_mean(tf.reduce_sum(rcnn_smooth_l1, axis=1))
 
     
-    r_l_index=tf.constant(index_True)
+    r_l_index=tf.constant(index_True, shape=[len(index_True),1])
 
     return softmax_loss, rcnn_smooth_l1, r_l_index
