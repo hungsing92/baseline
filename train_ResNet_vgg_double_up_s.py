@@ -262,6 +262,7 @@ def run_train():
 
     fuse_labels  = tf.placeholder(shape=[None            ], dtype=tf.int32,   name='fuse_label' )
     fuse_targets = tf.placeholder(shape=[None, *out_shape], dtype=tf.float32, name='fuse_target')
+    softmax_loss_ohem, rcnn_smooth_l1_ohem = rcnn_smooth_l1(fuse_scores, fuse_deltas, fuse_labels, fuse_targets)
     fuse_cls_loss, fuse_reg_loss = rcnn_loss(fuse_scores, fuse_deltas, fuse_labels, fuse_targets)
     tf.summary.scalar('rpn_cls_loss', top_cls_loss)
     tf.summary.scalar('rpn_reg_loss', top_reg_loss)
@@ -415,26 +416,27 @@ def run_train():
                 rpn_target ( anchors, inside_inds_filtered, batch_gt_labels,  batch_gt_top_boxes)
 
             batch_top_rois, batch_fuse_labels, batch_fuse_targets  = \
-                 rcnn_target(  batch_proposals, batch_gt_labels, batch_gt_top_boxes, batch_gt_boxes3d )
+                 rcnn_ohem(  batch_proposals, batch_gt_labels, batch_gt_top_boxes, batch_gt_boxes3d )
+
+            # batch_top_rois, batch_fuse_labels, batch_fuse_targets  = \
+            #      rcnn_target(  batch_proposals, batch_gt_labels, batch_gt_top_boxes, batch_gt_boxes3d )
 
             batch_rois3d	 = project_to_roi3d    (batch_top_rois)
             batch_front_rois = project_to_front_roi(batch_rois3d  ) 
             batch_rgb_rois   = project_to_rgb_roi  (batch_rois3d, rgb_shape[1], rgb_shape[0])
 
-
-            keep = np.where((batch_rgb_rois[:,1]>=-100) & (batch_rgb_rois[:,2]>=-100) & (batch_rgb_rois[:,3]<=(rgb_shape[1]+100)) & (batch_rgb_rois[:,4]<=(rgb_shape[0]+100)))[0]
-            batch_rois3d        = batch_rois3d[keep]      
-            batch_front_rois    = batch_front_rois[keep]
-            batch_rgb_rois      = batch_rgb_rois[keep]  
-            batch_proposal_scores=batch_proposal_scores[keep]
-            batch_top_rois      =batch_top_rois[keep]
-            batch_fuse_labels   =batch_fuse_labels[keep]
-            batch_fuse_targets  =batch_fuse_targets[keep]
-
-            if len(batch_rois3d)==0:
-                # pdb.set_trace()
-                idx=idx+1
-                continue
+            # keep = np.where((batch_rgb_rois[:,1]>=-100) & (batch_rgb_rois[:,2]>=-100) & (batch_rgb_rois[:,3]<=(rgb_shape[1]+100)) & (batch_rgb_rois[:,4]<=(rgb_shape[0]+100)))[0]
+            # batch_rois3d        = batch_rois3d[keep]      
+            # batch_front_rois    = batch_front_rois[keep]
+            # batch_rgb_rois      = batch_rgb_rois[keep]  
+            # batch_proposal_scores=batch_proposal_scores[keep]
+            # batch_top_rois      =batch_top_rois[keep]
+            # batch_fuse_labels   =batch_fuse_labels[keep]
+            # batch_fuse_targets  =batch_fuse_targets[keep]
+            # if len(batch_rois3d)==0:
+            #     # pdb.set_trace()
+            #     idx=idx+1
+            #     continue
 
 
 
@@ -485,6 +487,9 @@ def run_train():
             }
             #_, batch_top_cls_loss, batch_top_reg_loss = sess.run([solver_step, top_cls_loss, top_reg_loss],fd2)
 
+            softmax_loss_ohem_, rcnn_smooth_l1_ohem_ = \
+               sess.run([softmax_loss_ohem, rcnn_smooth_l1_ohem],fd2)
+            pdb.set_trace()
 
             _, rcnn_probs, batch_top_cls_loss, batch_top_reg_loss, batch_fuse_cls_loss, batch_fuse_reg_loss = \
                sess.run([solver_step, fuse_probs, top_cls_loss, top_reg_loss, fuse_cls_loss, fuse_reg_loss],fd2)
