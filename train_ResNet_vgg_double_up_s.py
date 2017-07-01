@@ -503,7 +503,7 @@ def run_train():
             batch_top_rois=batch_top_rois[ohem_ind]
             batch_fuse_labels=batch_fuse_labels[ohem_ind]
             batch_fuse_targets=batch_fuse_targets[ohem_ind]
-            pdb.set_trace()
+            # pdb.set_trace()
             batch_rois3d     = project_to_roi3d    (batch_top_rois)
             batch_front_rois = project_to_front_roi(batch_rois3d  ) 
             batch_rgb_rois   = project_to_rgb_roi  (batch_rois3d, rgb_shape[1], rgb_shape[0])
@@ -586,7 +586,7 @@ def run_train():
             # save: ------------------------------------
             if (iter)%5000==0 and (iter!=0):
                 #saver.save(sess, out_dir + '/check_points/%06d.ckpt'%iter)  #iter
-                saver.save(sess, out_dir + '/check_points/snap_RVD_FreezeBN_NGT_s_%06d.ckpt'%iter)  #iter
+                saver.save(sess, out_dir + '/check_points/snap_RVD_FreezeBN_NGT_OHEM_s_%06d.ckpt'%iter)  #iter
                 # saver.save(sess, out_dir + '/check_points/MobileNet.ckpt')  #iter
                 # pdb.set_trace()
                 pass
