@@ -85,7 +85,7 @@ def rcnn_loss_ohem(scores, deltas, rcnn_labels, rcnn_targets):
     
 
     rcnn_smooth_l1 = modified_smooth_l1(rcnn_deltas_, rcnn_targets_, sigma=3.0)
-    rcnn_smooth_l1=tf.reduce_sum(rcnn_smooth_l1, axis=1)
+    # rcnn_smooth_l1=tf.reduce_sum(rcnn_smooth_l1, axis=1)
     # rcnn_reg_loss  = tf.reduce_mean(tf.reduce_sum(rcnn_smooth_l1, axis=1))
 
     return softmax_loss, rcnn_smooth_l1
