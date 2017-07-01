@@ -68,7 +68,7 @@ def rcnn_target(rois, gt_labels, gt_boxes, gt_boxes3d):
     return rois, labels, targets
 
 
-def rcnn_ohem(rois, gt_labels, gt_boxes, gt_boxes3d):
+def rcnn_target_ohem(rois, gt_labels, gt_boxes, gt_boxes3d):
 
     # Include "ground-truth" in the set of candidate rois
     rois = rois.reshape(-1,5)  # Proposal (i, x1, y1, x2, y2) coming from RPN
