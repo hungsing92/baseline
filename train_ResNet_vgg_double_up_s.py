@@ -494,10 +494,10 @@ def run_train():
             fg_rois_per_image = int(np.round(CFG.TRAIN.RCNN_FG_FRACTION * rois_per_image))
             loss_ohem_, rcnn_smooth_l1_ohem_= sess.run([softmax_loss_ohem, rcnn_smooth_l1_ohem],fd2)
             loss_ohem_[:len(rcnn_smooth_l1_ohem_)] += rcnn_smooth_l1_ohem_
-            fg_inds=np.arange(len(rcnn_smooth_l1_ohem_))
-            if len(rcnn_smooth_l1_ohem_)>fg_rois_per_image:
-                fg_inds = np.random.choice(fg_inds, size=fg_rois_per_image, replace=False)
-                loss_ohem_[fg_inds]=0
+            # fg_inds=np.arange(len(rcnn_smooth_l1_ohem_))
+            # if len(rcnn_smooth_l1_ohem_)>fg_rois_per_image:
+            #     fg_inds = np.random.choice(fg_inds, size=fg_rois_per_image, replace=False)
+            #     loss_ohem_[fg_inds]=0
 
             ohem_ind = np.argsort(-loss_ohem_)[:rois_per_image]
             batch_top_rois=batch_top_rois[ohem_ind]
