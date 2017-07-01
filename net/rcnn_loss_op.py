@@ -81,12 +81,14 @@ def rcnn_loss_ohem(scores, deltas, rcnn_labels, rcnn_targets):
     rcnn_deltas_=tf.gather(rcnn_deltas,  index_True)
     rcnn_targets_=tf.gather(rcnn_targets,  index_True)
 
-    rcnn_smooth_l1_=tf.constant(0, dtype=tf.float32, shape=[num, 1])
+    
+    r_l=np.zeros((num,1))
 
     rcnn_smooth_l1 = modified_smooth_l1(rcnn_deltas, rcnn_targets, sigma=3.0)
     rcnn_smooth_l1=tf.reduce_sum(rcnn_smooth_l1, axis=1)
     # rcnn_reg_loss  = tf.reduce_mean(tf.reduce_sum(rcnn_smooth_l1, axis=1))
 
-    tf.gather(rcnn_smooth_l1_,  index_True)=rcnn_smooth_l1
+    r_l[index_True]=rcnn_smooth_l1
+    rcnn_smooth_l1_=tf.constant(r_l, dtype=tf.float32, shape=[num, 1])
 
     return softmax_loss, rcnn_smooth_l1_
