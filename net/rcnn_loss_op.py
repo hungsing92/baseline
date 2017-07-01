@@ -77,7 +77,7 @@ def rcnn_loss_ohem(scores, deltas, rcnn_labels, rcnn_targets):
     tf.summary.histogram('rcnn_deltas', rcnn_deltas)
     rcnn_targets =  tf.reshape(rcnn_targets,[-1, dim])
 
-    index_True=np.where(rcnn_labels !=0 )[0]
+    index_True=np.where(rcnn_labels ==1)[0]
     rcnn_deltas_=tf.gather(rcnn_deltas,  index_True)
     rcnn_targets_=tf.gather(rcnn_targets,  index_True)
 
