@@ -409,13 +409,14 @@ def run_test():
                 # img_rcnn_nms = draw_rgb_projections(rgb1, projections, color=(0,0,255), thickness=1)
 
                 # pdb.set_trace()
-                # rgb_boxes=project_to_rgb_roi(boxes3d)
-                rgb_boxes=batch_rgb_rois
+                rgb_boxes=project_to_rgb_roi(boxes3d, rgb_shape[1], rgb_shape[0] )
+                # rgb_boxes=batch_rgb_rois
+
                 img_rgb_2d_detection = draw_boxes(rgb, rgb_boxes[:,1:5], color=(255,0,255), thickness=1)
 
                 imshow('draw_rcnn_nms',rgb1)
                 cv2.imwrite(data_root+'seg/result_rgb/rgb_%05d.png'%iter,rgb1)
-                # imshow('img_rgb_2d_detection',img_rgb_2d_detection)
+                imshow('img_rgb_2d_detection',img_rgb_2d_detection)
                 cv2.waitKey(1)
 
 
