@@ -262,7 +262,7 @@ def run_train():
 
     fuse_labels  = tf.placeholder(shape=[None            ], dtype=tf.int32,   name='fuse_label' )
     fuse_targets = tf.placeholder(shape=[None, *out_shape], dtype=tf.float32, name='fuse_target')
-    softmax_loss_ohem, rcnn_smooth_l1_ohem, True_label_ind = rcnn_loss_ohem(fuse_scores, fuse_deltas, fuse_labels, fuse_targets)
+    softmax_loss_ohem, rcnn_smooth_l1_ohem = rcnn_loss_ohem(fuse_scores, fuse_deltas, fuse_labels, fuse_targets)
     fuse_cls_loss, fuse_reg_loss = rcnn_loss(fuse_scores, fuse_deltas, fuse_labels, fuse_targets)
     tf.summary.scalar('rpn_cls_loss', top_cls_loss)
     tf.summary.scalar('rpn_reg_loss', top_reg_loss)
@@ -487,8 +487,8 @@ def run_train():
             }
             #_, batch_top_cls_loss, batch_top_reg_loss = sess.run([solver_step, top_cls_loss, top_reg_loss],fd2)
 
-            softmax_loss_ohem_, rcnn_smooth_l1_ohem_, True_label_ind_ = \
-               sess.run([softmax_loss_ohem, rcnn_smooth_l1_ohem, True_label_ind],fd2)
+            softmax_loss_ohem_, rcnn_smooth_l1_ohem_= \
+               sess.run([softmax_loss_ohem, rcnn_smooth_l1_ohem],fd2)
             pdb.set_trace()
 
             _, rcnn_probs, batch_top_cls_loss, batch_top_reg_loss, batch_fuse_cls_loss, batch_fuse_reg_loss = \
