@@ -298,7 +298,7 @@ def run_train():
         # sess = tf_debug.LocalCLIDebugWrapperSession(sess)
         # summary_writer = tf.summary.FileWriter(out_dir+'/tf', sess.graph)
         saver  = tf.train.Saver() 
-        saver.restore(sess, './outputs/check_points/snap_RVD_FreezeBN_NGT_s_020000.ckpt') 
+        saver.restore(sess, './outputs/check_points/snap_RVD_FreezeBN_NGT_s_120000.ckpt') 
         # # saver.restore(sess, './outputs/check_points/MobileNet.ckpt')  
 
         # var_lt_res=[v for v in tf.trainable_variables() if v.name.startswith('res')]#resnet_v1_50
@@ -418,7 +418,7 @@ def run_train():
                  rcnn_target(  batch_proposals, batch_gt_labels, batch_gt_top_boxes, batch_gt_boxes3d )
 
             batch_rois3d	 = project_to_roi3d    (batch_top_rois)
-            batch_front_rois = project_to_front_roi(batch_rois3d  )
+            batch_front_rois = project_to_front_roi(batch_rois3d  ) 
             batch_rgb_rois   = project_to_rgb_roi  (batch_rois3d, rgb_shape[1], rgb_shape[0])
 
 
