@@ -491,7 +491,7 @@ def run_train():
             #_, batch_top_cls_loss, batch_top_reg_loss = sess.run([solver_step, top_cls_loss, top_reg_loss],fd2)
 
             rois_per_image    = CFG.TRAIN.RCNN_BATCH_SIZE
-            fg_rois_per_image = np.round(CFG.TRAIN.RCNN_FG_FRACTION * rois_per_image)
+            fg_rois_per_image = int(np.round(CFG.TRAIN.RCNN_FG_FRACTION * rois_per_image))
             loss_ohem_, rcnn_smooth_l1_ohem_= sess.run([softmax_loss_ohem, rcnn_smooth_l1_ohem],fd2)
             loss_ohem_[:len(rcnn_smooth_l1_ohem_)] += rcnn_smooth_l1_ohem_
             fg_inds=np.arange(len(rcnn_smooth_l1_ohem_))
