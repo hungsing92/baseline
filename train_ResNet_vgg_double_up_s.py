@@ -265,7 +265,7 @@ def run_train():
     fuse_targets = tf.placeholder(shape=[None, *out_shape], dtype=tf.float32, name='fuse_target')
 
     softmax_loss_ohem, rcnn_smooth_l1_ohem = rcnn_loss_ohem(fuse_scores, fuse_deltas, fuse_labels, fuse_targets)
-    
+
     fuse_cls_loss, fuse_reg_loss = rcnn_loss(fuse_scores, fuse_deltas, fuse_labels, fuse_targets)
     tf.summary.scalar('rpn_cls_loss', top_cls_loss)
     tf.summary.scalar('rpn_reg_loss', top_reg_loss)
@@ -494,7 +494,7 @@ def run_train():
             fg_rois_per_image = np.round(CFG.TRAIN.RCNN_FG_FRACTION * rois_per_image)
             loss_ohem_, rcnn_smooth_l1_ohem_= sess.run([softmax_loss_ohem, rcnn_smooth_l1_ohem],fd2)
             loss_ohem_[:len(rcnn_smooth_l1_ohem_)] += rcnn_smooth_l1_ohem_
-            fg_inds=np.range(len(rcnn_smooth_l1_ohem_))
+            fg_inds=np.arange(len(rcnn_smooth_l1_ohem_))
             if len(rcnn_smooth_l1_ohem_)>fg_rois_per_image:
                 fg_inds = np.random.choice(fg_inds, size=fg_rois_per_image, replace=False)
                 loss_ohem_[fg_inds]=0
