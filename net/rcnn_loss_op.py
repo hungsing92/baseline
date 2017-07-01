@@ -33,11 +33,11 @@ def rcnn_loss(scores, deltas, rcnn_labels, rcnn_targets):
     tf.summary.histogram('rcnn_deltas', rcnn_deltas)
     rcnn_targets =  tf.reshape(rcnn_targets,[-1, dim])
 
-    index_True=np.where(rcnn_labels !=0 )[0]
-    rcnn_deltas_=tf.gather(rcnn_deltas,  index_True)
-    rcnn_targets_=tf.gather(rcnn_targets,  index_True)    
+    index_True=tf.equal(rcnn_labels, tf.ones_like(rcnn_labels))
+    rcnn_deltas_=tf.boolean_mask(rcnn_deltas,  index_True)
+    rcnn_targets_=tf.boolean_mask(rcnn_targets,  index_True)   
 
-    rcnn_smooth_l1 = modified_smooth_l1(rcnn_deltas, rcnn_targets, sigma=3.0)
+    rcnn_smooth_l1 = modified_smooth_l1(rcnn_deltas_, rcnn_targets_, sigma=3.0)
     rcnn_reg_loss  = tf.reduce_mean(tf.reduce_sum(rcnn_smooth_l1, axis=1))
 
     return rcnn_cls_loss, rcnn_reg_loss
@@ -82,9 +82,8 @@ def rcnn_loss_ohem(scores, deltas, rcnn_labels, rcnn_targets):
     rcnn_targets_=tf.boolean_mask(rcnn_targets,  index_True)
     
     
-
     rcnn_smooth_l1 = modified_smooth_l1(rcnn_deltas_, rcnn_targets_, sigma=3.0)
-    # rcnn_smooth_l1=tf.reduce_sum(rcnn_smooth_l1, axis=1)
+    rcnn_smooth_l1=tf.reduce_sum(rcnn_smooth_l1, axis=1)
     # rcnn_reg_loss  = tf.reduce_mean(tf.reduce_sum(rcnn_smooth_l1, axis=1))
 
     return softmax_loss, rcnn_smooth_l1
