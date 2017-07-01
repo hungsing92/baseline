@@ -264,7 +264,11 @@ def run_train():
     fuse_labels  = tf.placeholder(shape=[None            ], dtype=tf.int32,   name='fuse_label' )
     fuse_targets = tf.placeholder(shape=[None, *out_shape], dtype=tf.float32, name='fuse_target')
 
-    softmax_loss_ohem, rcnn_smooth_l1_ohem = rcnn_loss_ohem(fuse_scores, fuse_deltas, fuse_labels, fuse_targets)
+    fuse_scores_ohem=tf.stop_gradient(fuse_scores)
+    fuse_deltas_ohem=tf.stop_gradient(fuse_deltas)
+    fuse_labels_ohem=tf.stop_gradient(fuse_labels)
+    fuse_targets_ohem=tf.stop_gradient(fuse_targets)
+    softmax_loss_ohem, rcnn_smooth_l1_ohem = rcnn_loss_ohem(fuse_scores_ohem, fuse_deltas_ohem, fuse_labels_ohem, fuse_targets_ohem)
 
     fuse_cls_loss, fuse_reg_loss = rcnn_loss(fuse_scores, fuse_deltas, fuse_labels, fuse_targets)
     tf.summary.scalar('rpn_cls_loss', top_cls_loss)
