@@ -489,7 +489,7 @@ def run_train():
 
             loss_ohem_, rcnn_smooth_l1_ohem_= \
                sess.run([softmax_loss_ohem, rcnn_smooth_l1_ohem],fd2)
-               pdb.set_trace()
+            pdb.set_trace()
             loss_ohem_[:len(rcnn_smooth_l1_ohem_)] += rcnn_smooth_l1_ohem_
 
             pdb.set_trace()
