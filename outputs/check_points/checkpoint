@@ -1,9 +1,6 @@
-<<<<<<< HEAD
-model_checkpoint_path: "snap_ResNet_vgg_double_up_rm_fc_NGT_s_005000.ckpt"
-all_model_checkpoint_paths: "snap_ResNet_vgg_double_up_rm_fc_NGT_s_005000.ckpt"
-=======
-model_checkpoint_path: "snap_ResNet_vgg_double_up_rm_fc_NGT_015000.ckpt"
-all_model_checkpoint_paths: "snap_ResNet_vgg_double_up_rm_fc_NGT_005000.ckpt"
-all_model_checkpoint_paths: "snap_ResNet_vgg_double_up_rm_fc_NGT_010000.ckpt"
-all_model_checkpoint_paths: "snap_ResNet_vgg_double_up_rm_fc_NGT_015000.ckpt"
->>>>>>> 492edcfaa78ed5276c7f536594844d244ffe791e
+model_checkpoint_path: "snap_ResNet_vgg_double_up_rm_fc_NGT_s_155000.ckpt"
+all_model_checkpoint_paths: "snap_ResNet_vgg_double_up_rm_fc_NGT_s_135000.ckpt"
+all_model_checkpoint_paths: "snap_ResNet_vgg_double_up_rm_fc_NGT_s_140000.ckpt"
+all_model_checkpoint_paths: "snap_ResNet_vgg_double_up_rm_fc_NGT_s_145000.ckpt"
+all_model_checkpoint_paths: "snap_ResNet_vgg_double_up_rm_fc_NGT_s_150000.ckpt"
+all_model_checkpoint_paths: "snap_ResNet_vgg_double_up_rm_fc_NGT_s_155000.ckpt"
