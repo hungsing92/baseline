@@ -332,7 +332,7 @@ def run_train():
         batch_top_reg_loss =0
         batch_fuse_cls_loss=0
         batch_fuse_reg_loss=0
-        rate=0.00003
+        rate=0.00005
         frame_range = np.arange(num_frames)
         idx=0
         frame=0
