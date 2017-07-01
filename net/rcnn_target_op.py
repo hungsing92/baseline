@@ -92,6 +92,7 @@ def rcnn_target_ohem(rois, gt_labels, gt_boxes, gt_boxes3d):
 
     # Select foreground RoIs as those with >= FG_THRESH overlap
     fg_inds = np.where(max_overlaps >= CFG.TRAIN.RCNN_FG_THRESH_LO)[0]
+    fg_rois_per_this_image = int(fg_inds.size)
     # fg_rois_per_this_image = int(min(fg_rois_per_image, fg_inds.size))
     # if fg_inds.size > 0:
     #     fg_inds = np.random.choice(fg_inds, size=fg_rois_per_this_image, replace=False)
