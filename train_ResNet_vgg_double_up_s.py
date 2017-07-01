@@ -487,7 +487,7 @@ def run_train():
             }
             #_, batch_top_cls_loss, batch_top_reg_loss = sess.run([solver_step, top_cls_loss, top_reg_loss],fd2)
 
-            softmax_loss_ohem_, rcnn_smooth_l1_ohem_ = \
+            softmax_loss_ohem_, rcnn_smooth_l1_ohem_, True_label_ind = \
                sess.run([softmax_loss_ohem, rcnn_smooth_l1_ohem],fd2)
             pdb.set_trace()
 
