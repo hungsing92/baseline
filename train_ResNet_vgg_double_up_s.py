@@ -416,7 +416,7 @@ def run_train():
                 rpn_target ( anchors, inside_inds_filtered, batch_gt_labels,  batch_gt_top_boxes)
 
             batch_top_rois, batch_fuse_labels, batch_fuse_targets  = \
-                 rcnn_ohem(  batch_proposals, batch_gt_labels, batch_gt_top_boxes, batch_gt_boxes3d )
+                 rcnn_loss_ohem(  batch_proposals, batch_gt_labels, batch_gt_top_boxes, batch_gt_boxes3d )
 
             # batch_top_rois, batch_fuse_labels, batch_fuse_targets  = \
             #      rcnn_target(  batch_proposals, batch_gt_labels, batch_gt_top_boxes, batch_gt_boxes3d )
