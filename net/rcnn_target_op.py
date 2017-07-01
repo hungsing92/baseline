@@ -41,7 +41,7 @@ def rcnn_target(rois, gt_labels, gt_boxes, gt_boxes3d):
     # Select background RoIs as those within [BG_THRESH_LO, BG_THRESH_HI)
     bg_inds = np.where((max_overlaps < CFG.TRAIN.RCNN_BG_THRESH_HI) &
                        (max_overlaps >= CFG.TRAIN.RCNN_BG_THRESH_LO))[0]
-    bg_rois_per_this_image = rois_per_image - fg_rois_per_this_image
+    bg_rois_per_this_image = int(min(rois_per_image - fg_rois_per_this_image, 3*fg_rois_per_this_image))
     bg_rois_per_this_image = int(min(bg_rois_per_this_image, bg_inds.size))
     if bg_inds.size > 0:
         bg_inds = np.random.choice(bg_inds, size=bg_rois_per_this_image, replace=False)

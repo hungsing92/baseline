@@ -137,7 +137,7 @@ def project_to_roi3d(top_rois):
     return rois3d
 
 
-def project_to_rgb_roi(rois3d):
+def project_to_rgb_roi(rois3d, width, height):
     num  = len(rois3d)
     rois = np.zeros((num,5),dtype=np.int32)
     projections = box3d_to_rgb_projections(rois3d)
@@ -147,6 +147,10 @@ def project_to_rgb_roi(rois3d):
         maxx = np.max(qs[:,0])
         miny = np.min(qs[:,1])
         maxy = np.max(qs[:,1])
+        minx = np.maximum(np.minimum(minx, width - 1), 0)
+        maxx = np.maximum(np.minimum(maxx, width - 1), 0)
+        miny = np.maximum(np.minimum(miny, height - 1), 0)
+        maxy = np.maximum(np.minimum(maxy, height - 1), 0)
         rois[n,1:5] = minx,miny,maxx,maxy
 
     return rois
@@ -417,7 +421,7 @@ def run_train():
 
             batch_rois3d	 = project_to_roi3d    (batch_top_rois)
             batch_front_rois = project_to_front_roi(batch_rois3d  )
-            batch_rgb_rois   = project_to_rgb_roi  (batch_rois3d  )
+            batch_rgb_rois   = project_to_rgb_roi  (batch_rois3d, , rgb_shape[1], rgb_shape[0])
 
 
             keep = np.where((batch_rgb_rois[:,1]>=-100) & (batch_rgb_rois[:,2]>=-100) & (batch_rgb_rois[:,3]<=(rgb_shape[1]+100)) & (batch_rgb_rois[:,4]<=(rgb_shape[0]+100)))[0]
