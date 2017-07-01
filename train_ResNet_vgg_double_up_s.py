@@ -10,7 +10,7 @@ from net.utility.draw import *
 from net.rpn_loss_op import *
 from net.rcnn_loss_op import *
 from net.rpn_target_op import make_bases, make_anchors, rpn_target, anchor_filter
-from net.rcnn_target_op import rcnn_target
+from net.rcnn_target_op import rcnn_target, rcnn_target_ohem
 
 from net.rpn_nms_op     import draw_rpn_nms, draw_rpn
 from net.rcnn_nms_op    import rcnn_nms, draw_rcnn_nms, draw_rcnn
@@ -416,7 +416,7 @@ def run_train():
                 rpn_target ( anchors, inside_inds_filtered, batch_gt_labels,  batch_gt_top_boxes)
 
             batch_top_rois, batch_fuse_labels, batch_fuse_targets  = \
-                 rcnn_loss_ohem(  batch_proposals, batch_gt_labels, batch_gt_top_boxes, batch_gt_boxes3d )
+                 rcnn_target_ohem(  batch_proposals, batch_gt_labels, batch_gt_top_boxes, batch_gt_boxes3d )
 
             # batch_top_rois, batch_fuse_labels, batch_fuse_targets  = \
             #      rcnn_target(  batch_proposals, batch_gt_labels, batch_gt_top_boxes, batch_gt_boxes3d )
