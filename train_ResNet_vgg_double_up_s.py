@@ -57,7 +57,7 @@ def load_dummy_datas(index):
         rgb   = cv2.imread(kitti_img_root+'/training/image_2/%06d.png'%int(index[n]))
         rgbs_norm0=(rgb-PIXEL_MEANS)/255
         # lidar = np.load(data_root+'seg/lidar/lidar_%05d.npy'%index[n]
-        top   = np.load(data_root+'seg/top/top_%05d.npy'%int(index[n]))
+        top   = np.load(data_root+'seg/top_new/top_new%05d.npy'%int(index[n]))
         front = np.zeros((1,1),dtype=np.float32)
         gt_label  = np.load(data_root+'seg/gt_labels/gt_labels_%05d.npy'%int(index[n]))
         gt_box3d = np.load(data_root+'seg/gt_boxes3d/gt_boxes3d_%05d.npy'%int(index[n]))
@@ -69,7 +69,7 @@ def load_dummy_datas(index):
         # gt_box3d=gt_box3d[keep]
 
 
-        top_image   = cv2.imread(data_root+'seg/top_image/top_image_%05d.png'%int(index[n]))
+        top_image   = cv2.imread(data_root+'seg/density_image/density_image_%05d.png'%int(index[n]))
         front_image = np.zeros((1,1,3),dtype=np.float32)
 
         rgbs.append(rgb)
@@ -167,10 +167,12 @@ def run_train():
         #     ratios=ratios,
         #     scales=scales
         # )
-        ratios=np.array([1.7,2.4])
+        ratios=np.array([1.7,2.4,2.7])
         scales=np.array([1.7,2.4])
         bases=np.array([[-19.5, -8, 19.5, 8],
                         [-8, -19.5, 8, 19.5],
+                        [-27.5, -11, 27.5, 11],
+                        [-11, -27.5, 11, 27.5],
                         [-5, -3, 5, 3],
                         [-3, -5, 3, 5]
                         ])
