@@ -403,7 +403,7 @@ def run_train():
             ## generate  train rois  ------------
             batch_top_inds, batch_top_pos_inds, batch_top_labels, batch_top_targets  = \
                 rpn_target ( anchors, inside_inds_filtered, batch_gt_labels,  batch_gt_top_boxes)
-
+            pdb.set_trace()
             batch_top_rois, batch_fuse_labels, batch_fuse_targets  = \
                  rcnn_target_ohem(  batch_proposals, batch_gt_labels, batch_gt_top_boxes, batch_gt_boxes3d )
 
