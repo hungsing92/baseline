@@ -172,7 +172,7 @@ def rpn_target( anchors, inside_inds, gt_labels,  gt_boxes):
 
     # subsample negative labels
     num_bg = CFG.TRAIN.RPN_BATCHSIZE - np.sum(labels == 1)
-    # num_bg = int(min(1.5*np.sum(labels == 1),num_bg))
+    num_bg = int(min(1.5*np.sum(labels == 1),num_bg))
     bg_inds = np.where(labels == 0)[0]
     if len(bg_inds) > num_bg:
         disable_inds = np.random.choice(bg_inds, size=(len(bg_inds) - num_bg), replace=False)
