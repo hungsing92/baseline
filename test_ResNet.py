@@ -27,13 +27,14 @@ slim = tf.contrib.slim
 # from vgg16 import *
 
 # from ResNet50 import *
-from ResNet50_vgg_c import *
+# from ResNet50_vgg_c import *
+from ResNet50_vgg_double_up_c import *
 from tensorflow.python import debug as tf_debug
 
 
 is_show=1
 # MM_PER_VIEW1 = 120, 30, 70, [1,1,0]
-MM_PER_VIEW1 = 180, None, 70, [1,1,0]#[ 12.0909996 , -1.04700089, -2.03249991]
+MM_PER_VIEW1 = 120, None, 70, [1,1,0]#[ 12.0909996 , -1.04700089, -2.03249991]
 #---------------------------------------------------------------------------------------------
 #  todo:
 #    -- fix anchor index
@@ -60,9 +61,9 @@ def load_dummy_datas():
     top_images  =[]
     front_images=[]
 
-    fig = mlab.figure(figure=None, bgcolor=(0,0,0), fgcolor=None, engine=None, size=(1000, 500))
+    fig = mlab.figure(figure=None, bgcolor=(0,0,0), fgcolor=None, engine=None, size=(1000, 1000))
     index=np.load('/home/hhs/4T/datasets/dummy_datas/seg/val_list.npy')
-    index=sorted(index)[60:100]
+    index=sorted(index)[600:640]
     print('len(index):%d'%len(index))
     # pdb.set_trace()
     if num_frames==[]:
@@ -79,11 +80,11 @@ def load_dummy_datas():
         gt_box3d = np.load('/home/hhs/4T/datasets/dummy_datas/seg/gt_boxes3d/gt_boxes3d_%s.npy'%str(index[n]))
 
 
-        rgb_shape   = rgb.shape
-        gt_rgb   = project_to_rgb_roi  (gt_box3d  )
-        keep = np.where((gt_rgb[:,1]>=-200) & (gt_rgb[:,2]>=-200) & (gt_rgb[:,3]<=(rgb_shape[1]+200)) & (gt_rgb[:,4]<=(rgb_shape[0]+200)))[0]
-        gt_label=gt_label[keep]
-        gt_box3d=gt_box3d[keep]
+        # rgb_shape   = rgb.shape
+        # gt_rgb   = project_to_rgb_roi  (gt_box3d  )
+        # keep = np.where((gt_rgb[:,1]>=-200) & (gt_rgb[:,2]>=-200) & (gt_rgb[:,3]<=(rgb_shape[1]+200)) & (gt_rgb[:,4]<=(rgb_shape[0]+200)))[0]
+        # gt_label=gt_label[keep]
+        # gt_box3d=gt_box3d[keep]
 
 
         top_image   = cv2.imread('/home/hhs/4T/datasets/dummy_datas/seg/top_image/top_image_%s.png'%str(index[n]),1)
@@ -135,7 +136,7 @@ def project_to_roi3d(top_rois):
     return rois3d
 
 
-def project_to_rgb_roi(rois3d):
+def project_to_rgb_roi(rois3d, width, height):
     num  = len(rois3d)
     rois = np.zeros((num,5),dtype=np.int32)
     projections = box3d_to_rgb_projections(rois3d)
@@ -145,6 +146,10 @@ def project_to_rgb_roi(rois3d):
         maxx = np.max(qs[:,0])
         miny = np.min(qs[:,1])
         maxy = np.max(qs[:,1])
+        minx = np.maximum(np.minimum(minx, width - 1), 0)
+        maxx = np.maximum(np.minimum(maxx, width - 1), 0)
+        miny = np.maximum(np.minimum(miny, height - 1), 0)
+        maxy = np.maximum(np.minimum(maxy, height - 1), 0)
         rois[n,1:5] = minx,miny,maxx,maxy
 
     return rois
@@ -205,7 +210,7 @@ def run_test():
         #-----------------------
         #check data
         if 0:
-            fig = mlab.figure(figure=None, bgcolor=(0,0,0), fgcolor=None, engine=None, size=(1000, 500))
+            fig = mlab.figure(figure=None, bgcolor=(0,0,0), fgcolor=None, engine=None, size=(1000, 1000))
             draw_lidar(lidars[0], fig=fig)
             draw_gt_boxes3d(gt_boxes3d[0], fig=fig)
             mlab.show(1)
@@ -240,9 +245,9 @@ def run_test():
 
     fuse_scores, fuse_probs, fuse_deltas = \
         fusion_net(
-            ( [top_features,     top_rois,     6,6,1./stride],
+            ( [top_features,     top_rois,     7,7,1./stride],
               [front_features,   front_rois,   0,0,1./stride],  #disable by 0,0
-              [rgb_features,     rgb_rois,     6,6,1./(2*stride)],),
+              [rgb_features,     rgb_rois,     7,7,1./(1*stride)],),
             num_class, out_shape) #<todo>  add non max suppression
 
 
@@ -259,7 +264,7 @@ def run_test():
         saver  = tf.train.Saver()  
 
 
-        saver.restore(sess, './outputs/check_points/snap_ResNet_vgg_up_NGT_060000.ckpt')  
+        saver.restore(sess, './outputs/check_points/snap_RVD_FreezeBN_NGT_OHEM_s_070000.ckpt')  
 
 
         batch_top_cls_loss =0
@@ -271,9 +276,9 @@ def run_test():
         for iter in range(num_frames):
             # epoch=1.0*iter
             # rate=0.001
-            # start_time=time.time()
+            start_time=time.time()
 
-
+            # iter=iter+50
             ## generate train image -------------
             # idx = np.random.choice(num_frames)     #*10   #num_frames)  #0
             frame_range = np.arange(num_frames)
@@ -299,7 +304,7 @@ def run_test():
                 top_images:      batch_top_images,
                 top_anchors:     anchors,
                 top_inside_inds: inside_inds_filtered,
-                IS_TRAIN_PHASE:  True
+                IS_TRAIN_PHASE:  False
             }
             batch_proposals, batch_proposal_scores, batch_top_features = sess.run([proposals, proposal_scores, top_features],fd1)
             print(batch_proposal_scores[:10])
@@ -308,14 +313,14 @@ def run_test():
             # pdb.set_trace()
             batch_rois3d        = project_to_roi3d(batch_top_rois)
             batch_front_rois = project_to_front_roi(batch_rois3d )
-            batch_rgb_rois      = project_to_rgb_roi     (batch_rois3d  )
-            # pdb.set_trace()
-            keep = np.where((batch_rgb_rois[:,1]>=-200) & (batch_rgb_rois[:,2]>=-200) & (batch_rgb_rois[:,3]<=(rgb_shape[1]+200)) & (batch_rgb_rois[:,4]<=(rgb_shape[0]+200)))[0]
-            batch_rois3d        = batch_rois3d[keep]      
-            batch_front_rois    = batch_front_rois[keep]
-            batch_rgb_rois      = batch_rgb_rois[keep]  
-            batch_proposal_scores=batch_proposal_scores[keep]
-            batch_top_rois      =batch_top_rois[keep]
+            batch_rgb_rois      = project_to_rgb_roi     (batch_rois3d , rgb_shape[1], rgb_shape[0] )
+            # # pdb.set_trace()
+            # keep = np.where((batch_rgb_rois[:,1]>=-200) & (batch_rgb_rois[:,2]>=-200) & (batch_rgb_rois[:,3]<=(rgb_shape[1]+200)) & (batch_rgb_rois[:,4]<=(rgb_shape[0]+200)))[0]
+            # batch_rois3d        = batch_rois3d[keep]      
+            # batch_front_rois    = batch_front_rois[keep]
+            # batch_rgb_rois      = batch_rgb_rois[keep]  
+            # batch_proposal_scores=batch_proposal_scores[keep]
+            # batch_top_rois      =batch_top_rois[keep]
 
             ## run classification and regression  -----------
 
@@ -336,7 +341,8 @@ def run_test():
             # pdb.set_trace()
 
             probs, boxes3d = rcnn_nms(batch_fuse_probs, batch_fuse_deltas, batch_rois3d, threshold=0.05)
-
+            speed=time.time()-start_time
+            print('speed: %0.4fs'%speed)
             # pdb.set_trace()
             # debug: ------------------------------------
             if is_show == 1:
@@ -353,10 +359,10 @@ def run_test():
                 mlab.clf(mfig)
                 # draw_didi_lidar(mfig, lidar, is_grid=1, is_axis=1)
                 draw_lidar(lidar, fig=mfig)
-                if len(boxes3d)!=0:
+                # if len(boxes3d)!=0:
                     # draw_didi_boxes3d(mfig, boxes3d)
-                    draw_target_boxes3d(boxes3d, fig=mfig)
-                    draw_gt_boxes3d(batch_gt_boxes3d, fig=mfig)
+                draw_target_boxes3d(boxes3d, fig=mfig)
+                draw_gt_boxes3d(batch_gt_boxes3d, fig=mfig)
                 # azimuth,elevation,distance,focalpoint = MM_PER_VIEW1
                 # mlab.view(azimuth,elevation,distance,focalpoint)
                 mlab.show(1)
@@ -379,9 +385,10 @@ def run_test():
                 #         axs[r,s].imshow(pn, cmap='gray', vmin=0, vmax=255)
                 plt.pause(0.01)
                 # pdb.set_trace()
-                img_gt     = draw_rpn_gt(top_image, batch_gt_top_boxes, batch_gt_labels)
-                img_rpn_nms = draw_rpn_nms(img_gt, batch_proposals, batch_proposal_scores)
-                imshow('img_rpn_nms',img_rpn_nms)
+                
+                img_rpn_nms = draw_rpn_nms(top_image, batch_proposals, batch_proposal_scores)
+                img_gt     = draw_rpn_gt(img_rpn_nms, batch_gt_top_boxes, batch_gt_labels)
+                imshow('img_rpn_nms',img_gt)
                 cv2.waitKey(1)
                 # imshow('img_rpn_gt',img_gt)
 
