@@ -172,7 +172,7 @@ def  project_to_front_roi(rois3d):
 #     rois[:,1:5] = box3d_to_surround_box(rois3d)
 #     return rois
 
-data_root='/home/hhs/4T/datasets/dummy_datas_005/'
+data_root='/home/hhs/4T/datasets/dummy_datas_064/'
 kitti_img_root='/home/hhs/4T/datasets/KITTI/'
 
 
@@ -270,7 +270,7 @@ def run_test():
         saver  = tf.train.Saver()  
 
 
-        saver.restore(sess, './outputs/check_points/snap_RVD_FreezeBN_NGT_s_120000.ckpt')  
+        saver.restore(sess, './outputs/check_points/snap_RVD_FreezeBN_NGT_OHEM_s_070000.ckpt')  
 
 
         batch_top_cls_loss =0
@@ -282,9 +282,9 @@ def run_test():
         for iter in range(num_frames):
             # epoch=1.0*iter
             # rate=0.001
-            # start_time=time.time()
+            start_time=time.time()
 
-            iter=iter+50
+            # iter=iter+50
             ## generate train image -------------
             # idx = np.random.choice(num_frames)     #*10   #num_frames)  #0
             frame_range = np.arange(num_frames)
@@ -353,7 +353,8 @@ def run_test():
             # pdb.set_trace()
 
             probs, boxes3d = rcnn_nms(batch_fuse_probs, batch_fuse_deltas, batch_rois3d, threshold=0.05)
-
+            speed=time.time()-start_time
+            print('speed: %0.4fs'%speed)
             # pdb.set_trace()
             # debug: ------------------------------------
             if is_show == 1:

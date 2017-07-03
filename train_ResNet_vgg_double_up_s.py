@@ -32,27 +32,6 @@ from net.configuration import *
 #http://3dimage.ee.tsinghua.edu.cn/cxz
 # "Multi-View 3D Object Detection Network for Autonomous Driving" - Xiaozhi Chen, CVPR 2017
 
-
-def load_dummy_data():
-    rgb   = np.load(data_root+'one_frame/rgb.npy')
-    lidar = np.load(data_root+'one_frame/lidar.npy')
-    top   = np.load(data_root+'one_frame/top.npy')
-    front = np.zeros((1,1),dtype=np.float32)
-    gt_labels    = np.load(data_root+'one_frame/gt_labels.npy')
-    gt_boxes3d   = np.load(data_root+'one_frame/gt_boxes3d.npy')
-    gt_top_boxes = np.load(data_root+'one_frame/gt_top_boxes.npy')
-
-    top_image   = cv2.imread(data_root+'one_frame/top_image.png')
-    front_image = np.zeros((1,1,3),dtype=np.float32)
-
-    rgb =(rgb*255).astype(np.uint8)
-    rgb = cv2.cvtColor(rgb, cv2.COLOR_RGB2BGR)
-    gt_boxes3d = gt_boxes3d.reshape(-1,8,3)
-
-    return  rgb, top, front, gt_labels, gt_boxes3d, top_image, front_image, lidar
-
-
-
 def load_dummy_datas(index):
 
     num_frames = []
@@ -84,10 +63,10 @@ def load_dummy_datas(index):
         gt_box3d = np.load(data_root+'seg/gt_boxes3d/gt_boxes3d_%05d.npy'%int(index[n]))
 
         rgb_shape   = rgb.shape
-        gt_rgb   = project_to_rgb_roi  (gt_box3d, rgb_shape[1], rgb_shape[0])
-        keep = np.where((gt_rgb[:,1]>=-200) & (gt_rgb[:,2]>=-200) & (gt_rgb[:,3]<=(rgb_shape[1]+200)) & (gt_rgb[:,4]<=(rgb_shape[0]+200)))[0]
-        gt_label=gt_label[keep]
-        gt_box3d=gt_box3d[keep]
+        # gt_rgb   = project_to_rgb_roi  (gt_box3d, rgb_shape[1], rgb_shape[0])
+        # keep = np.where((gt_rgb[:,1]>=-200) & (gt_rgb[:,2]>=-200) & (gt_rgb[:,3]<=(rgb_shape[1]+200)) & (gt_rgb[:,4]<=(rgb_shape[0]+200)))[0]
+        # gt_label=gt_label[keep]
+        # gt_box3d=gt_box3d[keep]
 
 
         top_image   = cv2.imread(data_root+'seg/top_image/top_image_%05d.png'%int(index[n]))
@@ -207,7 +186,8 @@ def run_train():
         top_shape   = tops[0].shape
         front_shape = fronts[0].shape
         rgb_shape   = rgbs[0].shape
-        top_feature_shape = ((top_shape[0]-1)//stride+1, (top_shape[1]-1)//stride+1)
+        # top_feature_shape = ((top_shape[0]-1)//stride+1, (top_shape[1]-1)//stride+1)
+        top_feature_shape = ((top_shape[0]-1)//stride, (top_shape[1]-1)//stride+1)
         # pdb.set_trace()
         # set anchor boxes
         num_class = 2 #incude background
@@ -306,35 +286,35 @@ def run_train():
         # sess = tf_debug.LocalCLIDebugWrapperSession(sess)
         # summary_writer = tf.summary.FileWriter(out_dir+'/tf', sess.graph)
         saver  = tf.train.Saver() 
-        saver.restore(sess, './outputs/check_points/snap_RVD_FreezeBN_NGT_s_120000.ckpt') 
+        # saver.restore(sess, './outputs/check_points/snap_RVD_FreezeBN_NGT_s_120000.ckpt') 
         # # saver.restore(sess, './outputs/check_points/MobileNet.ckpt')  
 
-        # var_lt_res=[v for v in tf.trainable_variables() if v.name.startswith('res')]#resnet_v1_50
-        # # # pdb.set_trace()
-        # # ## var_lt=[v for v in tf.trainable_variables() if not(v.name.startswith('fuse-block-1')) and not(v.name.startswith('fuse')) and not(v.name.startswith('fuse-input'))]
+        var_lt_res=[v for v in tf.trainable_variables() if v.name.startswith('res')]#resnet_v1_50
+        # # pdb.set_trace()
+        # ## var_lt=[v for v in tf.trainable_variables() if not(v.name.startswith('fuse-block-1')) and not(v.name.startswith('fuse')) and not(v.name.startswith('fuse-input'))]
 
-        # # # # var_lt.pop(0)
-        # # # # var_lt.pop(0)
-        # # # # pdb.set_trace()
-        # saver_0=tf.train.Saver(var_lt_res)        
-        # # # # 
-        # saver_0.restore(sess, './outputs/check_points/resnet_v1_50.ckpt')
+        # # # var_lt.pop(0)
+        # # # var_lt.pop(0)
         # # # pdb.set_trace()
-        # # top_lt=[v for v in tf.trainable_variables() if v.name.startswith('top_base')]
-        # # top_lt.pop(0)
-        # # # # top_lt.pop(0)
-        # # for v in top_lt:
-        # #     # pdb.set_trace()
-        # #     for v_rgb in var_lt:
-        # #         if v.name[9:]==v_rgb.name:
-        # #             print ("assign weights:%s"%v.name)
-        # #             v.assign(v_rgb)
-        # var_lt_vgg=[v for v in tf.trainable_variables() if v.name.startswith('vgg')]
-        # var_lt_vgg.pop(0)
-        # saver_1=tf.train.Saver(var_lt_vgg)
+        saver_0=tf.train.Saver(var_lt_res)        
+        # # # 
+        saver_0.restore(sess, './outputs/check_points/resnet_v1_50.ckpt')
+        # # pdb.set_trace()
+        # top_lt=[v for v in tf.trainable_variables() if v.name.startswith('top_base')]
+        # top_lt.pop(0)
+        # # # top_lt.pop(0)
+        # for v in top_lt:
+        #     # pdb.set_trace()
+        #     for v_rgb in var_lt:
+        #         if v.name[9:]==v_rgb.name:
+        #             print ("assign weights:%s"%v.name)
+        #             v.assign(v_rgb)
+        var_lt_vgg=[v for v in tf.trainable_variables() if v.name.startswith('vgg')]
+        var_lt_vgg.pop(0)
+        saver_1=tf.train.Saver(var_lt_vgg)
         
-        # # # pdb.set_trace()
-        # saver_1.restore(sess, './outputs/check_points/vgg_16.ckpt')
+        # # pdb.set_trace()
+        saver_1.restore(sess, './outputs/check_points/vgg_16.ckpt')
 
         batch_top_cls_loss =0
         batch_top_reg_loss =0
@@ -501,9 +481,10 @@ def run_train():
             # fg_inds=np.arange(len(rcnn_smooth_l1_ohem_))
             # if len(rcnn_smooth_l1_ohem_)>fg_rois_per_image:
             #     fg_inds = np.random.choice(fg_inds, size=fg_rois_per_image, replace=False)
-            #     loss_ohem_[fg_inds]=0
+            #     loss_ohem_[fg_inds]=0 
 
-            ohem_ind = np.argsort(-loss_ohem_)[:rois_per_image]
+            ohem_ind = np.argsort(-loss_ohem_[len(rcnn_smooth_l1_ohem_):])[:(rois_per_image-len(rcnn_smooth_l1_ohem_))]
+            ohem_ind = np.vstack([np.arange(len(rcnn_smooth_l1_ohem_)).reshape([-1,1]), ohem_ind.reshape([-1,1])])
             batch_top_rois=batch_top_rois[ohem_ind]
             batch_fuse_labels=batch_fuse_labels[ohem_ind]
             batch_fuse_targets=batch_fuse_targets[ohem_ind]
@@ -590,7 +571,7 @@ def run_train():
             # save: ------------------------------------
             if (iter)%5000==0 and (iter!=0):
                 #saver.save(sess, out_dir + '/check_points/%06d.ckpt'%iter)  #iter
-                saver.save(sess, out_dir + '/check_points/snap_RVD_FreezeBN_NGT_OHEM_s_%06d.ckpt'%iter)  #iter
+                saver.save(sess, out_dir + '/check_points/snap_RVD_FreezeBN_NGT_OHEM_New_lidar_s_%06d.ckpt'%iter)  #iter
                 # saver.save(sess, out_dir + '/check_points/MobileNet.ckpt')  #iter
                 # pdb.set_trace()
                 pass

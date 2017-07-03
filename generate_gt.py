@@ -16,7 +16,7 @@ root_dir = "/home/hhs/4T/datasets/KITTI/object/training"
 label_path = os.path.join(root_dir, "label_2/")
 calib_path = os.path.join(root_dir, "calib/")
 gt_path='/home/hhs/4T/datasets/dummy_datas/seg/gt_boxes3d'
-classes = {'__background__':0, 'Car':1}#, 'Van':1, 'Truck':1, 'Tram':1}
+classes = {'__background__':0, 'Car':1, 'Van':1}#, 'Van':1, 'Truck':1, 'Tram':1}
 
 def load_kitti_calib(calib_path,index):
     """
@@ -121,21 +121,21 @@ for i in range(7481):
 			gt_boxes3d.append(box3d)
 			gt_labels.append(clss)
 		# z_1=z_1+np.sum(box3d[:,2])/8
-		z_1=z_1+h
-		h_.append(h)
-	z=z+z_1/num_objs
+	# 	z_1=z_1+h
+	# 	h_.append(h)
+	# z=z+z_1/num_objs
 	# print(z_1/num_objs)
 	if len(gt_labels) == 0:
 		continue
 	gt_boxes3d = np.array(gt_boxes3d,dtype=np.float32)
 	gt_labels  = np.array(gt_labels ,dtype=np.uint8)
 
-	# np.save('/home/hhs/4T/datasets/dummy_datas/seg/gt_boxes3d/gt_boxes3d_%05d.npy'%i,gt_boxes3d)
-	# np.save('/home/hhs/4T/datasets/dummy_datas/seg/gt_labels/gt_labels_%05d.npy'%i,gt_labels)
-print(z/7481)
-print(np.mean(h_))
-print(min(h_))
-print(max(h_))
+	np.save('/home/hhs/4T/datasets/dummy_datas/seg/gt_boxes3d/gt_boxes3d_%05d.npy'%i,gt_boxes3d)
+	np.save('/home/hhs/4T/datasets/dummy_datas/seg/gt_labels/gt_labels_%05d.npy'%i,gt_labels)
+# print(z/7481)
+# print(np.mean(h_))
+# print(min(h_))
+# print(max(h_))
 
 
 
