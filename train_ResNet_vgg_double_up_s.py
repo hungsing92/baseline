@@ -486,7 +486,7 @@ def run_train():
             #     loss_ohem_[fg_inds]=0 
             pdb.set_trace()
             ohem_ind = np.argsort(-loss_ohem_[len(rcnn_smooth_l1_ohem_):])[:(rois_per_image-len(rcnn_smooth_l1_ohem_))]
-            ohem_ind = np.vstack([np.arange(len(rcnn_smooth_l1_ohem_)), ohem_ind])
+            ohem_ind = np.hstack([np.arange(len(rcnn_smooth_l1_ohem_)), ohem_ind])
             batch_top_rois=batch_top_rois[ohem_ind]
             batch_fuse_labels=batch_fuse_labels[ohem_ind]
             batch_fuse_targets=batch_fuse_targets[ohem_ind]
