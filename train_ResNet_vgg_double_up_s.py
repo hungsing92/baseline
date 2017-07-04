@@ -399,7 +399,7 @@ def run_train():
             }
             batch_proposals, batch_proposal_scores, batch_top_features = sess.run([proposals, proposal_scores, top_features],fd1)
             print(batch_proposal_scores[:50])
-            pdb.set_trace()
+            
             ## generate  train rois  ------------
             batch_top_inds, batch_top_pos_inds, batch_top_labels, batch_top_targets  = \
                 rpn_target ( anchors, inside_inds_filtered, batch_gt_labels,  batch_gt_top_boxes)
@@ -484,7 +484,7 @@ def run_train():
             # if len(rcnn_smooth_l1_ohem_)>fg_rois_per_image:
             #     fg_inds = np.random.choice(fg_inds, size=fg_rois_per_image, replace=False)
             #     loss_ohem_[fg_inds]=0 
-
+            pdb.set_trace()
             ohem_ind = np.argsort(-loss_ohem_[len(rcnn_smooth_l1_ohem_):])[:(rois_per_image-len(rcnn_smooth_l1_ohem_))]
             ohem_ind = np.vstack([np.arange(len(rcnn_smooth_l1_ohem_)).reshape([-1,1]), ohem_ind.reshape([-1,1])])
             batch_top_rois=batch_top_rois[ohem_ind]
