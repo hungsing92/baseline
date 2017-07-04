@@ -15,7 +15,7 @@ from tensorflow.contrib.slim.python.slim.nets import vgg
 
 keep_prob=0.5
 nms_pre_topn_=5000
-nms_post_topn_=2000
+nms_post_topn_=200
 is_training=False
 def top_feature_net(input, anchors, inds_inside, num_bases):
   stride=4
