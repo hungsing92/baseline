@@ -399,7 +399,7 @@ def run_train():
             }
             batch_proposals, batch_proposal_scores, batch_top_features = sess.run([proposals, proposal_scores, top_features],fd1)
             print(batch_proposal_scores[:50])
-            # pdb.set_trace()
+            pdb.set_trace()
             ## generate  train rois  ------------
             batch_top_inds, batch_top_pos_inds, batch_top_labels, batch_top_targets  = \
                 rpn_target ( anchors, inside_inds_filtered, batch_gt_labels,  batch_gt_top_boxes)
