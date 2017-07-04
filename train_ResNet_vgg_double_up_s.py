@@ -398,12 +398,13 @@ def run_train():
                 IS_TRAIN_PHASE:  True
             }
             batch_proposals, batch_proposal_scores, batch_top_features = sess.run([proposals, proposal_scores, top_features],fd1)
+            print('Nums of batch_proposals: %d'%len(batch_proposals))
             print(batch_proposal_scores[:50])
             
             ## generate  train rois  ------------
             batch_top_inds, batch_top_pos_inds, batch_top_labels, batch_top_targets  = \
                 rpn_target ( anchors, inside_inds_filtered, batch_gt_labels,  batch_gt_top_boxes)
-            pdb.set_trace()
+            # pdb.set_trace()
             batch_top_rois, batch_fuse_labels, batch_fuse_targets  = \
                  rcnn_target_ohem(  batch_proposals, batch_gt_labels, batch_gt_top_boxes, batch_gt_boxes3d )
 
@@ -414,45 +415,6 @@ def run_train():
             batch_front_rois = project_to_front_roi(batch_rois3d  ) 
             batch_rgb_rois   = project_to_rgb_roi  (batch_rois3d, rgb_shape[1], rgb_shape[0])
 
-            # keep = np.where((batch_rgb_rois[:,1]>=-100) & (batch_rgb_rois[:,2]>=-100) & (batch_rgb_rois[:,3]<=(rgb_shape[1]+100)) & (batch_rgb_rois[:,4]<=(rgb_shape[0]+100)))[0]
-            # batch_rois3d        = batch_rois3d[keep]      
-            # batch_front_rois    = batch_front_rois[keep]
-            # batch_rgb_rois      = batch_rgb_rois[keep]  
-            # batch_proposal_scores=batch_proposal_scores[keep]
-            # batch_top_rois      =batch_top_rois[keep]
-            # batch_fuse_labels   =batch_fuse_labels[keep]
-            # batch_fuse_targets  =batch_fuse_targets[keep]
-            # if len(batch_rois3d)==0:
-            #     # pdb.set_trace()
-            #     idx=idx+1
-            #     continue
-
-
-
-
-            # ##debug gt generation
-            # if vis and iter%iter_debug==0:
-            #     top_image = top_imgs[idx]
-            #     rgb       = rgbs[idx]
-
-            #     img_gt     = draw_rpn_gt(top_image, batch_gt_top_boxes, batch_gt_labels)
-            #     img_label  = draw_rpn_labels (img_gt, anchors, batch_top_inds, batch_top_labels )
-            #     img_target = draw_rpn_targets(top_image, anchors, batch_top_pos_inds, batch_top_targets)
-            #     #imshow('img_rpn_gt',img_gt)
-            #     imshow('img_anchor_label',img_label)
-            #     #imshow('img_rpn_target',img_target)
-
-            #     img_label  = draw_rcnn_labels (top_image, batch_top_rois, batch_fuse_labels )
-            #     img_target = draw_rcnn_targets(top_image, batch_top_rois, batch_fuse_labels, batch_fuse_targets)
-            #     #imshow('img_rcnn_label',img_label)
-            #     if vis :
-            #         imshow('img_rcnn_target',img_target)
-
-
-            #     img_rgb_rois = draw_boxes(rgb, batch_rgb_rois[:,1:5], color=(255,0,255), thickness=1)
-            #     if vis :
-            #         imshow('img_rgb_rois',img_rgb_rois)
-            #         cv2.waitKey(1)
 
             ## run classification and regression loss -----------
             fd2={
@@ -484,7 +446,7 @@ def run_train():
             # if len(rcnn_smooth_l1_ohem_)>fg_rois_per_image:
             #     fg_inds = np.random.choice(fg_inds, size=fg_rois_per_image, replace=False)
             #     loss_ohem_[fg_inds]=0 
-            pdb.set_trace()
+            # pdb.set_trace()
             ohem_ind = np.argsort(-loss_ohem_[len(rcnn_smooth_l1_ohem_):])[:(rois_per_image-len(rcnn_smooth_l1_ohem_))]
             ohem_ind = np.hstack([np.arange(len(rcnn_smooth_l1_ohem_)), ohem_ind])
             batch_top_rois=batch_top_rois[ohem_ind]
