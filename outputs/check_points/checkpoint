@@ -1,6 +1,15 @@
+<<<<<<< HEAD
 model_checkpoint_path: "snap_ResNet_vgg_double_up_rm_fc_NGT_s_155000.ckpt"
 all_model_checkpoint_paths: "snap_ResNet_vgg_double_up_rm_fc_NGT_s_135000.ckpt"
 all_model_checkpoint_paths: "snap_ResNet_vgg_double_up_rm_fc_NGT_s_140000.ckpt"
 all_model_checkpoint_paths: "snap_ResNet_vgg_double_up_rm_fc_NGT_s_145000.ckpt"
 all_model_checkpoint_paths: "snap_ResNet_vgg_double_up_rm_fc_NGT_s_150000.ckpt"
 all_model_checkpoint_paths: "snap_ResNet_vgg_double_up_rm_fc_NGT_s_155000.ckpt"
+=======
+model_checkpoint_path: "snap_ResNet_vgg_double_up_rm_fc_NGT_new_lidar_035000.ckpt"
+all_model_checkpoint_paths: "snap_ResNet_vgg_double_up_rm_fc_NGT_new_lidar_015000.ckpt"
+all_model_checkpoint_paths: "snap_ResNet_vgg_double_up_rm_fc_NGT_new_lidar_020000.ckpt"
+all_model_checkpoint_paths: "snap_ResNet_vgg_double_up_rm_fc_NGT_new_lidar_025000.ckpt"
+all_model_checkpoint_paths: "snap_ResNet_vgg_double_up_rm_fc_NGT_new_lidar_030000.ckpt"
+all_model_checkpoint_paths: "snap_ResNet_vgg_double_up_rm_fc_NGT_new_lidar_035000.ckpt"
+>>>>>>> 9c5c969fb4023c23495f784258b9f9e0c11bae58

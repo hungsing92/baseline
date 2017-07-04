@@ -107,7 +107,6 @@ def load_dummy_datas(index):
             mlab.show(1)
             cv2.waitKey(0)
             mlab.close()
-
             pass
     # pdb.set_trace()
     # rgbs=np.array(rgbs)
@@ -175,10 +174,12 @@ def run_train():
         #     ratios=ratios,
         #     scales=scales
         # )
-        ratios=np.array([1.7,2.4])
+        ratios=np.array([1.7,2.4,2.7])
         scales=np.array([1.7,2.4])
         bases=np.array([[-19.5, -8, 19.5, 8],
                         [-8, -19.5, 8, 19.5],
+                        [-27.5, -11, 27.5, 11],
+                        [-11, -27.5, 11, 27.5],
                         [-5, -3, 5, 3],
                         [-3, -5, 3, 5]
                         ])
@@ -194,7 +195,7 @@ def run_train():
         top_shape   = tops[0].shape
         front_shape = fronts[0].shape
         rgb_shape   = rgbs[0].shape
-        top_feature_shape = ((top_shape[0]-1)//stride+1, (top_shape[1]-1)//stride+1)
+        # top_feature_shape = ((top_shape[0]-1)//stride+1, (top_shape[1]-1)//stride+1)
         top_feature_shape = ((top_shape[0]-1)//stride, (top_shape[1]-1)//stride+1)
         # pdb.set_trace()
         # set anchor boxes
@@ -276,7 +277,7 @@ def run_train():
 
     num_ratios=len(ratios)
     num_scales=len(scales)
-    fig, axs = plt.subplots(num_ratios,num_scales)
+    # fig, axs = plt.subplots(num_ratios,num_scales)
 
     merged = tf.summary.merge_all()
 
@@ -426,10 +427,10 @@ def run_train():
             # batch_fuse_labels   =batch_fuse_labels[keep]
             # batch_fuse_targets  =batch_fuse_targets[keep]
 
-            if len(batch_rois3d)==0:
-                # pdb.set_trace()
-                idx=idx+1
-                continue
+            # if len(batch_rois3d)==0:
+            #     # pdb.set_trace()
+            #     idx=idx+1
+            #     continue
 
 
 
@@ -539,7 +540,7 @@ def run_train():
             # save: ------------------------------------
             if (iter)%5000==0 and (iter!=0):
                 #saver.save(sess, out_dir + '/check_points/%06d.ckpt'%iter)  #iter
-                saver.save(sess, out_dir + '/check_points/snap_ResNet_vgg_double_up_rm_fc_NGT_%06d.ckpt'%iter)  #iter
+                saver.save(sess, out_dir + '/check_points/snap_ResNet_vgg_double_up_rm_fc_NGT_new_lidar_%06d.ckpt'%iter)  #iter
                 # saver.save(sess, out_dir + '/check_points/MobileNet.ckpt')  #iter
                 # pdb.set_trace()
                 pass
