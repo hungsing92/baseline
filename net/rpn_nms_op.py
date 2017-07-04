@@ -175,8 +175,8 @@ def rpn_nms_generator(
         keep = nms(np.hstack((proposals, scores)), nms_thresh)
         if (nms_post_topn > 0) and (len(keep)>nms_post_topn):
             keep = keep[:nms_post_topn]
-            proposals = proposals[keep, :]
-            scores = scores[keep]
+        proposals = proposals[keep, :]
+        scores = scores[keep]
 
         # Output rois blob
         # Our RPN implementation only supports a single input image, so all
