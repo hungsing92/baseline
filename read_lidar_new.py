@@ -23,7 +23,7 @@ def lidar_to_top(lidar):
     Z0, Zn = 0, int((TOP_Z_MAX-TOP_Z_MIN)//TOP_Z_DIVISION)+1
     width  = Yn - Y0
     height   = Xn - X0
-    channel = Zn - Z0  + 1
+    channel = Zn - Z0  + 2
 
     pxs=lidar[:,0]
     pys=lidar[:,1]
@@ -45,12 +45,20 @@ def lidar_to_top(lidar):
     qzs=((pzs-TOP_Z_MIN)//TOP_Z_DIVISION).astype(np.int32)
 
     print('height,width,channel=%d,%d,%d'%(height,width,channel))
-    top = np.zeros(shape=(height,width,channel), dtype=np.float32)
+    top = np.ones(shape=(height,width,channel), dtype=np.float32)*TOP_Z_MIN
+    top[:,:,-2:]=0
+    mask = np.ones(shape=(height,width,channel-1), dtype=np.float32)* -5
     # pdb.set_trace()
 
     for i in range(len(pxs)):
-        top[-qxs[i], -qys[i], qzs[i]] = qzs[i]*TOP_Z_DIVISION+TOP_Z_MIN
+        # top[-qxs[i], -qys[i], qzs[i]] = qzs[i]*TOP_Z_DIVISION+TOP_Z_MIN
         top[-qxs[i], -qys[i], -1]= 1+ top[-qxs[i], -qys[i], -1]
+        if pzs[i]>mask[-qxs[i], -qys[i],qzs[i]]:
+            top[-qxs[i], -qys[i], qzs[i]] = pzs[i]
+            mask[-qxs[i], -qys[i],qzs[i]]=pzs[i]
+        if pzs[i]>mask[-qxs[i], -qys[i],-1]:
+            mask[-qxs[i], -qys[i],-1]=pzs[i]
+            top[-qxs[i], -qys[i], -2]=prs[i]
 
 
 
@@ -92,7 +100,8 @@ def lidar_to_top(lidar):
 #         pass
 
 #     print("speed:%fs"%(time()-start))
-
+    top[:,:,:-2]=top[:,:,:-2]-TOP_Z_MIN
+    top[top[:,:,:-2]<0]=0
     top[:,:,-1] = np.log(top[:,:,-1]+1)/math.log(64)
 
     if 1:
@@ -145,8 +154,8 @@ for i in range(7481):
     #     fd={lidar_o:lidar}
     #     top,top_image=sess.run([tops,top_images],fd)
     # np.save('/home/hhs/4T/datasets/dummy_datas/seg/lidar/lidar_%05d.npy'%i,lidar)
-    np.save('/home/hhs/4T/datasets/dummy_datas/seg/top_regular_height/top_regular_height_%05d.npy'%i,top_new)
-    cv2.imwrite('/home/hhs/4T/datasets/dummy_datas/seg/density_image_regular_height/density_image_%05d.png'%i,density_image)
+    np.save('/home/hhs/4T/datasets/dummy_datas/seg/top_70/top_70%05d.npy'%i,top_new)
+    cv2.imwrite('/home/hhs/4T/datasets/dummy_datas/seg/density_image_70/density_image_70%05d.png'%i,density_image)
    
    
     

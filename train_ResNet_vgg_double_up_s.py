@@ -57,7 +57,7 @@ def load_dummy_datas(index):
         rgb   = cv2.imread(kitti_img_root+'/training/image_2/%06d.png'%int(index[n]))
         rgbs_norm0=(rgb-PIXEL_MEANS)/255
         # lidar = np.load(data_root+'seg/lidar/lidar_%05d.npy'%index[n]
-        top   = np.load(data_root+'seg/top_regular_height/top_regular_height_%05d.npy'%int(index[n]))
+        top   = np.load(data_root+'seg/top_70/top_70%05d.npy'%int(index[n]))
         front = np.zeros((1,1),dtype=np.float32)
         gt_label  = np.load(data_root+'seg/gt_labels/gt_labels_%05d.npy'%int(index[n]))
         gt_box3d = np.load(data_root+'seg/gt_boxes3d/gt_boxes3d_%05d.npy'%int(index[n]))
@@ -69,7 +69,7 @@ def load_dummy_datas(index):
         # gt_box3d=gt_box3d[keep]
 
 
-        top_image   = cv2.imread(data_root+'seg/density_image_regular_height/density_image_%05d.png'%int(index[n]))
+        top_image   = cv2.imread(data_root+'seg/density_image_70/density_image_70%05d.png'%int(index[n]))
         front_image = np.zeros((1,1,3),dtype=np.float32)
 
         rgbs.append(rgb)
@@ -145,6 +145,7 @@ def  project_to_front_roi(rois3d):
 data_root='/home/users/hhs/4T/datasets/dummy_datas/'
 kitti_img_root='/mnt/disk_4T/KITTI/'
 vis=0
+ohem=False
 def run_train():
 
     # output dir, etc
@@ -362,7 +363,7 @@ def run_train():
                 idx=0
             print('processing image : %s'%image_index[idx])
 
-            if (iter+1)%(10000)==0:
+            if (iter+1)%(20000)==0:
                 rate=0.8*rate
 
             rgb_shape   = rgbs[idx].shape
@@ -405,57 +406,62 @@ def run_train():
             batch_top_inds, batch_top_pos_inds, batch_top_labels, batch_top_targets  = \
                 rpn_target ( anchors, inside_inds_filtered, batch_gt_labels,  batch_gt_top_boxes)
             # pdb.set_trace()
-            batch_top_rois, batch_fuse_labels, batch_fuse_targets  = \
-                 rcnn_target_ohem(  batch_proposals, batch_gt_labels, batch_gt_top_boxes, batch_gt_boxes3d )
-
-            # batch_top_rois, batch_fuse_labels, batch_fuse_targets  = \
-            #      rcnn_target(  batch_proposals, batch_gt_labels, batch_gt_top_boxes, batch_gt_boxes3d )
-
-            batch_rois3d	 = project_to_roi3d    (batch_top_rois)
-            batch_front_rois = project_to_front_roi(batch_rois3d  ) 
-            batch_rgb_rois   = project_to_rgb_roi  (batch_rois3d, rgb_shape[1], rgb_shape[0])
-
-
-            ## run classification and regression loss -----------
-            fd2={
-				**fd1,
-
-                top_images: batch_top_images,
-                front_images: batch_front_images,
-                rgb_images: batch_rgb_images,
-
-				top_rois:   batch_top_rois,
-                front_rois: batch_front_rois,
-                rgb_rois:   batch_rgb_rois,
-
-                top_inds:     batch_top_inds,
-                top_pos_inds: batch_top_pos_inds,
-                top_labels:   batch_top_labels,
-                top_targets:  batch_top_targets,
-
-                fuse_labels:  batch_fuse_labels,
-                fuse_targets: batch_fuse_targets,
-            }
-            #_, batch_top_cls_loss, batch_top_reg_loss = sess.run([solver_step, top_cls_loss, top_reg_loss],fd2)
-
-            rois_per_image    = CFG.TRAIN.RCNN_BATCH_SIZE
-            fg_rois_per_image = int(np.round(CFG.TRAIN.RCNN_FG_FRACTION * rois_per_image))
-            loss_ohem_, rcnn_smooth_l1_ohem_= sess.run([softmax_loss_ohem, rcnn_smooth_l1_ohem],fd2)
-            loss_ohem_[:len(rcnn_smooth_l1_ohem_)] += rcnn_smooth_l1_ohem_
-            # fg_inds=np.arange(len(rcnn_smooth_l1_ohem_))
-            # if len(rcnn_smooth_l1_ohem_)>fg_rois_per_image:
-            #     fg_inds = np.random.choice(fg_inds, size=fg_rois_per_image, replace=False)
-            #     loss_ohem_[fg_inds]=0 
-            # pdb.set_trace()
-            ohem_ind = np.argsort(-loss_ohem_[len(rcnn_smooth_l1_ohem_):])[:(rois_per_image-len(rcnn_smooth_l1_ohem_))]
-            ohem_ind = np.hstack([np.arange(len(rcnn_smooth_l1_ohem_)), ohem_ind])
-            batch_top_rois=batch_top_rois[ohem_ind]
-            batch_fuse_labels=batch_fuse_labels[ohem_ind]
-            batch_fuse_targets=batch_fuse_targets[ohem_ind]
-            # pdb.set_trace()
+            if ohem==True:
+                batch_top_rois, batch_fuse_labels, batch_fuse_targets  = \
+                     rcnn_target_ohem(  batch_proposals, batch_gt_labels, batch_gt_top_boxes, batch_gt_boxes3d )
+    
+                # batch_top_rois, batch_fuse_labels, batch_fuse_targets  = \
+                #      rcnn_target(  batch_proposals, batch_gt_labels, batch_gt_top_boxes, batch_gt_boxes3d )
+    
+                batch_rois3d	 = project_to_roi3d    (batch_top_rois)
+                batch_front_rois = project_to_front_roi(batch_rois3d  ) 
+                batch_rgb_rois   = project_to_rgb_roi  (batch_rois3d, rgb_shape[1], rgb_shape[0])
+    
+    
+                ## run classification and regression loss -----------
+                fd2={
+			 	**fd1,
+    
+                    top_images: batch_top_images,
+                    front_images: batch_front_images,
+                    rgb_images: batch_rgb_images,
+    
+			 	top_rois:   batch_top_rois,
+                    front_rois: batch_front_rois,
+                    rgb_rois:   batch_rgb_rois,
+    
+                    top_inds:     batch_top_inds,
+                    top_pos_inds: batch_top_pos_inds,
+                    top_labels:   batch_top_labels,
+                    top_targets:  batch_top_targets,
+    
+                    fuse_labels:  batch_fuse_labels,
+                    fuse_targets: batch_fuse_targets,
+                }
+                #_, batch_top_cls_loss, batch_top_reg_loss = sess.run([solver_step, top_cls_loss, top_reg_loss],fd2)
+    
+                rois_per_image    = CFG.TRAIN.RCNN_BATCH_SIZE
+                fg_rois_per_image = int(np.round(CFG.TRAIN.RCNN_FG_FRACTION * rois_per_image))
+                loss_ohem_, rcnn_smooth_l1_ohem_= sess.run([softmax_loss_ohem, rcnn_smooth_l1_ohem],fd2)
+                loss_ohem_[:len(rcnn_smooth_l1_ohem_)] += rcnn_smooth_l1_ohem_
+                # fg_inds=np.arange(len(rcnn_smooth_l1_ohem_))
+                # if len(rcnn_smooth_l1_ohem_)>fg_rois_per_image:
+                #     fg_inds = np.random.choice(fg_inds, size=fg_rois_per_image, replace=False)
+                #     loss_ohem_[fg_inds]=0 
+                # pdb.set_trace()
+                ohem_ind = np.argsort(-loss_ohem_[len(rcnn_smooth_l1_ohem_):])[:(rois_per_image-len(rcnn_smooth_l1_ohem_))]
+                ohem_ind = np.hstack([np.arange(len(rcnn_smooth_l1_ohem_)), ohem_ind])
+                batch_top_rois=batch_top_rois[ohem_ind]
+                batch_fuse_labels=batch_fuse_labels[ohem_ind]
+                batch_fuse_targets=batch_fuse_targets[ohem_ind]
+            else:
+                batch_top_rois, batch_fuse_labels, batch_fuse_targets  = \
+                 rcnn_target(  batch_proposals, batch_gt_labels, batch_gt_top_boxes, batch_gt_boxes3d )
+                # pdb.set_trace()
             batch_rois3d     = project_to_roi3d    (batch_top_rois)
             batch_front_rois = project_to_front_roi(batch_rois3d  ) 
             batch_rgb_rois   = project_to_rgb_roi  (batch_rois3d, rgb_shape[1], rgb_shape[0])
+
 
             fd2={
                 **fd1,
@@ -535,7 +541,7 @@ def run_train():
             # save: ------------------------------------
             if (iter)%5000==0 and (iter!=0):
                 #saver.save(sess, out_dir + '/check_points/%06d.ckpt'%iter)  #iter
-                saver.save(sess, out_dir + '/check_points/snap_RVD_FreezeBN_NGT_OHEM_New_lidar_s_%06d.ckpt'%iter)  #iter
+                saver.save(sess, out_dir + '/check_points/snap_RVD_new_lidar_6s_%06d.ckpt'%iter)  #iter
                 # saver.save(sess, out_dir + '/check_points/MobileNet.ckpt')  #iter
                 # pdb.set_trace()
                 pass
