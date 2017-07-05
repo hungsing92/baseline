@@ -289,34 +289,34 @@ def run_train():
         # sess = tf_debug.LocalCLIDebugWrapperSession(sess)
         # summary_writer = tf.summary.FileWriter(out_dir+'/tf', sess.graph)
         saver  = tf.train.Saver() 
-        # saver.restore(sess, './outputs/check_points/snap_RVD_FreezeBN_NGT_s_120000.ckpt') 
+        saver.restore(sess, './outputs/check_points/snap_RVD_FreezeBN_NGT_s_010000.ckpt') 
         # # saver.restore(sess, './outputs/check_points/MobileNet.ckpt')  
 
-        var_lt_res=[v for v in tf.trainable_variables() if v.name.startswith('res')]#resnet_v1_50
-        # # pdb.set_trace()
-        # ## var_lt=[v for v in tf.trainable_variables() if not(v.name.startswith('fuse-block-1')) and not(v.name.startswith('fuse')) and not(v.name.startswith('fuse-input'))]
-
-        # # # var_lt.pop(0)
-        # # # var_lt.pop(0)
+        # var_lt_res=[v for v in tf.trainable_variables() if v.name.startswith('res')]#resnet_v1_50
         # # # pdb.set_trace()
-        saver_0=tf.train.Saver(var_lt_res)        
-        # # # 
-        saver_0.restore(sess, './outputs/check_points/resnet_v1_50.ckpt')
-        # # pdb.set_trace()
-        # top_lt=[v for v in tf.trainable_variables() if v.name.startswith('top_base')]
-        # top_lt.pop(0)
-        # # # top_lt.pop(0)
-        # for v in top_lt:
-        #     # pdb.set_trace()
-        #     for v_rgb in var_lt:
-        #         if v.name[9:]==v_rgb.name:
-        #             print ("assign weights:%s"%v.name)
-        #             v.assign(v_rgb)
-        var_lt_vgg=[v for v in tf.trainable_variables() if v.name.startswith('vgg')]
-        var_lt_vgg.pop(0)
-        saver_1=tf.train.Saver(var_lt_vgg)
+        # # ## var_lt=[v for v in tf.trainable_variables() if not(v.name.startswith('fuse-block-1')) and not(v.name.startswith('fuse')) and not(v.name.startswith('fuse-input'))]
+
+        # # # # var_lt.pop(0)
+        # # # # var_lt.pop(0)
+        # # # # pdb.set_trace()
+        # saver_0=tf.train.Saver(var_lt_res)        
+        # # # # 
+        # saver_0.restore(sess, './outputs/check_points/resnet_v1_50.ckpt')
+        # # # pdb.set_trace()
+        # # top_lt=[v for v in tf.trainable_variables() if v.name.startswith('top_base')]
+        # # top_lt.pop(0)
+        # # # # top_lt.pop(0)
+        # # for v in top_lt:
+        # #     # pdb.set_trace()
+        # #     for v_rgb in var_lt:
+        # #         if v.name[9:]==v_rgb.name:
+        # #             print ("assign weights:%s"%v.name)
+        # #             v.assign(v_rgb)
+        # var_lt_vgg=[v for v in tf.trainable_variables() if v.name.startswith('vgg')]
+        # var_lt_vgg.pop(0)
+        # saver_1=tf.train.Saver(var_lt_vgg)
         
-        # # pdb.set_trace()
+        # # # pdb.set_trace()
         saver_1.restore(sess, './outputs/check_points/vgg_16.ckpt')
 
         batch_top_cls_loss =0
