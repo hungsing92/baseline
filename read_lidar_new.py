@@ -49,7 +49,7 @@ def lidar_to_top(lidar):
     # pdb.set_trace()
 
     for i in range(len(pxs)):
-        top[-qxs[i], -qys[i], qzs[i]] = prs[i]
+        top[-qxs[i], -qys[i], qzs[i]] = qzs[i]*TOP_Z_DIVISION+TOP_Z_MIN
         top[-qxs[i], -qys[i], -1]= 1+ top[-qxs[i], -qys[i], -1]
 
 
@@ -145,8 +145,8 @@ for i in range(7481):
     #     fd={lidar_o:lidar}
     #     top,top_image=sess.run([tops,top_images],fd)
     # np.save('/home/hhs/4T/datasets/dummy_datas/seg/lidar/lidar_%05d.npy'%i,lidar)
-    np.save('/home/hhs/4T/datasets/dummy_datas/seg/top_new/top_new%05d.npy'%i,top_new)
-    cv2.imwrite('/home/hhs/4T/datasets/dummy_datas/seg/density_image/density_image_%05d.png'%i,density_image)
+    np.save('/home/hhs/4T/datasets/dummy_datas/seg/top_regular_height/top_regular_height_%05d.npy'%i,top_new)
+    cv2.imwrite('/home/hhs/4T/datasets/dummy_datas/seg/density_image_regular_height/density_image_%05d.png'%i,density_image)
    
    
     
