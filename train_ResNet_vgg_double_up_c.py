@@ -56,7 +56,7 @@ def load_dummy_datas(index):
         rgb   = cv2.imread(kitti_img_root+'/object/training/image_2/%06d.png'%int(index[n]))
         rgbs_norm0=(rgb-PIXEL_MEANS)/255
         # lidar = np.load(data_root+'seg/lidar/lidar_%05d.npy'%int(index[n]))
-        top   = np.load(data_root+'seg/top_new/top_new%05d.npy'%int(index[n]))
+        top   = np.load(data_root+'seg/top_70/top_70%05d.npy'%int(index[n]))
         front = np.zeros((1,1),dtype=np.float32)
         gt_label  = np.load(data_root+'seg/gt_labels/gt_labels_%05d.npy'%int(index[n]))
         gt_box3d = np.load(data_root+'seg/gt_boxes3d/gt_boxes3d_%05d.npy'%int(index[n]))
@@ -75,7 +75,7 @@ def load_dummy_datas(index):
 >>>>>>> 343b663154474e9553c601f824134c07d551a72e
 
 
-        top_image   = cv2.imread(data_root+'seg/density_image/density_image_%05d.png'%int(index[n]))
+        top_image   = cv2.imread(data_root+'seg/density_image_70/density_image_70%05d.png'%int(index[n]))
         front_image = np.zeros((1,1,3),dtype=np.float32)
 
         rgbs.append(rgb)
@@ -178,8 +178,8 @@ def run_train():
         scales=np.array([1.7,2.4])
         bases=np.array([[-19.5, -8, 19.5, 8],
                         [-8, -19.5, 8, 19.5],
-                        [-27.5, -11, 27.5, 11],
-                        [-11, -27.5, 11, 27.5],
+                        # [-27.5, -11, 27.5, 11],
+                        # [-11, -27.5, 11, 27.5],
                         [-5, -3, 5, 3],
                         [-3, -5, 3, 5]
                         ])
@@ -196,7 +196,7 @@ def run_train():
         front_shape = fronts[0].shape
         rgb_shape   = rgbs[0].shape
         # top_feature_shape = ((top_shape[0]-1)//stride+1, (top_shape[1]-1)//stride+1)
-        top_feature_shape = ((top_shape[0]-1)//stride, (top_shape[1]-1)//stride+1)
+        top_feature_shape = ((top_shape[0]-1)//stride+1, (top_shape[1]-1)//stride+1)
         # pdb.set_trace()
         # set anchor boxes
         num_class = 2 #incude background
@@ -262,7 +262,7 @@ def run_train():
     l2 = l2_regulariser(decay=0.00001)
     tf.summary.scalar('l2', l2)
     learning_rate = tf.placeholder(tf.float32, shape=[])
-    rate=0.0001
+    rate=0.0005
     solver = tf.train.AdamOptimizer(learning_rate)
     # solver = tf.train.MomentumOptimizer(learning_rate=learning_rate, momentum=0.9)
     #solver_step = solver.minimize(top_cls_loss+top_reg_loss+l2)
@@ -282,13 +282,14 @@ def run_train():
     merged = tf.summary.merge_all()
 
     sess = tf.InteractiveSession()  
-    train_writer = tf.summary.FileWriter( './outputs/tensorboard/Res_Vgg_double_up_rm_fc',
+    train_writer = tf.summary.FileWriter( './outputs/tensorboard/RVD_ohem',
                                       sess.graph)
     with sess.as_default():
         sess.run( tf.global_variables_initializer(), { IS_TRAIN_PHASE : True } )
         # sess = tf_debug.LocalCLIDebugWrapperSession(sess)
         # summary_writer = tf.summary.FileWriter(out_dir+'/tf', sess.graph)
         saver  = tf.train.Saver() 
+<<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
         saver.restore(sess, './outputs/check_points/snap_RVD_FreezeBN_NGT_s_120000.ckpt') 
@@ -298,6 +299,9 @@ def run_train():
 =======
         saver.restore(sess, './outputs/check_points/snap_ResNet_vgg_double_up_rm_fc_NGT_new_lidar_070000.ckpt') 
 >>>>>>> 810b1be4d78255816eaa452f7d5eb83b7cb81c05
+=======
+        saver.restore(sess, './outputs/check_points/snap_RVD_FreezeBN_NGT_OHEM_s_070000.ckpt') 
+>>>>>>> a42debc46a19045849a064af08df0a5ed16b2db9
         # # saver.restore(sess, './outputs/check_points/MobileNet.ckpt')  
 
         # var_lt_res=[v for v in tf.trainable_variables() if v.name.startswith('res')]#resnet_v1_50
@@ -372,7 +376,7 @@ def run_train():
                 idx=0
             print('processing image : %s'%image_index[idx])
 
-            if (iter+1)%(10000)==0:
+            if (iter+1)%(20000)==0:
                 rate=0.8*rate
 
             rgb_shape   = rgbs[idx].shape
@@ -544,7 +548,7 @@ def run_train():
             # save: ------------------------------------
             if (iter)%5000==0 and (iter!=0):
                 #saver.save(sess, out_dir + '/check_points/%06d.ckpt'%iter)  #iter
-                saver.save(sess, out_dir + '/check_points/snap_ResNet_vgg_double_up_rm_fc_NGT_new_lidar_%06d.ckpt'%iter)  #iter
+                saver.save(sess, out_dir + '/check_points/snap_RVD_new_lidar_%06d.ckpt'%iter)  #iter
                 # saver.save(sess, out_dir + '/check_points/MobileNet.ckpt')  #iter
                 # pdb.set_trace()
                 pass

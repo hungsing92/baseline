@@ -63,7 +63,8 @@ def load_dummy_datas():
     fig = mlab.figure(figure=None, bgcolor=(0,0,0), fgcolor=None, engine=None, size=(1000, 500))
     files_list=glob.glob(data_root+'seg/rgb/*.png')
     index=np.array([file_index.strip().split('/')[-1][10:10+5] for file_index in files_list ])
-    num_frames=len(files_list)
+    # num_frames=len(files_list)
+    num_frames=30
     index=sorted(index)
     print('len(index):%d'%len(index))
     # pdb.set_trace()
@@ -76,7 +77,7 @@ def load_dummy_datas():
         rgb=np.float32(rgb)
         rgbs_norm0=(rgb-PIXEL_MEANS)/255
         lidar = np.load(data_root+'seg/lidar/lidar_%05d.npy'%n)
-        top   = np.load(data_root+'seg/top/top_%05d.npy'%n)
+        top   = np.load(data_root+'seg/top_new/top_new%05d.npy'%n)
         front = np.zeros((1,1),dtype=np.float32)
         # gt_label  = np.load('/home/hhs/4T/datasets/dummy_datas/seg/gt_labels/gt_labels_%s.npy'%str(index[n]))
         # gt_box3d = np.load('/home/hhs/4T/datasets/dummy_datas/seg/gt_boxes3d/gt_boxes3d_%s.npy'%str(index[n]))
@@ -89,7 +90,7 @@ def load_dummy_datas():
         # gt_box3d=gt_box3d[keep]
 
 
-        top_image   = cv2.imread(data_root+'seg/top_image/top_image_%05d.png'%n,1)
+        top_image   = cv2.imread(data_root+'seg/density_image/density_image_%05d.png'%n,1)
         # top_image   = np.int32(top_image)
         front_image = np.zeros((1,1,3),dtype=np.float32)
 
@@ -193,10 +194,12 @@ def run_test():
         #     ratios=ratios,
         #     scales=scales
         # )
-        ratios=np.array([1.7,2.4])
+        ratios=np.array([1.7,2.4,3])
         scales=np.array([1.7,2.4])
         bases=np.array([[-19.5, -8, 19.5, 8],
                         [-8, -19.5, 8, 19.5],
+                        [-27.5, -11, 27.5, 11],
+                        [-11, -27.5, 11, 27.5],
                         [-5, -3, 5, 3],
                         [-3, -5, 3, 5]
                         ])
@@ -209,7 +212,7 @@ def run_test():
         top_shape   = tops[0].shape
         front_shape = fronts[0].shape
         rgb_shape   = rgbs[0].shape
-        top_feature_shape = ((top_shape[0]-1)//stride+1, (top_shape[1]-1)//stride+1)
+        top_feature_shape = ((top_shape[0]-1)//stride, (top_shape[1]-1)//stride+1)
         out_shape=(8,3)
 
 
@@ -270,7 +273,7 @@ def run_test():
         saver  = tf.train.Saver()  
 
 
-        saver.restore(sess, './outputs/check_points/snap_RVD_FreezeBN_NGT_OHEM_s_070000.ckpt')  
+        saver.restore(sess, './outputs/check_points/snap_ResNet_vgg_double_up_rm_fc_NGT_new_lidar_070000.ckpt')  
 
 
         batch_top_cls_loss =0
