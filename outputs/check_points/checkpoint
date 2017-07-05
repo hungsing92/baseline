@@ -1,4 +1,5 @@
-model_checkpoint_path: "snap_RVD_new_lidar_015000.ckpt"
+model_checkpoint_path: "snap_RVD_new_lidar_020000.ckpt"
 all_model_checkpoint_paths: "snap_RVD_new_lidar_005000.ckpt"
 all_model_checkpoint_paths: "snap_RVD_new_lidar_010000.ckpt"
 all_model_checkpoint_paths: "snap_RVD_new_lidar_015000.ckpt"
+all_model_checkpoint_paths: "snap_RVD_new_lidar_020000.ckpt"
