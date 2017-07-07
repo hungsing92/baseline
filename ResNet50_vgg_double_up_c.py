@@ -71,6 +71,9 @@ def rgb_feature_net(input):
       block4=end_points['resnet_v1_50/block4']
       block3=end_points['resnet_v1_50/block3']
       block2=end_points['resnet_v1_50/block2']
+      tf.summary.histogram('rgb_top_block4', block4)
+      tf.summary.histogram('rgb_top_block3', block3)
+      tf.summary.histogram('rgb_top_block2', block2)
       # block1=end_points['resnet_v1_50/block1/unit_3/bottleneck_v1/conv1']
       with tf.variable_scope("rgb_up") as sc:
         block4_   = conv2d_relu(block4, num_kernels=256, kernel_size=(1,1), stride=[1,1,1,1], padding='SAME', name='4')
@@ -81,6 +84,7 @@ def rgb_feature_net(input):
         up2     = upsample2d(block2_, factor = 2, has_bias=True, trainable=True, name='up2')
         up_34      =tf.add(up4, up3, name="up_add_3_4")
         up      =tf.add(up_34, up2, name="up_add_3_4_2")
+        # up      = tf.multiply(up, 1/3000000)
         block    = conv2d_relu(up, num_kernels=256, kernel_size=(3,3), stride=[1,1,1,1], padding='SAME', name='rgb_ft')
         # block1_   = conv2d_bn_relu(block1, num_kernels=256, kernel_size=(1,1), stride=[1,1,1,1], padding='SAME', name='1')
         # up      =tf.add(block1_, up_, name="up_add")
