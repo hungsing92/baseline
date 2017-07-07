@@ -107,7 +107,7 @@ def load_dummy_datas(index):
     rgb   = cv2.imread('/home/hhs/4T/datasets/KITTI/object/training/image_2/0%s.png'%str(index),1).astype(np.float32, copy=False)
     rgbs_norm0=(rgb-PIXEL_MEANS)/255
     lidar = np.load('/home/hhs/4T/datasets/dummy_datas/seg/lidar/lidar_%s.npy'%str(index))
-    top   = np.load('/home/hhs/4T/datasets/dummy_datas/seg/top/top_%s.npy'%str(index))
+    top   = np.load('/home/hhs/4T/datasets/dummy_datas/seg/top_7/top_70%s.npy'%str(index))
     front = np.zeros((1,1),dtype=np.float32)
     gt_label  = np.load('/home/hhs/4T/datasets/dummy_datas/seg/gt_labels/gt_labels_%s.npy'%str(index))
     gt_box3d = np.load('/home/hhs/4T/datasets/dummy_datas/seg/gt_boxes3d/gt_boxes3d_%s.npy'%str(index))
@@ -116,7 +116,7 @@ def load_dummy_datas(index):
     # keep = np.where((gt_rgb[:,1]>=-200) & (gt_rgb[:,2]>=-200) & (gt_rgb[:,3]<=(rgb_shape[1]+200)) & (gt_rgb[:,4]<=(rgb_shape[0]+200)))[0]
     # gt_label=gt_label[keep]
     # gt_box3d=gt_box3d[keep]
-    top_image   = cv2.imread('/home/hhs/4T/datasets/dummy_datas/seg/top_image/top_image_%s.png'%str(index),1)
+    top_image   = cv2.imread('/home/hhs/4T/datasets/dummy_datas/seg/density_image_7/density_image_70%s.png'%str(index),1)
     front_image = np.zeros((1,1,3),dtype=np.float32)
     rgbs.append(rgb)
     lidars.append(lidar)
@@ -192,7 +192,7 @@ def run_test():
         top_shape   = tops[0].shape
         front_shape = fronts[0].shape
         rgb_shape   = rgbs[0].shape
-        top_feature_shape = ((top_shape[0]-1)//stride+1, (top_shape[1]-1)//stride+1)
+        top_feature_shape = ((top_shape[0]-1)//stride, (top_shape[1]-1)//stride+1)
         out_shape=(8,3)
 
 
