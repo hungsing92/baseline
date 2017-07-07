@@ -192,7 +192,7 @@ def run_test():
         top_shape   = tops[0].shape
         front_shape = fronts[0].shape
         rgb_shape   = rgbs[0].shape
-        top_feature_shape = ((top_shape[0]-1)//stride, (top_shape[1]-1)//stride+1)
+        top_feature_shape = ((top_shape[0]-1)//stride+1, (top_shape[1]-1)//stride+1)
         out_shape=(8,3)
 
 
