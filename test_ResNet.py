@@ -194,8 +194,8 @@ def run_test():
         scales=np.array([1.7,2.4])
         bases=np.array([[-19.5, -8, 19.5, 8],
                         [-8, -19.5, 8, 19.5],
-                        # [-27.5, -11, 27.5, 11],
-                        # [-11, -27.5, 11, 27.5],
+                        [-27.5, -11, 27.5, 11],
+                        [-11, -27.5, 11, 27.5],
                         [-5, -3, 5, 3],
                         [-3, -5, 3, 5]
                         ])
@@ -269,7 +269,7 @@ def run_test():
         saver  = tf.train.Saver()  
 
 
-        saver.restore(sess, './outputs/check_points/snap_RVD_FreezeBN_NGT_OHEM_s_070000.ckpt')  
+        saver.restore(sess, './outputs/check_points/snap_RVD_new_lidar_6s_125000.ckpt')  
 
 
         batch_top_cls_loss =0

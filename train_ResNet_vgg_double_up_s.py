@@ -145,7 +145,7 @@ def  project_to_front_roi(rois3d):
 data_root='/home/users/hhs/4T/datasets/dummy_datas/'
 kitti_img_root='/mnt/disk_4T/KITTI/'
 vis=0
-ohem=False
+ohem=True
 def run_train():
 
     # output dir, etc
@@ -282,14 +282,14 @@ def run_train():
     merged = tf.summary.merge_all()
 
     sess = tf.InteractiveSession()
-    train_writer = tf.summary.FileWriter( './outputs/tensorboard/RVD_FreezeBN',
+    train_writer = tf.summary.FileWriter( './outputs/tensorboard/ohem_new_lidar_s',
                                       sess.graph)
     with sess.as_default():
         sess.run( tf.global_variables_initializer(), { IS_TRAIN_PHASE : True } )
         # sess = tf_debug.LocalCLIDebugWrapperSession(sess)
         # summary_writer = tf.summary.FileWriter(out_dir+'/tf', sess.graph)
         saver  = tf.train.Saver() 
-        saver.restore(sess, './outputs/check_points/snap_RVD_new_lidar_6s_010000.ckpt') 
+        saver.restore(sess, './outputs/check_points/snap_RVD_new_lidar_6s_1250000.ckpt') 
         # # saver.restore(sess, './outputs/check_points/MobileNet.ckpt')  
 
         # var_lt_res=[v for v in tf.trainable_variables() if v.name.startswith('res')]#resnet_v1_50

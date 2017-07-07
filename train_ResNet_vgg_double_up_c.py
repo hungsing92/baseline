@@ -62,7 +62,7 @@ def load_dummy_datas(index):
         gt_box3d = np.load(data_root+'seg/gt_boxes3d/gt_boxes3d_%05d.npy'%int(index[n]))
 
         rgb_shape   = rgb.shape
-        gt_rgb   = project_to_rgb_roi  (gt_box3d  )
+        gt_rgb   = project_to_rgb_roi  (gt_box3d, rgb_shape[1], rgb_shape[0]  )
         keep = np.where((gt_rgb[:,1]>=-200) & (gt_rgb[:,2]>=-200) & (gt_rgb[:,3]<=(rgb_shape[1]+200)) & (gt_rgb[:,4]<=(rgb_shape[0]+200)))[0]
         gt_label=gt_label[keep]
         gt_box3d=gt_box3d[keep]
@@ -171,8 +171,8 @@ def run_train():
         scales=np.array([1.7,2.4])
         bases=np.array([[-19.5, -8, 19.5, 8],
                         [-8, -19.5, 8, 19.5],
-                        # [-27.5, -11, 27.5, 11],
-                        # [-11, -27.5, 11, 27.5],
+                        [-27.5, -11, 27.5, 11],
+                        [-11, -27.5, 11, 27.5],
                         [-5, -3, 5, 3],
                         [-3, -5, 3, 5]
                         ])
@@ -275,25 +275,27 @@ def run_train():
     merged = tf.summary.merge_all()
 
     sess = tf.InteractiveSession()  
-    train_writer = tf.summary.FileWriter( './outputs/tensorboard/RVD_ohem',
+    train_writer = tf.summary.FileWriter( './outputs/tensorboard/RVD_ohem0',
                                       sess.graph)
     with sess.as_default():
         sess.run( tf.global_variables_initializer(), { IS_TRAIN_PHASE : True } )
         # sess = tf_debug.LocalCLIDebugWrapperSession(sess)
         # summary_writer = tf.summary.FileWriter(out_dir+'/tf', sess.graph)
         saver  = tf.train.Saver() 
-        saver.restore(sess, './outputs/check_points/snap_RVD_FreezeBN_NGT_OHEM_s_070000.ckpt') 
+
+        # saver_0.restore(sess, './outputs/check_points/snap_RVD_FreezeBN_NGT_OHEM_s_070000.ckpt') 
+        saver.restore(sess, './outputs/check_points/snap_RVD_new_lidar_015000.ckpt') 
         # # saver.restore(sess, './outputs/check_points/MobileNet.ckpt')  
 
         # var_lt_res=[v for v in tf.trainable_variables() if v.name.startswith('res')]#resnet_v1_50
-        # # # pdb.set_trace()
-        # # ## var_lt=[v for v in tf.trainable_variables() if not(v.name.startswith('fuse-block-1')) and not(v.name.startswith('fuse')) and not(v.name.startswith('fuse-input'))]
+        # # pdb.set_trace()
+        # ## var_lt=[v for v in tf.trainable_variables() if not(v.name.startswith('fuse-block-1')) and not(v.name.startswith('fuse')) and not(v.name.startswith('fuse-input'))]
 
-        # # # # var_lt.pop(0)
-        # # # # var_lt.pop(0)
-        # # # # pdb.set_trace()
+        # # # var_lt.pop(0)
+        # # # var_lt.pop(0)
+        # # # pdb.set_trace()
         # saver_0=tf.train.Saver(var_lt_res)        
-        # # # # 
+        # # # 
         # saver_0.restore(sess, './outputs/check_points/resnet_v1_50.ckpt')
         # # # pdb.set_trace()
         # # top_lt=[v for v in tf.trainable_variables() if v.name.startswith('top_base')]
@@ -316,7 +318,7 @@ def run_train():
         batch_top_reg_loss =0
         batch_fuse_cls_loss=0
         batch_fuse_reg_loss=0
-        # rate=0.00005
+        # # rate=0.00005
         frame_range = np.arange(num_frames)
         idx=0
         frame=0
