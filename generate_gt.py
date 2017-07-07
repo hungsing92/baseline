@@ -79,6 +79,7 @@ for i in range(7481):
 	num_objs = len(lines)
 	if num_objs == 0:
 		continue
+	# gt_boxes2d = []
 	gt_boxes3d = []
 	gt_labels  = []
 	cam=np.ones([4,1])
@@ -91,6 +92,12 @@ for i in range(7481):
 			clss=classes[obj[0].strip()]
 		except:
 			continue
+		
+
+		x1 = float(obj[4])
+		y1= float(obj[5])
+		x2= float(obj[6])
+		y2= float(obj[7])
 		
 		h = float(obj[8])
 		w = float(obj[9])
@@ -118,8 +125,9 @@ for i in range(7481):
 		top_box=box3d_to_top_box([box3d])
 		if (top_box[0][0]>=Top_X0) and (top_box[0][1]>=Top_Y0) and (top_box[0][2]<=Top_Xn) and (top_box[0][3]<=Top_Yn):
 			# pdb.set_trace()
-			gt_boxes3d.append(box3d)
+			# gt_boxes2d.append(np.array([x1,y1,x2,y2]))
 			gt_labels.append(clss)
+			gt_boxes3d.append(box3d)
 		# z_1=z_1+np.sum(box3d[:,2])/8
 		z_1=z_1+h
 		h_.append(h)
@@ -129,9 +137,10 @@ for i in range(7481):
 		continue
 	gt_boxes3d = np.array(gt_boxes3d,dtype=np.float32)
 	gt_labels  = np.array(gt_labels ,dtype=np.uint8)
-
-	# np.save('/home/hhs/4T/datasets/dummy_datas/seg/gt_boxes3d/gt_boxes3d_%05d.npy'%i,gt_boxes3d)
-	# np.save('/home/hhs/4T/datasets/dummy_datas/seg/gt_labels/gt_labels_%05d.npy'%i,gt_labels)
+	# gt_boxes2d = np.array(gt_boxes2d,dtype=np.float32)
+	np.save('/home/hhs/4T/datasets/dummy_datas/seg/gt_boxes3d_all/gt_boxes3d_%05d.npy'%i,gt_boxes3d)
+	# np.save('/home/hhs/4T/datasets/dummy_datas/seg/gt_boxes2d_all/gt_boxes2d_%05d.npy'%i,gt_boxes2d)
+	np.save('/home/hhs/4T/datasets/dummy_datas/seg/gt_labels_all/gt_labels_%05d.npy'%i,gt_labels)
 print(z/7481)
 print(np.mean(h_))
 print(min(h_))
