@@ -156,9 +156,9 @@ for i in range(7481):
     # with sess.as_default(): 
     #     fd={lidar_o:lidar}
     #     top,top_image=sess.run([tops,top_images],fd)
-    np.save('/home/hhs/4T/datasets/dummy_datas/seg/lidar/lidar_%05d.npy'%i,lidar)
+    # np.save('/home/hhs/4T/datasets/dummy_datas/seg/lidar/lidar_%05d.npy'%i,lidar)
     np.save('/home/hhs/4T/datasets/dummy_datas/seg/top_70/top_70%05d.npy'%i,top_new)
-    # cv2.imwrite('/home/hhs/4T/datasets/dummy_datas/seg/density_image_70/density_image_70%05d.png'%i,density_image)
+    cv2.imwrite('/home/hhs/4T/datasets/dummy_datas/seg/density_image_70/density_image_70%05d.png'%i,density_image)
    
    
     

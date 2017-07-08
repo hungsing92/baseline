@@ -275,7 +275,7 @@ def run_train():
     merged = tf.summary.merge_all()
 
     sess = tf.InteractiveSession()  
-    train_writer = tf.summary.FileWriter( './outputs/tensorboard/RVD_ohem0',
+    train_writer = tf.summary.FileWriter( './outputs/tensorboard/RVD_ohem_NL',
                                       sess.graph)
     with sess.as_default():
         sess.run( tf.global_variables_initializer(), { IS_TRAIN_PHASE : True } )
@@ -501,14 +501,14 @@ def run_train():
 
                 ## show rpn score maps
                 p = batch_top_probs.reshape( *(top_feature_shape[0:2]), 2*num_bases)
-                for n in range(num_bases):
-                    r=n%num_scales
-                    s=n//num_scales
-                    pn = p[:,:,2*n+1]*255
-                    axs[s,r].cla()
-                    if vis :
-                        axs[s,r].imshow(pn, cmap='gray', vmin=0, vmax=255)
-                        plt.pause(0.01)
+                # for n in range(num_bases):
+                #     r=n%num_scales
+                #     s=n//num_scales
+                #     pn = p[:,:,2*n+1]*255
+                #     axs[s,r].cla()
+                #     if vis :
+                #         axs[s,r].imshow(pn, cmap='gray', vmin=0, vmax=255)
+                #         plt.pause(0.01)
 
 				## show rpn(top) nms
                 img_rpn     = draw_rpn    (top_image, batch_top_probs, batch_top_deltas, anchors, inside_inds)

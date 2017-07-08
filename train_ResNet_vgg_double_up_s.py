@@ -145,7 +145,7 @@ def  project_to_front_roi(rois3d):
 data_root='/home/users/hhs/4T/datasets/dummy_datas/'
 kitti_img_root='/mnt/disk_4T/KITTI/'
 vis=0
-ohem=True
+ohem=False
 def run_train():
 
     # output dir, etc
@@ -190,7 +190,7 @@ def run_train():
         front_shape = fronts[0].shape
         rgb_shape   = rgbs[0].shape
         # top_feature_shape = ((top_shape[0]-1)//stride+1, (top_shape[1]-1)//stride+1)
-        top_feature_shape = ((top_shape[0]-1)//stride, (top_shape[1]-1)//stride+1)
+        top_feature_shape = ((top_shape[0]-1)//stride+1, (top_shape[1]-1)//stride+1)
         # pdb.set_trace()
         # set anchor boxes
         num_class = 2 #incude background
