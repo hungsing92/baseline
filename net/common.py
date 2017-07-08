@@ -2,10 +2,10 @@ SEED = 202
 
 #### kitti dataset orijection from lidar to top, front and rgb ####
 
-TOP_Y_MIN=-20  #40
-TOP_Y_MAX=+20
+TOP_Y_MIN=-30  #40
+TOP_Y_MAX=+30
 TOP_X_MIN=0
-TOP_X_MAX=80   #70.4
+TOP_X_MAX=70   #70.4
 TOP_Z_MIN=-2.0    ###<todo> determine the correct values!
 TOP_Z_MAX= 0.4
 

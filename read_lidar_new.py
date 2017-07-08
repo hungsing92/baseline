@@ -4,7 +4,7 @@ import os
 import matplotlib.pyplot as plt
 import pdb
 import tensorflow as tf
-from time import time
+import time
 
 import cv2
 from net.utility.draw import *
@@ -134,12 +134,15 @@ bird = os.path.join(root_dir, "lidar_bv/")
 
 for i in range(7481):
     # i=i+7253
+    start_time=time.time()
     filename = velodyne + str(i).zfill(6) + ".bin"
     print("Processing: ", filename)
     lidar = np.fromfile(filename, dtype=np.float32)
     lidar = lidar.reshape((-1, 4))
     # pdb.set_trace()
     top_new, density_image=lidar_to_top(lidar)
+    speed=time.time()-start_time
+    print('speed: %0.4fs'%speed)
     # img_=lidar_new[:,:,-1]
     # img_ = img_-np.min(img_)
     # img_ = (img_/np.max(img_)*255)
@@ -153,9 +156,9 @@ for i in range(7481):
     # with sess.as_default(): 
     #     fd={lidar_o:lidar}
     #     top,top_image=sess.run([tops,top_images],fd)
-    # np.save('/home/hhs/4T/datasets/dummy_datas/seg/lidar/lidar_%05d.npy'%i,lidar)
-    np.save('/home/hhs/4T/datasets/dummy_datas/seg/top_7/top_70%05d.npy'%i,top_new)
-    cv2.imwrite('/home/hhs/4T/datasets/dummy_datas/seg/density_image_7/density_image_70%05d.png'%i,density_image)
+    np.save('/home/hhs/4T/datasets/dummy_datas/seg/lidar/lidar_%05d.npy'%i,lidar)
+    np.save('/home/hhs/4T/datasets/dummy_datas/seg/top_70/top_70%05d.npy'%i,top_new)
+    # cv2.imwrite('/home/hhs/4T/datasets/dummy_datas/seg/density_image_70/density_image_70%05d.png'%i,density_image)
    
    
     
