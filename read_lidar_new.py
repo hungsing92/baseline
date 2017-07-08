@@ -4,7 +4,7 @@ import os
 import matplotlib.pyplot as plt
 import pdb
 import tensorflow as tf
-from time import time
+import time
 
 import cv2
 from net.utility.draw import *
@@ -45,8 +45,8 @@ def lidar_to_top(lidar):
     qzs=((pzs-TOP_Z_MIN)//TOP_Z_DIVISION).astype(np.int32)
 
     print('height,width,channel=%d,%d,%d'%(height,width,channel))
-    top = np.ones(shape=(height,width,channel), dtype=np.float32)*TOP_Z_MIN
-    top[:,:,-2:]=0
+    top = np.zeros(shape=(height,width,channel), dtype=np.float32)
+    # top[:,:,-2:]=0
     mask = np.ones(shape=(height,width,channel-1), dtype=np.float32)* -5
     # pdb.set_trace()
 
@@ -54,7 +54,7 @@ def lidar_to_top(lidar):
         # top[-qxs[i], -qys[i], qzs[i]] = qzs[i]*TOP_Z_DIVISION+TOP_Z_MIN
         top[-qxs[i], -qys[i], -1]= 1+ top[-qxs[i], -qys[i], -1]
         if pzs[i]>mask[-qxs[i], -qys[i],qzs[i]]:
-            top[-qxs[i], -qys[i], qzs[i]] = pzs[i]
+            top[-qxs[i], -qys[i], qzs[i]] = max(0,pzs[i]-TOP_Z_MIN)
             mask[-qxs[i], -qys[i],qzs[i]]=pzs[i]
         if pzs[i]>mask[-qxs[i], -qys[i],-1]:
             mask[-qxs[i], -qys[i],-1]=pzs[i]
@@ -100,8 +100,8 @@ def lidar_to_top(lidar):
 #         pass
 
 #     print("speed:%fs"%(time()-start))
-    top[:,:,:-2]=top[:,:,:-2]-TOP_Z_MIN
-    top[top[:,:,:-2]<0]=0
+    # top[:,:,:-2]=top[:,:,:-2]-TOP_Z_MIN
+    # top[top[:,:,:-2]<0]=0
     top[:,:,-1] = np.log(top[:,:,-1]+1)/math.log(64)
 
     if 1:
@@ -134,12 +134,15 @@ bird = os.path.join(root_dir, "lidar_bv/")
 
 for i in range(7481):
     # i=i+7253
+    start_time=time.time()
     filename = velodyne + str(i).zfill(6) + ".bin"
     print("Processing: ", filename)
     lidar = np.fromfile(filename, dtype=np.float32)
     lidar = lidar.reshape((-1, 4))
     # pdb.set_trace()
     top_new, density_image=lidar_to_top(lidar)
+    speed=time.time()-start_time
+    print('speed: %0.4fs'%speed)
     # img_=lidar_new[:,:,-1]
     # img_ = img_-np.min(img_)
     # img_ = (img_/np.max(img_)*255)

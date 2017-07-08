@@ -61,6 +61,7 @@ def load_dummy_datas(index):
         gt_label  = np.load(data_root+'seg/gt_labels/gt_labels_%05d.npy'%int(index[n]))
         gt_box3d = np.load(data_root+'seg/gt_boxes3d/gt_boxes3d_%05d.npy'%int(index[n]))
 
+<<<<<<< HEAD
         rgb_shape   = rgb.shape
 <<<<<<< HEAD
 <<<<<<< HEAD
@@ -79,6 +80,13 @@ def load_dummy_datas(index):
 >>>>>>> 343b663154474e9553c601f824134c07d551a72e
 =======
 >>>>>>> b2714c03a93ad97ea2c7a602928e43cb7840f68b
+=======
+        # rgb_shape   = rgb.shape
+        # gt_rgb   = project_to_rgb_roi  (gt_box3d, rgb_shape[1], rgb_shape[0]  )
+        # keep = np.where((gt_rgb[:,1]>=-200) & (gt_rgb[:,2]>=-200) & (gt_rgb[:,3]<=(rgb_shape[1]+200)) & (gt_rgb[:,4]<=(rgb_shape[0]+200)))[0]
+        # gt_label=gt_label[keep]
+        # gt_box3d=gt_box3d[keep]
+>>>>>>> e39bc02e36acd6240edcf88ea478363ba08a2d26
 
 
         top_image   = cv2.imread(data_root+'seg/density_image_70/density_image_70%05d.png'%int(index[n]))
@@ -184,8 +192,8 @@ def run_train():
         scales=np.array([1.7,2.4])
         bases=np.array([[-19.5, -8, 19.5, 8],
                         [-8, -19.5, 8, 19.5],
-                        [-27.5, -11, 27.5, 11],
-                        [-11, -27.5, 11, 27.5],
+                        # [-27.5, -11, 27.5, 11],
+                        # [-11, -27.5, 11, 27.5],
                         [-5, -3, 5, 3],
                         [-3, -5, 3, 5]
                         ])
@@ -288,7 +296,7 @@ def run_train():
     merged = tf.summary.merge_all()
 
     sess = tf.InteractiveSession()  
-    train_writer = tf.summary.FileWriter( './outputs/tensorboard/RVD_ohem0',
+    train_writer = tf.summary.FileWriter( './outputs/tensorboard/RVD_ohem_NL',
                                       sess.graph)
     with sess.as_default():
         sess.run( tf.global_variables_initializer(), { IS_TRAIN_PHASE : True } )
@@ -312,8 +320,12 @@ def run_train():
 =======
 
         # saver_0.restore(sess, './outputs/check_points/snap_RVD_FreezeBN_NGT_OHEM_s_070000.ckpt') 
+<<<<<<< HEAD
         saver.restore(sess, './outputs/check_points/snap_RVD_new_lidar_015000.ckpt') 
 >>>>>>> b2714c03a93ad97ea2c7a602928e43cb7840f68b
+=======
+        saver.restore(sess, './outputs/check_points/snap_RVD_FreezeBN_NGT_OHEM_s_070000.ckpt') 
+>>>>>>> e39bc02e36acd6240edcf88ea478363ba08a2d26
         # # saver.restore(sess, './outputs/check_points/MobileNet.ckpt')  
 
         # var_lt_res=[v for v in tf.trainable_variables() if v.name.startswith('res')]#resnet_v1_50
@@ -530,14 +542,14 @@ def run_train():
 
                 ## show rpn score maps
                 p = batch_top_probs.reshape( *(top_feature_shape[0:2]), 2*num_bases)
-                for n in range(num_bases):
-                    r=n%num_scales
-                    s=n//num_scales
-                    pn = p[:,:,2*n+1]*255
-                    axs[s,r].cla()
-                    if vis :
-                        axs[s,r].imshow(pn, cmap='gray', vmin=0, vmax=255)
-                        plt.pause(0.01)
+                # for n in range(num_bases):
+                #     r=n%num_scales
+                #     s=n//num_scales
+                #     pn = p[:,:,2*n+1]*255
+                #     axs[s,r].cla()
+                #     if vis :
+                #         axs[s,r].imshow(pn, cmap='gray', vmin=0, vmax=255)
+                #         plt.pause(0.01)
 
 				## show rpn(top) nms
                 img_rpn     = draw_rpn    (top_image, batch_top_probs, batch_top_deltas, anchors, inside_inds)

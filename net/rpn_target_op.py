@@ -127,6 +127,7 @@ def anchor_filter(top_img, anchors, inside_inds):
     img_integral=cv2.integral(top_img)
     anchors_=anchors[inside_inds,:]
     elements_count=img_integral[anchors_[:,3],anchors_[:,2]]+img_integral[anchors_[:,1],anchors_[:,0]]-img_integral[anchors_[:,3],anchors_[:,0]]-img_integral[anchors_[:,1], anchors_[:,2]]
+    
     keep=np.where(elements_count>0)
 
     return inside_inds[keep[0]]
