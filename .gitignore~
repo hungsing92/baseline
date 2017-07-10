@@ -13,4 +13,3 @@ net/__pycache__/
 net/processing/
 net/utility/
 outputs/
-evaluate_object/

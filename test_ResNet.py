@@ -153,7 +153,7 @@ def load_dummy_datas(index):
     return  rgbs, tops, fronts, gt_labels, gt_boxes3d, top_images, front_images, lidars, rgbs_norm
 
 
-is_show=1
+is_show=0
 # MM_PER_VIEW1 = 120, 30, 70, [1,1,0]
 MM_PER_VIEW1 = 180, 70, 60, [1,1,0]#[ 12.0909996 , -1.04700089, -2.03249991]
 def run_test():
@@ -163,7 +163,7 @@ def run_test():
     makedirs(out_dir +'/tf')
     makedirs(out_dir +'/check_points')
     log = Logger(out_dir+'/log_%s.txt'%(time.strftime('%Y-%m-%d %H:%M:%S')),mode='a')
-    index=np.load('/home/hhs/4T/datasets/dummy_datas/seg/train_list.npy')
+    index=np.load('/home/hhs/4T/datasets/dummy_datas/seg/val_list.npy')
     index=sorted(index)
     print('len(index):%d'%len(index))
     num_frames=len(index)
@@ -335,7 +335,7 @@ def run_test():
             probs, boxes3d = rcnn_nms(batch_fuse_probs, batch_fuse_deltas, batch_rois3d, threshold=0.05)
             # print('nums of boxes3d : %d'%len(boxes3d))
 
-            # generat_test_reslut(probs, boxes3d, rgb_shape, int(index[iter]))
+            generat_test_reslut(probs, boxes3d, rgb_shape, int(index[iter]))
             speed=time.time()-start_time
             print('speed: %0.4fs'%speed)
             # pdb.set_trace()
@@ -351,16 +351,16 @@ def run_test():
                 batch_fuse_probs, batch_fuse_deltas = \
                     sess.run([ fuse_probs, fuse_deltas ],fd2)    
                 ## show on lidar
-                # mfig = mlab.figure(figure=None, bgcolor=(0,0,0), fgcolor=None, engine=None, size=(1000, 1000))
+                mfig = mlab.figure(figure=None, bgcolor=(0,0,0), fgcolor=None, engine=None, size=(1000, 1000))
  
-                # draw_lidar(lidar, fig=mfig)
-                # # if len(boxes3d)!=0:
-                #     # draw_didi_boxes3d(mfig, boxes3d)
-                # draw_target_boxes3d(boxes3d, fig=mfig)
-                # draw_gt_boxes3d(batch_gt_boxes3d, fig=mfig)
-                # azimuth,elevation,distance,focalpoint = MM_PER_VIEW1
-                # mlab.view(azimuth,elevation,distance,focalpoint)
-                # mlab.show(1)
+                draw_lidar(lidar, fig=mfig)
+                # if len(boxes3d)!=0:
+                    # draw_didi_boxes3d(mfig, boxes3d)
+                draw_target_boxes3d(boxes3d, fig=mfig)
+                draw_gt_boxes3d(batch_gt_boxes3d, fig=mfig)
+                azimuth,elevation,distance,focalpoint = MM_PER_VIEW1
+                mlab.view(azimuth,elevation,distance,focalpoint)
+                mlab.show(1)
                 # # cv2.waitKey(0)
                 # # mlab.close()
 
@@ -398,8 +398,8 @@ def run_test():
 
                 imshow('draw_rcnn_nms',img_rcnn_nms)
                 imshow('img_rgb_2d_detection',img_rgb_2d_detection)
-                # cv2.waitKey(0)
-                plt.pause(0.25)
+                cv2.waitKey(0)
+                # plt.pause(0.25)
                 # mlab.clf(mfig)
 
 

@@ -20,7 +20,7 @@ STATIC EVALUATION PARAMETERS
 
 // holds the number of test images on the server
 const int32_t N_MAXIMAGES = 7518;
-const int32_t N_TESTIMAGES = 1108;
+const int32_t N_TESTIMAGES = 1971;
 
 // easy, moderate and hard evaluation level
 enum DIFFICULTY{EASY=0, MODERATE=1, HARD=2};
@@ -35,7 +35,7 @@ enum CLASSES{CAR=0, PEDESTRIAN=1, CYCLIST=2};
 
 // parameters varying per class
 vector<string> CLASS_NAMES;
-const double   MIN_OVERLAP[3] = {0.7, 0.5, 0.5};                  // the minimum overlap required for evaluation
+const double   MIN_OVERLAP[3] = {0.5, 0.5, 0.5};                  // the minimum overlap required for evaluation
 
 // no. of recall steps that should be evaluated (discretized)
 const double N_SAMPLE_PTS = 41;
