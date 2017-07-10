@@ -63,8 +63,8 @@ def load_dummy_datas():
     fig = mlab.figure(figure=None, bgcolor=(0,0,0), fgcolor=None, engine=None, size=(1000, 500))
     files_list=glob.glob(data_root+'seg/rgb/*.png')
     index=np.array([file_index.strip().split('/')[-1][10:10+5] for file_index in files_list ])
-    # num_frames=len(files_list)
-    num_frames=30
+    num_frames=len(files_list)
+    # num_frames=30
     index=sorted(index)
     print('len(index):%d'%len(index))
     # pdb.set_trace()
@@ -77,7 +77,7 @@ def load_dummy_datas():
         rgb=np.float32(rgb)
         rgbs_norm0=(rgb-PIXEL_MEANS)/255
         lidar = np.load(data_root+'seg/lidar/lidar_%05d.npy'%n)
-        top   = np.load(data_root+'seg/top_new/top_new%05d.npy'%n)
+        top   = np.load(data_root+'seg/top_70/top_70%05d.npy'%n)
         front = np.zeros((1,1),dtype=np.float32)
         # gt_label  = np.load('/home/hhs/4T/datasets/dummy_datas/seg/gt_labels/gt_labels_%s.npy'%str(index[n]))
         # gt_box3d = np.load('/home/hhs/4T/datasets/dummy_datas/seg/gt_boxes3d/gt_boxes3d_%s.npy'%str(index[n]))
@@ -90,7 +90,7 @@ def load_dummy_datas():
         # gt_box3d=gt_box3d[keep]
 
 
-        top_image   = cv2.imread(data_root+'seg/density_image/density_image_%05d.png'%n,1)
+        top_image   = cv2.imread(data_root+'seg/density_image_70/density_image_70%05d.png'%n,1)
         # top_image   = np.int32(top_image)
         front_image = np.zeros((1,1,3),dtype=np.float32)
 
@@ -212,7 +212,7 @@ def run_test():
         top_shape   = tops[0].shape
         front_shape = fronts[0].shape
         rgb_shape   = rgbs[0].shape
-        top_feature_shape = ((top_shape[0]-1)//stride, (top_shape[1]-1)//stride+1)
+        top_feature_shape = ((top_shape[0]-1)//stride+1, (top_shape[1]-1)//stride+1)
         out_shape=(8,3)
 
 
@@ -262,7 +262,7 @@ def run_test():
 
     num_ratios=len(ratios)
     num_scales=len(scales)
-    fig, axs = plt.subplots(num_ratios,num_scales)
+    # fig, axs = plt.subplots(num_ratios,num_scales)
     mfig = mlab.figure(figure=None, bgcolor=(0,0,0), fgcolor=None, engine=None, size=(500, 500))
 
     sess = tf.InteractiveSession()
@@ -273,7 +273,7 @@ def run_test():
         saver  = tf.train.Saver()  
 
 
-        saver.restore(sess, './outputs/check_points/snap_ResNet_vgg_double_up_rm_fc_NGT_new_lidar_070000.ckpt')  
+        saver.restore(sess, './outputs/check_points/snap_RVD_new_lidar_6s_045000.ckpt')  
 
 
         batch_top_cls_loss =0
@@ -313,7 +313,7 @@ def run_test():
                 top_images:      batch_top_images,
                 top_anchors:     anchors,
                 top_inside_inds: inside_inds_filtered,
-                IS_TRAIN_PHASE:  True
+                IS_TRAIN_PHASE:  False
             }
             batch_proposals, batch_proposal_scores, batch_top_features = sess.run([proposals, proposal_scores, top_features],fd1)
             print(batch_proposal_scores[:10])
@@ -370,7 +370,7 @@ def run_test():
                     sess.run([ top_probs, top_scores, top_deltas ],fd2)
                 batch_fuse_probs, batch_fuse_deltas = \
                     sess.run([ fuse_probs, fuse_deltas ],fd2)    
-                ## show on lidar
+                # show on lidar
                 mlab.clf(mfig)
                 # draw_didi_lidar(mfig, lidar, is_grid=1, is_axis=1)
                 draw_lidar(lidar, fig=mfig)
@@ -378,8 +378,8 @@ def run_test():
                     # draw_didi_boxes3d(mfig, boxes3d)
                     draw_target_boxes3d(boxes3d, fig=mfig)
                     # draw_gt_boxes3d(batch_gt_boxes3d, fig=mfig)
-                # azimuth,elevation,distance,focalpoint = MM_PER_VIEW1
-                # mlab.view(azimuth,elevation,distance,focalpoint)
+                azimuth,elevation,distance,focalpoint = MM_PER_VIEW1
+                mlab.view(azimuth,elevation,distance,focalpoint)
                 mlab.show(1)
                 mlab.savefig(data_root+'seg/mayavi_fig/mayavi_%05d.png'%iter)
                 # cv2.waitKey(0)
@@ -399,7 +399,7 @@ def run_test():
                 #         s=n//num_scales
                 #         axs[r,s].cla()
                 #         axs[r,s].imshow(pn, cmap='gray', vmin=0, vmax=255)
-                plt.pause(0.01)
+                # plt.pause(0.2)
                 # pdb.set_trace()
                 # img_gt     = draw_rpn_gt(top_image, batch_gt_top_boxes, batch_gt_labels)
                 img_rpn_nms = draw_rpn_nms(top_image, batch_proposals, batch_proposal_scores)
@@ -419,18 +419,13 @@ def run_test():
                 img_rgb_2d_detection = draw_boxes(rgb, rgb_boxes[:,1:5], color=(255,0,255), thickness=1)
 
                 imshow('draw_rcnn_nms',rgb1)
-                cv2.imwrite(data_root+'seg/result_rgb/rgb_%05d.png'%iter,rgb1)
+                
                 imshow('img_rgb_2d_detection',img_rgb_2d_detection)
-                cv2.waitKey(1)
+                # cv2.waitKey(0)
+                # plt.pause(0.55)
 
+                cv2.imwrite(data_root+'seg/result_rgb/rgb_%05d.png'%iter,rgb1)
 
-                #save
-                # name=timestamps[idx]
-                # cv2.imwrite(out_dir +'/results/top/%s.png'%name, img_rcnn_after_nms_top)
-                # cv2.imwrite(out_dir +'/results/surround/%s.png'%name, img_rcnn_after_nms_surround)
-                # mlab.savefig(out_dir +'/results/lidar/%s.png'%name,figure=mfig)
-
-                # if idx==0: cv2.waitKey(0)
 
 
 ## main function ##########################################################################
