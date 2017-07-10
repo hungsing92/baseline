@@ -460,7 +460,7 @@ def run_train():
                 # pdb.set_trace()
             batch_rois3d     = project_to_roi3d    (batch_top_rois)
             batch_front_rois = project_to_front_roi(batch_rois3d  ) 
-            batch_rgb_rois   = project_to_rgb_roi  (batch_rois3d, rgb_shape[1], rgb_scm,hape[0])
+            batch_rgb_rois   = project_to_rgb_roi  (batch_rois3d, rgb_shape[1], rgb_shape[0])
 
 
             fd2={
