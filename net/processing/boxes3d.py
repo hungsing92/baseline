@@ -112,6 +112,14 @@ def box3d_to_top_projections(boxes3d):
 
 
 def draw_rgb_projections(image, projections, color=(255,255,255), thickness=2, darker=0.7):
+    def length_filter(x1,x2,img):
+        x1=np.array(x1)
+        x2=np.array(x2)
+        dist=np.sqrt(np.sum((x1-x2)**2))
+        if dist>0.75*img.shape[1]:
+            return True
+        else:
+            return False
 
     img = image.copy()*darker
     num=len(projections)
@@ -121,6 +129,8 @@ def draw_rgb_projections(image, projections, color=(255,255,255), thickness=2, d
         for k in range(0,4):
             #http://docs.enthought.com/mayavi/mayavi/auto/mlab_helper_functions.html
             i,j=k,(k+1)%4
+            if length_filter((qs[i,0],qs[i,1]),(qs[j,0],qs[j,1]),img):
+                break
             cv2.line(img, (qs[i,0],qs[i,1]), (qs[j,0],qs[j,1]), color, thickness, cv2.LINE_AA)
 
             i,j=k+4,(k+1)%4 + 4

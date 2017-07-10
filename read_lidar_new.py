@@ -5,6 +5,7 @@ import matplotlib.pyplot as plt
 import pdb
 import tensorflow as tf
 import time
+import glob
 
 import cv2
 from net.utility.draw import *
@@ -127,15 +128,25 @@ def lidar_to_top(lidar):
 
     return top, density_image
 
-root_dir = "/home/hhs/4T/datasets/KITTI/object/training"
-velodyne = os.path.join(root_dir, "velodyne/")
-bird = os.path.join(root_dir, "lidar_bv/")
+# root_dir = "/home/hhs/4T/datasets/KITTI/object/training"
+# velodyne = os.path.join(root_dir, "velodyne/")
+# bird = os.path.join(root_dir, "lidar_bv/")
 
 
-for i in range(7481):
+root_dir = "/home/hhs/4T/datasets/dummy_datas_064/seg/"
+velodyne = os.path.join('/home/hhs/4T/datasets/raw data/2011_09_26_drive_0064_sync/2011_09_26/2011_09_26_drive_0064_sync/velodyne_points/data')
+files_list=glob.glob(velodyne+'/*.bin')
+
+file=[i.strip().split('/')[-1] for i in files_list]
+ind=[int(i.strip().split('.')[0]) for i in file]
+num=len(file)
+
+print(num)
+
+for i in range(num):
     # i=i+7253
     start_time=time.time()
-    filename = velodyne + str(i).zfill(6) + ".bin"
+    filename = velodyne + '/'+file[i]
     print("Processing: ", filename)
     lidar = np.fromfile(filename, dtype=np.float32)
     lidar = lidar.reshape((-1, 4))
@@ -157,8 +168,11 @@ for i in range(7481):
     #     fd={lidar_o:lidar}
     #     top,top_image=sess.run([tops,top_images],fd)
     # np.save('/home/hhs/4T/datasets/dummy_datas/seg/lidar/lidar_%05d.npy'%i,lidar)
-    np.save('/home/hhs/4T/datasets/dummy_datas/seg/top_70/top_70%05d.npy'%i,top_new)
-    cv2.imwrite('/home/hhs/4T/datasets/dummy_datas/seg/density_image_70/density_image_70%05d.png'%i,density_image)
+    # np.save('/home/hhs/4T/datasets/dummy_datas/seg/top_70/top_70%05d.npy'%i,top_new)
+    # cv2.imwrite('/home/hhs/4T/datasets/dummy_datas/seg/density_image_70/density_image_70%05d.png'%i,density_image)
+   
+    np.save(root_dir+'/top_70/top_70%05d.npy'%ind[i],top_new)
+    cv2.imwrite(root_dir+'/density_image_70/density_image_70%05d.png'%ind[i],density_image)
    
    
     

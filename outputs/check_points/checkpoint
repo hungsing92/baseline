@@ -1,5 +1,6 @@
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 model_checkpoint_path: "snap_RVD_new_lidar_6s_045000.ckpt"
 all_model_checkpoint_paths: "snap_RVD_new_lidar_6s_025000.ckpt"
 all_model_checkpoint_paths: "snap_RVD_new_lidar_6s_030000.ckpt"
@@ -21,3 +22,11 @@ all_model_checkpoint_paths: "snap_RVD_new_lidar_055000.ckpt"
 all_model_checkpoint_paths: "snap_RVD_new_lidar_060000.ckpt"
 all_model_checkpoint_paths: "snap_RVD_new_lidar_065000.ckpt"
 >>>>>>> 09ce83db1a23dfe2b739ac483597749fe150a8bf
+=======
+model_checkpoint_path: "snap_RVD_new_lidar_140000.ckpt"
+all_model_checkpoint_paths: "snap_RVD_new_lidar_120000.ckpt"
+all_model_checkpoint_paths: "snap_RVD_new_lidar_125000.ckpt"
+all_model_checkpoint_paths: "snap_RVD_new_lidar_130000.ckpt"
+all_model_checkpoint_paths: "snap_RVD_new_lidar_135000.ckpt"
+all_model_checkpoint_paths: "snap_RVD_new_lidar_140000.ckpt"
+>>>>>>> fa646548cf6a2586eaef26ba1e1a313570c8482c

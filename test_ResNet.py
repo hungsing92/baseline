@@ -155,7 +155,7 @@ def load_dummy_datas(index):
 
 is_show=1
 # MM_PER_VIEW1 = 120, 30, 70, [1,1,0]
-MM_PER_VIEW1 = 120, 30, 70, [1,1,0]#[ 12.0909996 , -1.04700089, -2.03249991]
+MM_PER_VIEW1 = 180, 70, 60, [1,1,0]#[ 12.0909996 , -1.04700089, -2.03249991]
 def run_test():
 
     # output dir, etc
@@ -253,7 +253,7 @@ def run_test():
         saver  = tf.train.Saver()  
 
 
-        saver.restore(sess, './outputs/check_points/snap_RVD_FreezeBN_NGT_OHEM_s_070000.ckpt')  
+        saver.restore(sess, './outputs/check_points/snap_RVD_new_lidar_120000.ckpt')  
 
 
         batch_top_cls_loss =0
@@ -335,7 +335,7 @@ def run_test():
             probs, boxes3d = rcnn_nms(batch_fuse_probs, batch_fuse_deltas, batch_rois3d, threshold=0.05)
             # print('nums of boxes3d : %d'%len(boxes3d))
 
-            generat_test_reslut(probs, boxes3d, rgb_shape, int(index[iter]))
+            # generat_test_reslut(probs, boxes3d, rgb_shape, int(index[iter]))
             speed=time.time()-start_time
             print('speed: %0.4fs'%speed)
             # pdb.set_trace()
@@ -351,34 +351,34 @@ def run_test():
                 batch_fuse_probs, batch_fuse_deltas = \
                     sess.run([ fuse_probs, fuse_deltas ],fd2)    
                 ## show on lidar
-                mfig = mlab.figure(figure=None, bgcolor=(0,0,0), fgcolor=None, engine=None, size=(1000, 1000))
+                # mfig = mlab.figure(figure=None, bgcolor=(0,0,0), fgcolor=None, engine=None, size=(1000, 1000))
  
-                draw_lidar(lidar, fig=mfig)
-                # if len(boxes3d)!=0:
-                    # draw_didi_boxes3d(mfig, boxes3d)
-                draw_target_boxes3d(boxes3d, fig=mfig)
-                draw_gt_boxes3d(batch_gt_boxes3d, fig=mfig)
+                # draw_lidar(lidar, fig=mfig)
+                # # if len(boxes3d)!=0:
+                #     # draw_didi_boxes3d(mfig, boxes3d)
+                # draw_target_boxes3d(boxes3d, fig=mfig)
+                # draw_gt_boxes3d(batch_gt_boxes3d, fig=mfig)
                 # azimuth,elevation,distance,focalpoint = MM_PER_VIEW1
                 # mlab.view(azimuth,elevation,distance,focalpoint)
-                mlab.show(1)
-                # cv2.waitKey(0)
-                # mlab.close()
+                # mlab.show(1)
+                # # cv2.waitKey(0)
+                # # mlab.close()
 
 
-                ## show rpn score maps
-                p = batch_top_probs.reshape( *(top_feature_shape[0:2]), 2*num_bases)
-                # for n in range(num_bases):
+                # ## show rpn score maps
+                # p = batch_top_probs.reshape( *(top_feature_shape[0:2]), 2*num_bases)
+                # # for n in range(num_bases):
 
-                #     pn = p[:,:,2*n+1]*255
-                #     if num_scales==1 or num_ratios==1:
-                #         axs[n].cla()
-                #         axs[n].imshow(pn, cmap='gray', vmin=0, vmax=255)
-                #     else:
-                #         r=n%num_scales
-                #         s=n//num_scales
-                #         axs[r,s].cla()
-                #         axs[r,s].imshow(pn, cmap='gray', vmin=0, vmax=255)
-                plt.pause(0.01)
+                # #     pn = p[:,:,2*n+1]*255
+                # #     if num_scales==1 or num_ratios==1:
+                # #         axs[n].cla()
+                # #         axs[n].imshow(pn, cmap='gray', vmin=0, vmax=255)
+                # #     else:
+                # #         r=n%num_scales
+                # #         s=n//num_scales
+                # #         axs[r,s].cla()
+                # #         axs[r,s].imshow(pn, cmap='gray', vmin=0, vmax=255)
+                # plt.pause(0.5)
                 # pdb.set_trace()
                 
                 img_rpn_nms = draw_rpn_nms(top_image, batch_proposals, batch_proposal_scores)
@@ -388,17 +388,18 @@ def run_test():
                 # imshow('img_rpn_gt',img_gt)
 
                 rgb1 =draw_rcnn_nms (rgb, boxes3d, probs)                
-                # projections=box3d_to_rgb_projections(batch_gt_boxes3d)
-                # img_rcnn_nms = draw_rgb_projections(rgb1, projections, color=(0,0,255), thickness=1)
+                projections=box3d_to_rgb_projections(batch_gt_boxes3d)
+                img_rcnn_nms = draw_rgb_projections(rgb1, projections, color=(0,0,255), thickness=1)
 
                 # pdb.set_trace()
                 rgb_boxes=project_to_rgb_roi(boxes3d, rgb_shape[1], rgb_shape[0] )
                 # rgb_boxes=batch_rgb_rois
                 img_rgb_2d_detection = draw_boxes(rgb, rgb_boxes[:,1:5], color=(255,0,255), thickness=1)
 
-                imshow('draw_rcnn_nms',rgb1)
+                imshow('draw_rcnn_nms',img_rcnn_nms)
                 imshow('img_rgb_2d_detection',img_rgb_2d_detection)
-                cv2.waitKey(0)
+                # cv2.waitKey(0)
+                plt.pause(0.25)
                 # mlab.clf(mfig)
 
 
