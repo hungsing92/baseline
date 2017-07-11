@@ -1,3 +1,4 @@
+import _init_paths
 from net.common import *
 import numpy as np
 import os

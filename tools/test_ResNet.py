@@ -1,3 +1,4 @@
+import _init_paths
 from net.common import *
 from net.utility.file import *
 from net.processing.boxes import *
@@ -85,8 +86,13 @@ def generat_test_reslut(probs, boxes3d, rgb_shape, index):
     reuslts=[]
     for i in np.arange(len(rgb_boxes)):
         box= rgb_boxes[i]
-        line='Car -1 -1 -10 %.2f %.2f %.2f %.2f -1 -1 -1 -1000 -1000 -1000 -10 %.2f\n'%(box[1], box[2], box[3], box[4], probs[i])
-        file.write(line)
+        if probs == [] :
+            for i in range(1):
+                line='Car -1 -1 -10 %.2f %.2f %.2f %.2f -1 -1 -1 -1000 -1000 -1000 -10 %.2f\n'%(box[1], box[2], box[3], box[4], 1-(i+1)*0.06)
+                file.write(line)
+        else:
+            line='Car -1 -1 -10 %.2f %.2f %.2f %.2f -1 -1 -1 -1000 -1000 -1000 -10 %.2f\n'%(box[1], box[2], box[3], box[4], probs[i])
+            file.write(line)
 
     file.close()
     return 1
@@ -180,6 +186,8 @@ def run_test():
         scales=np.array([1.7,2.4])
         bases=np.array([[-19.5, -8, 19.5, 8],
                         [-8, -19.5, 8, 19.5],
+                        [-27.5, -11, 27.5, 11],
+                        [-11, -27.5, 11, 27.5],
                         [-5, -3, 5, 3],
                         [-3, -5, 3, 5]
                         ])
@@ -253,7 +261,7 @@ def run_test():
         saver  = tf.train.Saver()  
 
 
-        saver.restore(sess, './outputs/check_points/snap_RVD_new_lidar_120000.ckpt')  
+        saver.restore(sess, './outputs/check_points/snap_RVD_new_lidar_6s_060000.ckpt')  
 
 
         batch_top_cls_loss =0
@@ -263,16 +271,9 @@ def run_test():
 
 
         for iter in range(num_frames):
-            # epoch=1.0*iter
-            # rate=0.001
             start_time=time.time()
 
-            # iter=iter+50
-            ## generate train image -------------
-            # idx = np.random.choice(num_frames)     #*10   #num_frames)  #0
-            # frame_range = np.arange(num_frames)
-            # idx = frame_range[iter%num_frames]    #*10   #num_frames)  #0
-            print('Processing Img: %s'%index[iter])
+            print('Processing Img: %d  %s'%(iter, index[iter]))
             rgbs, tops, fronts, gt_labels, gt_boxes3d, top_imgs, front_imgs, lidars,rgbs_norm0 = load_dummy_datas(index[iter])
             idx=0
             rgb_shape   = rgbs[idx].shape
@@ -299,20 +300,11 @@ def run_test():
                 IS_TRAIN_PHASE:  False
             }
             batch_proposals, batch_proposal_scores, batch_top_features = sess.run([proposals, proposal_scores, top_features],fd1)
-            # print(batch_proposal_scores[:10])
-            ## generate  train rois  ------------
+
             batch_top_rois = batch_proposals
-            # pdb.set_trace()
             batch_rois3d        = project_to_roi3d(batch_top_rois)
             batch_front_rois = project_to_front_roi(batch_rois3d )
             batch_rgb_rois      = project_to_rgb_roi     (batch_rois3d , rgb_shape[1], rgb_shape[0] )
-            # # pdb.set_trace()
-            # keep = np.where((batch_rgb_rois[:,1]>=-200) & (batch_rgb_rois[:,2]>=-200) & (batch_rgb_rois[:,3]<=(rgb_shape[1]+200)) & (batch_rgb_rois[:,4]<=(rgb_shape[0]+200)))[0]
-            # batch_rois3d        = batch_rois3d[keep]      
-            # batch_front_rois    = batch_front_rois[keep]
-            # batch_rgb_rois      = batch_rgb_rois[keep]  
-            # batch_proposal_scores=batch_proposal_scores[keep]
-            # batch_top_rois      =batch_top_rois[keep]
 
             ## run classification and regression  -----------
 
@@ -330,8 +322,6 @@ def run_test():
             }
             batch_top_probs,  batch_top_deltas  =  sess.run([ top_probs,  top_deltas  ],fd2)
             batch_fuse_probs, batch_fuse_deltas =  sess.run([ fuse_probs, fuse_deltas ],fd2)
-            # pdb.set_trace()
-
             probs, boxes3d = rcnn_nms(batch_fuse_probs, batch_fuse_deltas, batch_rois3d, threshold=0.05)
             # print('nums of boxes3d : %d'%len(boxes3d))
 
@@ -362,25 +352,7 @@ def run_test():
                 mlab.view(azimuth,elevation,distance,focalpoint)
                 mlab.show(1)
                 # # cv2.waitKey(0)
-                # # mlab.close()
-
-
-                # ## show rpn score maps
-                # p = batch_top_probs.reshape( *(top_feature_shape[0:2]), 2*num_bases)
-                # # for n in range(num_bases):
-
-                # #     pn = p[:,:,2*n+1]*255
-                # #     if num_scales==1 or num_ratios==1:
-                # #         axs[n].cla()
-                # #         axs[n].imshow(pn, cmap='gray', vmin=0, vmax=255)
-                # #     else:
-                # #         r=n%num_scales
-                # #         s=n//num_scales
-                # #         axs[r,s].cla()
-                # #         axs[r,s].imshow(pn, cmap='gray', vmin=0, vmax=255)
-                # plt.pause(0.5)
-                # pdb.set_trace()
-                
+                # # mlab.close()               
                 img_rpn_nms = draw_rpn_nms(top_image, batch_proposals, batch_proposal_scores)
                 img_gt     = draw_rpn_gt(img_rpn_nms, batch_gt_top_boxes, batch_gt_labels)
                 imshow('img_rpn_nms',img_gt)
@@ -401,16 +373,6 @@ def run_test():
                 cv2.waitKey(0)
                 # plt.pause(0.25)
                 # mlab.clf(mfig)
-
-
-                #save
-                # name=timestamps[idx]
-                # cv2.imwrite(out_dir +'/results/top/%s.png'%name, img_rcnn_after_nms_top)
-                # cv2.imwrite(out_dir +'/results/surround/%s.png'%name, img_rcnn_after_nms_surround)
-                # mlab.savefig(out_dir +'/results/lidar/%s.png'%name,figure=mfig)
-
-                # if idx==0: cv2.waitKey(0)
-
 
 ## main function ##########################################################################
 

@@ -1,5 +1,4 @@
-
-
+import _init_paths
 import numpy as np
 import glob
 import pdb

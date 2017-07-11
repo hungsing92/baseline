@@ -1,3 +1,4 @@
+import _init_paths
 from kitti_data import pykitti
 from kitti_data.pykitti.tracklet import parseXML, TRUNC_IN_IMAGE, TRUNC_TRUNCATED
 from kitti_data.draw import *
