@@ -170,7 +170,9 @@ def run_test():
     makedirs(out_dir +'/tf')
     makedirs(out_dir +'/check_points')
     log = Logger(out_dir+'/log_%s.txt'%(time.strftime('%Y-%m-%d %H:%M:%S')),mode='a')
+
     index=np.load(train_data_root+'/val_list.npy')
+    
     index=sorted(index)
     print('len(index):%d'%len(index))
     num_frames=len(index)
