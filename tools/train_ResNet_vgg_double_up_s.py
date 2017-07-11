@@ -153,7 +153,8 @@ def run_train():
     out_dir = './outputs'
     makedirs(out_dir +'/tf')
     makedirs(out_dir +'/check_points')
-    log = Logger(out_dir+'/log_%s.txt'%(time.strftime('%Y-%m-%d %H:%M:%S')),mode='a')
+    makedirs(out_dir +'/log')
+    log = Logger(out_dir+'/log/log_%s.txt'%(time.strftime('%Y-%m-%d %H:%M:%S')),mode='a')
     index=np.load(data_root+'seg/train_list.npy')
     index=sorted(index)
     index=np.array(index)
