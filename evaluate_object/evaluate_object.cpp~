@@ -20,7 +20,7 @@ STATIC EVALUATION PARAMETERS
 
 // holds the number of test images on the server
 const int32_t N_MAXIMAGES = 7518;
-const int32_t N_TESTIMAGES = 1108;
+const int32_t N_TESTIMAGES = 1990;
 
 // easy, moderate and hard evaluation level
 enum DIFFICULTY{EASY=0, MODERATE=1, HARD=2};

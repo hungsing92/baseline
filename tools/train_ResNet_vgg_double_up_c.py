@@ -1,3 +1,4 @@
+import _init_paths
 from net.common import *
 from net.utility.file import *
 from net.processing.boxes import *
@@ -5,12 +6,12 @@ from net.processing.boxes3d import *
 from net.utility.draw import *
 
 # from dummynet import *
-from data import *
+from data.data import *
 
 from net.rpn_loss_op import *
 from net.rcnn_loss_op import *
 from net.rpn_target_op import make_bases, make_anchors, rpn_target, anchor_filter
-from net.rcnn_target_op import rcnn_target
+from net.rcnn_target_op import rcnn_target, rcnn_target_ohem
 
 from net.rpn_nms_op     import draw_rpn_nms, draw_rpn
 from net.rcnn_nms_op    import rcnn_nms, draw_rcnn_nms, draw_rcnn
@@ -24,34 +25,13 @@ import glob
 import tensorflow as tf
 slim = tf.contrib.slim
 # from mobilenet import *
-from vgg16_c import *
+from ResNet50_vgg_double_up_c import *
 from tensorflow.python import debug as tf_debug
 # os.environ["QT_API"] = "pyqt"
 
 #http://3dimage.ee.tsinghua.edu.cn/cxz
 # "Multi-View 3D Object Detection Network for Autonomous Driving" - Xiaozhi Chen, CVPR 2017
-
-
-def load_dummy_data():
-    rgb   = np.load('/home/hhs/4T/datasets/dummy_datas/one_frame/rgb.npy')
-    lidar = np.load('/home/hhs/4T/datasets/dummy_datas/one_frame/lidar.npy')
-    top   = np.load('/home/hhs/4T/datasets/dummy_datas/one_frame/top.npy')
-    front = np.zeros((1,1),dtype=np.float32)
-    gt_labels    = np.load('/home/hhs/4T/datasets/dummy_datas/one_frame/gt_labels.npy')
-    gt_boxes3d   = np.load('/home/hhs/4T/datasets/dummy_datas/one_frame/gt_boxes3d.npy')
-    gt_top_boxes = np.load('/home/hhs/4T/datasets/dummy_datas/one_frame/gt_top_boxes.npy')
-
-    top_image   = cv2.imread('/home/hhs/4T/datasets/dummy_datas/one_frame/top_image.png')
-    front_image = np.zeros((1,1,3),dtype=np.float32)
-
-    rgb =(rgb*255).astype(np.uint8)
-    rgb = cv2.cvtColor(rgb, cv2.COLOR_RGB2BGR)
-    gt_boxes3d = gt_boxes3d.reshape(-1,8,3)
-
-    return  rgb, top, front, gt_labels, gt_boxes3d, top_image, front_image, lidar
-
-
-
+MM_PER_VIEW1 = 180, 70, 30, [1,1,0]
 def load_dummy_datas(index):
 
     num_frames = []
@@ -66,7 +46,7 @@ def load_dummy_datas(index):
     top_images  =[]
     front_images=[]
 
-
+    
 
     # pdb.set_trace()
     if num_frames==[]:
@@ -76,20 +56,41 @@ def load_dummy_datas(index):
         print('processing img:%d,%05d'%(n,int(index[n])))
         rgb   = cv2.imread(kitti_img_root+'/object/training/image_2/%06d.png'%int(index[n]))
         rgbs_norm0=(rgb-PIXEL_MEANS)/255
-        # lidar = np.load(data_root+'lidar/lidar_%05d.npy'%index[n]
-        top   = np.load(data_root+'top/top_%05d.npy'%int(index[n]))
+        # lidar = np.load(data_root+'seg/lidar/lidar_%05d.npy'%int(index[n]))
+        top   = np.load(data_root+'seg/top_70/top_70%05d.npy'%int(index[n]))
         front = np.zeros((1,1),dtype=np.float32)
-        gt_label  = np.load(data_root+'gt_labels/gt_labels_%05d.npy'%int(index[n]))
-        gt_box3d = np.load(data_root+'gt_boxes3d/gt_boxes3d_%05d.npy'%int(index[n]))
+        gt_label  = np.load(data_root+'seg/gt_labels/gt_labels_%05d.npy'%int(index[n]))
+        gt_box3d = np.load(data_root+'seg/gt_boxes3d/gt_boxes3d_%05d.npy'%int(index[n]))
 
+<<<<<<< HEAD
         rgb_shape   = rgb.shape
-        gt_rgb   = project_to_rgb_roi  (gt_box3d  )
+<<<<<<< HEAD
+<<<<<<< HEAD
+=======
+>>>>>>> b2714c03a93ad97ea2c7a602928e43cb7840f68b
+        gt_rgb   = project_to_rgb_roi  (gt_box3d, rgb_shape[1], rgb_shape[0]  )
         keep = np.where((gt_rgb[:,1]>=-200) & (gt_rgb[:,2]>=-200) & (gt_rgb[:,3]<=(rgb_shape[1]+200)) & (gt_rgb[:,4]<=(rgb_shape[0]+200)))[0]
         gt_label=gt_label[keep]
         gt_box3d=gt_box3d[keep]
+<<<<<<< HEAD
+=======
+        # gt_rgb   = project_to_rgb_roi  (gt_box3d  )
+        # keep = np.where((gt_rgb[:,1]>=-200) & (gt_rgb[:,2]>=-200) & (gt_rgb[:,3]<=(rgb_shape[1]+200)) & (gt_rgb[:,4]<=(rgb_shape[0]+200)))[0]
+        # gt_label=gt_label[keep]
+        # gt_box3d=gt_box3d[keep]
+>>>>>>> 343b663154474e9553c601f824134c07d551a72e
+=======
+>>>>>>> b2714c03a93ad97ea2c7a602928e43cb7840f68b
+=======
+        # rgb_shape   = rgb.shape
+        # gt_rgb   = project_to_rgb_roi  (gt_box3d, rgb_shape[1], rgb_shape[0]  )
+        # keep = np.where((gt_rgb[:,1]>=-200) & (gt_rgb[:,2]>=-200) & (gt_rgb[:,3]<=(rgb_shape[1]+200)) & (gt_rgb[:,4]<=(rgb_shape[0]+200)))[0]
+        # gt_label=gt_label[keep]
+        # gt_box3d=gt_box3d[keep]
+>>>>>>> e39bc02e36acd6240edcf88ea478363ba08a2d26
 
 
-        top_image   = cv2.imread(data_root+'top_image/top_image_%05d.png'%int(index[n]))
+        top_image   = cv2.imread(data_root+'seg/density_image_70/density_image_70%05d.png'%int(index[n]))
         front_image = np.zeros((1,1,3),dtype=np.float32)
 
         rgbs.append(rgb)
@@ -113,13 +114,14 @@ def load_dummy_datas(index):
 
             imshow('rgb',rgb1)
             imshow('top_image',top_image1)
-
+            azimuth,elevation,distance,focalpoint = MM_PER_VIEW1
+            mlab.view(azimuth,elevation,distance,focalpoint)
             mlab.clf(fig)
             draw_lidar(lidar, fig=fig)
             draw_gt_boxes3d(gt_box3d, fig=fig)
             mlab.show(1)
             cv2.waitKey(0)
-
+            mlab.close()
             pass
     # pdb.set_trace()
     # rgbs=np.array(rgbs)
@@ -137,7 +139,7 @@ def project_to_roi3d(top_rois):
     return rois3d
 
 
-def project_to_rgb_roi(rois3d):
+def project_to_rgb_roi(rois3d, width, height):
     num  = len(rois3d)
     rois = np.zeros((num,5),dtype=np.int32)
     projections = box3d_to_rgb_projections(rois3d)
@@ -147,6 +149,10 @@ def project_to_rgb_roi(rois3d):
         maxx = np.max(qs[:,0])
         miny = np.min(qs[:,1])
         maxy = np.max(qs[:,1])
+        minx = np.maximum(np.minimum(minx, width - 1), 0)
+        maxx = np.maximum(np.minimum(maxx, width - 1), 0)
+        miny = np.maximum(np.minimum(miny, height - 1), 0)
+        maxy = np.maximum(np.minimum(maxy, height - 1), 0)
         rois[n,1:5] = minx,miny,maxx,maxy
 
     return rois
@@ -157,7 +163,8 @@ def  project_to_front_roi(rois3d):
     rois = np.zeros((num,5),dtype=np.int32)
 
     return rois
-data_root='/home/hhs/4T/datasets/dummy_datas/seg/'
+
+data_root='/home/hhs/4T/datasets/dummy_datas/'
 kitti_img_root='/home/hhs/4T/datasets/KITTI/'
 vis=0
 def run_train():
@@ -167,7 +174,7 @@ def run_train():
     makedirs(out_dir +'/tf')
     makedirs(out_dir +'/check_points')
     log = Logger(out_dir+'/log_%s.txt'%(time.strftime('%Y-%m-%d %H:%M:%S')),mode='a')
-    index=np.load(data_root+'train_list.npy')
+    index=np.load(data_root+'seg/train_list.npy')
     index=sorted(index)
     index=np.array(index)
     num_frames = len(index)
@@ -182,16 +189,18 @@ def run_train():
         #     ratios=ratios,
         #     scales=scales
         # )
-        ratios=np.array([1.7,2.4])
+        ratios=np.array([1.7,2.4,2.7])
         scales=np.array([1.7,2.4])
         bases=np.array([[-19.5, -8, 19.5, 8],
                         [-8, -19.5, 8, 19.5],
+                        # [-27.5, -11, 27.5, 11],
+                        # [-11, -27.5, 11, 27.5],
                         [-5, -3, 5, 3],
                         [-3, -5, 3, 5]
                         ])
         # pdb.set_trace()
         num_bases = len(bases)
-        stride = 8
+        stride = 4
 
         out_shape=(8,3)
 
@@ -201,6 +210,7 @@ def run_train():
         top_shape   = tops[0].shape
         front_shape = fronts[0].shape
         rgb_shape   = rgbs[0].shape
+        # top_feature_shape = ((top_shape[0]-1)//stride+1, (top_shape[1]-1)//stride+1)
         top_feature_shape = ((top_shape[0]-1)//stride+1, (top_shape[1]-1)//stride+1)
         # pdb.set_trace()
         # set anchor boxes
@@ -237,13 +247,13 @@ def run_train():
         top_feature_net(top_images, top_anchors, top_inside_inds, num_bases)
     # pdb.set_trace()
     front_features = front_feature_net(front_images)
-    rgb_features   = rgb_feature_net(rgb_images)
+    rgb_features   = rgb_feature_net(rgb_images) 
 
     fuse_scores, fuse_probs, fuse_deltas = \
         fusion_net(
-			( [top_features,     top_rois,     6,6,1./stride],
+			( [top_features,     top_rois,     7,7,1./stride],
 			  [front_features,   front_rois,   0,0,1./stride],  #disable by 0,0
-			  [rgb_features,     rgb_rois,     6,6,1./stride],),
+			  [rgb_features,     rgb_rois,     7,7,1./(1*stride)],),
             num_class, out_shape) #<todo>  add non max suppression
 
 
@@ -264,9 +274,10 @@ def run_train():
     tf.summary.scalar('rcnn_reg_loss', fuse_reg_loss)
 
     #solver
-    l2 = l2_regulariser(decay=0.000005)
+    l2 = l2_regulariser(decay=0.00001)
     tf.summary.scalar('l2', l2)
     learning_rate = tf.placeholder(tf.float32, shape=[])
+    rate=0.0005
     solver = tf.train.AdamOptimizer(learning_rate)
     # solver = tf.train.MomentumOptimizer(learning_rate=learning_rate, momentum=0.9)
     #solver_step = solver.minimize(top_cls_loss+top_reg_loss+l2)
@@ -281,49 +292,79 @@ def run_train():
 
     num_ratios=len(ratios)
     num_scales=len(scales)
-    fig, axs = plt.subplots(num_ratios,num_scales)
+    # fig, axs = plt.subplots(num_ratios,num_scales)
 
     merged = tf.summary.merge_all()
 
-    sess = tf.InteractiveSession()
-    train_writer = tf.summary.FileWriter( './outputs/tensorboard/5_fixed_vgg',
+    sess = tf.InteractiveSession()  
+    train_writer = tf.summary.FileWriter( './outputs/tensorboard/RVD_ohem_NL',
                                       sess.graph)
     with sess.as_default():
         sess.run( tf.global_variables_initializer(), { IS_TRAIN_PHASE : True } )
         # sess = tf_debug.LocalCLIDebugWrapperSession(sess)
         # summary_writer = tf.summary.FileWriter(out_dir+'/tf', sess.graph)
         saver  = tf.train.Saver() 
-        # saver.restore(sess, './outputs/check_points/snap_vgg16_fixed_070000.ckpt') s
+<<<<<<< HEAD
+<<<<<<< HEAD
+<<<<<<< HEAD
+<<<<<<< HEAD
+        saver.restore(sess, './outputs/check_points/snap_RVD_FreezeBN_NGT_s_120000.ckpt') 
+=======
+        # saver.restore(sess, './outputs/check_points/snap_ResNet_vgg_double_up_rm_fc_NGT_070000.ckpt') 
+>>>>>>> 343b663154474e9553c601f824134c07d551a72e
+=======
+        saver.restore(sess, './outputs/check_points/snap_ResNet_vgg_double_up_rm_fc_NGT_new_lidar_070000.ckpt') 
+>>>>>>> 810b1be4d78255816eaa452f7d5eb83b7cb81c05
+=======
+        saver.restore(sess, './outputs/check_points/snap_RVD_FreezeBN_NGT_OHEM_s_070000.ckpt') 
+>>>>>>> a42debc46a19045849a064af08df0a5ed16b2db9
+=======
+
+        # saver_0.restore(sess, './outputs/check_points/snap_RVD_FreezeBN_NGT_OHEM_s_070000.ckpt') 
+<<<<<<< HEAD
+        saver.restore(sess, './outputs/check_points/snap_RVD_new_lidar_015000.ckpt') 
+>>>>>>> b2714c03a93ad97ea2c7a602928e43cb7840f68b
+=======
+        saver.restore(sess, './outputs/check_points/snap_RVD_FreezeBN_NGT_OHEM_s_070000.ckpt') 
+>>>>>>> e39bc02e36acd6240edcf88ea478363ba08a2d26
         # # saver.restore(sess, './outputs/check_points/MobileNet.ckpt')  
-        var_lt=[v for v in tf.trainable_variables() if not(v.name.startswith('fuse/sco'))]#resnet_v1_50
-        # pdb.set_trace()
-        # var_lt=[v for v in tf.trainable_variables() if not(v.name.startswith('fuse-block-1')) and not(v.name.startswith('fuse')) and not(v.name.startswith('fuse-input'))]
+
+        # var_lt_res=[v for v in tf.trainable_variables() if v.name.startswith('res')]#resnet_v1_50
+        # # pdb.set_trace()
+        # ## var_lt=[v for v in tf.trainable_variables() if not(v.name.startswith('fuse-block-1')) and not(v.name.startswith('fuse')) and not(v.name.startswith('fuse-input'))]
 
         # # # var_lt.pop(0)
         # # # var_lt.pop(0)
         # # # pdb.set_trace()
-        saver_0=tf.train.Saver(var_lt)        
+        # saver_0=tf.train.Saver(var_lt_res)        
         # # # 
-        saver_0.restore(sess, './outputs/check_points/snap_vgg16_fixed_090000old.ckpt')
+        # saver_0.restore(sess, './outputs/check_points/resnet_v1_50.ckpt')
         # # # pdb.set_trace()
-        # top_lt=[v for v in tf.trainable_variables() if v.name.startswith('top_base')]
-        # top_lt.pop(0)
-        # # # top_lt.pop(0)
-        # for v in top_lt:
-        #     # pdb.set_trace()
-        #     for v_rgb in var_lt:
-        #         if v.name[9:]==v_rgb.name:
-        #             print ("assign weights:%s"%v.name)
-        #             v.assign(v_rgb)
+        # # top_lt=[v for v in tf.trainable_variables() if v.name.startswith('top_base')]
+        # # top_lt.pop(0)
+        # # # # top_lt.pop(0)
+        # # for v in top_lt:
+        # #     # pdb.set_trace()
+        # #     for v_rgb in var_lt:
+        # #         if v.name[9:]==v_rgb.name:
+        # #             print ("assign weights:%s"%v.name)
+        # #             v.assign(v_rgb)
+        # var_lt_vgg=[v for v in tf.trainable_variables() if v.name.startswith('vgg')]
+        # var_lt_vgg.pop(0)
+        # saver_1=tf.train.Saver(var_lt_vgg)
+        
+        # # # pdb.set_trace()
+        # saver_1.restore(sess, './outputs/check_points/vgg_16.ckpt')
 
         batch_top_cls_loss =0
         batch_top_reg_loss =0
         batch_fuse_cls_loss=0
         batch_fuse_reg_loss=0
-        rate=0.00002
+        # # rate=0.00005
         frame_range = np.arange(num_frames)
         idx=0
         frame=0
+        rate=0.00005
         for iter in range(max_iter):
             epoch=iter//num_frames+1
             # rate=0.001
@@ -376,13 +417,9 @@ def run_train():
             # pdb.set_trace()
             batch_gt_labels    = gt_labels[idx]
             if len(batch_gt_labels)==0:
+                # pdb.set_trace()
                 idx=idx+1
-                print('********************No target*******************')
                 continue
-            # if len(batch_gt_labels)==0:
-            #     # pdb.set_trace()
-            #     idx=idx+1
-            #     continue
             batch_gt_boxes3d   = gt_boxes3d[idx]
             # pdb.set_trace()
             batch_gt_top_boxes = box3d_to_top_box(batch_gt_boxes3d)
@@ -411,24 +448,22 @@ def run_train():
 
             batch_rois3d	 = project_to_roi3d    (batch_top_rois)
             batch_front_rois = project_to_front_roi(batch_rois3d  )
-            batch_rgb_rois   = project_to_rgb_roi  (batch_rois3d  )
+            batch_rgb_rois   = project_to_rgb_roi  (batch_rois3d, rgb_shape[1], rgb_shape[0])
 
 
-            keep = np.where((batch_rgb_rois[:,1]>=-100) & (batch_rgb_rois[:,2]>=-100) & (batch_rgb_rois[:,3]<=(rgb_shape[1]+100)) & (batch_rgb_rois[:,4]<=(rgb_shape[0]+100)))[0]
-            batch_rois3d        = batch_rois3d[keep]      
-            batch_front_rois    = batch_front_rois[keep]
-            batch_rgb_rois      = batch_rgb_rois[keep]  
-            batch_proposal_scores=batch_proposal_scores[keep]
-            batch_top_rois      =batch_top_rois[keep]
-            batch_fuse_labels   =batch_fuse_labels[keep]
-            batch_fuse_targets  =batch_fuse_targets[keep]
+            # keep = np.where((batch_rgb_rois[:,1]>=-100) & (batch_rgb_rois[:,2]>=-100) & (batch_rgb_rois[:,3]<=(rgb_shape[1]+100)) & (batch_rgb_rois[:,4]<=(rgb_shape[0]+100)))[0]
+            # batch_rois3d        = batch_rois3d[keep]      
+            # batch_front_rois    = batch_front_rois[keep]
+            # batch_rgb_rois      = batch_rgb_rois[keep]  
+            # batch_proposal_scores=batch_proposal_scores[keep]
+            # batch_top_rois      =batch_top_rois[keep]
+            # batch_fuse_labels   =batch_fuse_labels[keep]
+            # batch_fuse_targets  =batch_fuse_targets[keep]
 
-
-
-            if len(batch_rois3d)==0:
-                # pdb.set_trace()
-                idx=idx+1
-                continue
+            # if len(batch_rois3d)==0:
+            #     # pdb.set_trace()
+            #     idx=idx+1
+            #     continue
 
 
 
@@ -480,14 +515,14 @@ def run_train():
             #_, batch_top_cls_loss, batch_top_reg_loss = sess.run([solver_step, top_cls_loss, top_reg_loss],fd2)
 
 
-            _, batch_top_cls_loss, batch_top_reg_loss, batch_fuse_cls_loss, batch_fuse_reg_loss = \
-               sess.run([solver_step, top_cls_loss, top_reg_loss, fuse_cls_loss, fuse_reg_loss],fd2)
+            _, rcnn_probs, batch_top_cls_loss, batch_top_reg_loss, batch_fuse_cls_loss, batch_fuse_reg_loss = \
+               sess.run([solver_step, fuse_probs, top_cls_loss, top_reg_loss, fuse_cls_loss, fuse_reg_loss],fd2)
 
             speed=time.time()-start_time
             log.write('%5.1f   %5d    %0.4fs   %0.4f   |   %0.5f   %0.5f   |   %0.5f   %0.5f  \n' %\
 				(epoch, iter, speed, rate, batch_top_cls_loss, batch_top_reg_loss, batch_fuse_cls_loss, batch_fuse_reg_loss))
 
-
+            print (rcnn_probs[:10,1])
 
             #print('ok')
             # debug: ------------------------------------
@@ -501,21 +536,21 @@ def run_train():
 
                 batch_fuse_probs, batch_fuse_deltas = \
                     sess.run([ fuse_probs, fuse_deltas ],fd2)
-
+                # pdb.set_trace()
                 #batch_fuse_deltas=0*batch_fuse_deltas #disable 3d box prediction
                 probs, boxes3d = rcnn_nms(batch_fuse_probs, batch_fuse_deltas, batch_rois3d, threshold=0.05)
 
 
                 ## show rpn score maps
                 p = batch_top_probs.reshape( *(top_feature_shape[0:2]), 2*num_bases)
-                for n in range(num_bases):
-                    r=n%num_scales
-                    s=n//num_scales
-                    pn = p[:,:,2*n+1]*255
-                    axs[s,r].cla()
-                    if vis :
-                        axs[s,r].imshow(pn, cmap='gray', vmin=0, vmax=255)
-                        plt.pause(0.01)
+                # for n in range(num_bases):
+                #     r=n%num_scales
+                #     s=n//num_scales
+                #     pn = p[:,:,2*n+1]*255
+                #     axs[s,r].cla()
+                #     if vis :
+                #         axs[s,r].imshow(pn, cmap='gray', vmin=0, vmax=255)
+                #         plt.pause(0.01)
 
 				## show rpn(top) nms
                 img_rpn     = draw_rpn    (top_image, batch_top_probs, batch_top_deltas, anchors, inside_inds)
@@ -538,7 +573,7 @@ def run_train():
             # save: ------------------------------------
             if (iter)%5000==0 and (iter!=0):
                 #saver.save(sess, out_dir + '/check_points/%06d.ckpt'%iter)  #iter
-                saver.save(sess, out_dir + '/check_points/snap_vgg16_fixed_%06d.ckpt'%iter)  #iter
+                saver.save(sess, out_dir + '/check_points/snap_RVD_new_lidar_%06d.ckpt'%iter)  #iter
                 # saver.save(sess, out_dir + '/check_points/MobileNet.ckpt')  #iter
                 # pdb.set_trace()
                 pass
