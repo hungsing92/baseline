@@ -5,8 +5,7 @@ from net.processing.boxes import *
 from net.processing.boxes3d import *
 from net.utility.draw import *
 
-# from dummynet import *
-from data import *
+from data.data import *
 
 from net.rpn_loss_op import *
 from net.rcnn_loss_op import *
@@ -79,6 +78,8 @@ def  project_to_front_roi(rois3d):
 
 def generat_test_reslut(probs, boxes3d, rgb_shape, index):
     result_path='./evaluate_object/val_R/'
+    makedirs(result_path)
+    # empty(result_path)
     if len(boxes3d)==0:
         return 1
     file=open(result_path+'%06d'%index+'.txt', 'w')
@@ -110,19 +111,19 @@ def load_dummy_datas(index):
     top_images  =[]
     front_images=[]
 
-    rgb   = cv2.imread('/home/hhs/4T/datasets/KITTI/object/training/image_2/0%s.png'%str(index),1).astype(np.float32, copy=False)
+    rgb   = cv2.imread(kitti_dir+'/image_2/0%s.png'%str(index),1).astype(np.float32, copy=False)
     rgbs_norm0=(rgb-PIXEL_MEANS)/255
-    lidar = np.load('/home/hhs/4T/datasets/dummy_datas/seg/lidar/lidar_%s.npy'%str(index))
-    top   = np.load('/home/hhs/4T/datasets/dummy_datas/seg/top_70/top_70%s.npy'%str(index))
+    lidar = np.load(train_data_root+'/lidar/lidar_%s.npy'%str(index))
+    top   = np.load(train_data_root+'/top_70/top_70%s.npy'%str(index))
     front = np.zeros((1,1),dtype=np.float32)
-    gt_label  = np.load('/home/hhs/4T/datasets/dummy_datas/seg/gt_labels/gt_labels_%s.npy'%str(index))
-    gt_box3d = np.load('/home/hhs/4T/datasets/dummy_datas/seg/gt_boxes3d/gt_boxes3d_%s.npy'%str(index))
+    gt_label  = np.load(train_data_root+'/gt_labels/gt_labels_%s.npy'%str(index))
+    gt_box3d = np.load(train_data_root+'/gt_boxes3d/gt_boxes3d_%s.npy'%str(index))
     rgb_shape   = rgb.shape
     # gt_rgb   = project_to_rgb_roi  (gt_box3d, rgb_shape[1], rgb_shape[0] )
     # keep = np.where((gt_rgb[:,1]>=-200) & (gt_rgb[:,2]>=-200) & (gt_rgb[:,3]<=(rgb_shape[1]+200)) & (gt_rgb[:,4]<=(rgb_shape[0]+200)))[0]
     # gt_label=gt_label[keep]
     # gt_box3d=gt_box3d[keep]
-    top_image   = cv2.imread('/home/hhs/4T/datasets/dummy_datas/seg/density_image_70/density_image_70%s.png'%str(index),1)
+    top_image   = cv2.imread(train_data_root+'/density_image_70/density_image_70%s.png'%str(index),1)
     front_image = np.zeros((1,1,3),dtype=np.float32)
     rgbs.append(rgb)
     lidars.append(lidar)
@@ -169,7 +170,7 @@ def run_test():
     makedirs(out_dir +'/tf')
     makedirs(out_dir +'/check_points')
     log = Logger(out_dir+'/log_%s.txt'%(time.strftime('%Y-%m-%d %H:%M:%S')),mode='a')
-    index=np.load('/home/hhs/4T/datasets/dummy_datas/seg/val_list.npy')
+    index=np.load(train_data_root+'/val_list.npy')
     index=sorted(index)
     print('len(index):%d'%len(index))
     num_frames=len(index)
@@ -218,7 +219,6 @@ def run_test():
     # set anchor boxes
     num_class = 2 #incude background
     anchors, inside_inds =  make_anchors(bases, stride, top_shape[0:2], top_feature_shape[0:2])
-    # inside_inds = np.arange(0,len(anchors),dtype=np.int32)  #use all  #<todo>
     print ('out_shape=%s'%str(out_shape))
     print ('num_frames=%d'%num_frames)
 
@@ -250,25 +250,18 @@ def run_test():
 
     num_ratios=len(ratios)
     num_scales=len(scales)
-    # fig, axs = plt.subplots(num_ratios,num_scales)
-    # mfig = mlab.figure(figure=None, bgcolor=(0,0,0), fgcolor=None, engine=None, size=(500, 500))
-
     sess = tf.InteractiveSession()
     with sess.as_default():
         sess.run( tf.global_variables_initializer(), { IS_TRAIN_PHASE : True } )
         # sess = tf_debug.LocalCLIDebugWrapperSession(sess)
         summary_writer = tf.summary.FileWriter(out_dir+'/tf', sess.graph)
         saver  = tf.train.Saver()  
-
-
-        saver.restore(sess, './outputs/check_points/snap_RVD_new_lidar_6s_060000.ckpt')  
-
+        saver.restore(sess, './outputs/check_points/snap_RVD_new_lidar_6s_060000.ckpt')
 
         batch_top_cls_loss =0
         batch_top_reg_loss =0
         batch_fuse_cls_loss=0
         batch_fuse_reg_loss=0
-
 
         for iter in range(num_frames):
             start_time=time.time()
@@ -286,7 +279,6 @@ def run_test():
 
             batch_gt_labels    = gt_labels[idx]
             batch_gt_boxes3d   = gt_boxes3d[idx]
-            # pdb.set_trace()
             batch_gt_top_boxes = box3d_to_top_box(batch_gt_boxes3d)
 
             inside_inds_filtered=anchor_filter(batch_top_images[0,:,:,-1], anchors, inside_inds)

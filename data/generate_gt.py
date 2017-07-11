@@ -102,7 +102,7 @@ calib_path = os.path.join(kitti_dir, "calib/")
 classes = {'__background__':0, 'Car':1, 'Van':1}#, ' Van':1, 'Truck':1, 'Tram':1}
 # result_path='./evaluate_object/val_gt/'
 gt_boxes3d_path = train_data_root + '/gt_boxes3d'
-gt_labels_path = train_data_root + 'gt_labels'
+gt_labels_path = train_data_root + '/gt_labels'
 
 empty(gt_boxes3d_path)
 empty(gt_labels_path)
@@ -182,16 +182,16 @@ for i in range(7481):
 	gt_labels  = np.array(gt_labels ,dtype=np.uint8)
 	file.close()
 
-	np.save(train_data_root+'/gt_boxes3d/gt_boxes3d_%05d.npy'%i,gt_boxes3d)
-	np.save(train_data_root+'/gt_labels/gt_labels_%05d.npy'%i,gt_labels)
+	np.save(gt_boxes3d_path+'/gt_boxes3d_%05d.npy'%i,gt_boxes3d)
+	np.save(gt_labels_path+'/gt_labels_%05d.npy'%i,gt_labels)
 
 
 
 
-#generate train and val list
-
-files_list=glob.glob(train_data_root+"/gt_labels/gt_labels_*.npy")
-index=np.array([file_index.strip().split('/')[-1][10:10+5] for file_index in files_list ])
+#Generate train and val list
+#3DOP train val list http://www.cs.toronto.edu/objprop3d/data/ImageSets.tar.gz
+files_list=glob.glob(gt_labels_path+"/gt_labels_*.npy")
+index=np.array([file_index.strip().split('_')[-1].split('.')[0] for file_index in files_list ])
 num_frames=len(files_list)
 train_num=int(np.round(num_frames*0.7))
 random_index=np.random.permutation(index)

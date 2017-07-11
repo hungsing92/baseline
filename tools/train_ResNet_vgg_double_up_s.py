@@ -146,7 +146,7 @@ def  project_to_front_roi(rois3d):
 data_root='/home/users/hhs/4T/datasets/dummy_datas/'
 kitti_img_root='/mnt/disk_4T/KITTI/'
 vis=0
-ohem=False
+ohem=True
 def run_train():
 
     # output dir, etc
@@ -290,7 +290,7 @@ def run_train():
         # sess = tf_debug.LocalCLIDebugWrapperSession(sess)
         # summary_writer = tf.summary.FileWriter(out_dir+'/tf', sess.graph)
         saver  = tf.train.Saver() 
-        saver.restore(sess, './outputs/check_points/snap_RVD_new_lidar_6s_045000.ckpt') 
+        saver.restore(sess, './outputs/check_points/snap_RVD_new_lidar_6s_075000.ckpt') 
         # # saver.restore(sess, './outputs/check_points/MobileNet.ckpt')  
 
         # var_lt_res=[v for v in tf.trainable_variables() if v.name.startswith('res')]#resnet_v1_50
@@ -324,7 +324,7 @@ def run_train():
         batch_top_reg_loss =0
         batch_fuse_cls_loss=0
         batch_fuse_reg_loss=0
-        rate=0.00002
+        rate=0.000005
         frame_range = np.arange(num_frames)
         idx=0
         frame=0

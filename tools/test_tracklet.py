@@ -6,7 +6,7 @@ from net.processing.boxes3d import *
 from net.utility.draw import *
 
 # from dummynet import *
-from data import *
+from data.data import *
 
 from net.rpn_loss_op import *
 from net.rcnn_loss_op import *
@@ -62,7 +62,7 @@ def load_dummy_datas():
     front_images=[]
 
     fig = mlab.figure(figure=None, bgcolor=(0,0,0), fgcolor=None, engine=None, size=(1000, 500))
-    files_list=glob.glob(data_root+'seg/rgb/*.png')
+    files_list=glob.glob(tracklet_root+'seg/rgb/*.png')
     index=np.array([file_index.strip().split('/')[-1][10:10+5] for file_index in files_list ])
     num_frames=len(files_list)
     # num_frames=30
@@ -74,24 +74,16 @@ def load_dummy_datas():
         print('num_frames:%d'%num_frames)
     for n in range(num_frames):
         print(n)
-        rgb   = cv2.imread(data_root+'seg/rgb/rgb_%05d.png'%n,1)
+        rgb   = cv2.imread(tracklet_root+'seg/rgb/rgb_%05d.png'%n,1)
         rgb=np.float32(rgb)
         rgbs_norm0=(rgb-PIXEL_MEANS)/255
-        lidar = np.load(data_root+'seg/lidar/lidar_%05d.npy'%n)
-        top   = np.load(data_root+'seg/top_70/top_70%05d.npy'%n)
+        lidar = np.load(tracklet_root+'seg/lidar/lidar_%05d.npy'%n)
+        top   = np.load(tracklet_root+'seg/top_70/top_70%05d.npy'%n)
         front = np.zeros((1,1),dtype=np.float32)
         # gt_label  = np.load('/home/hhs/4T/datasets/dummy_datas/seg/gt_labels/gt_labels_%s.npy'%str(index[n]))
         # gt_box3d = np.load('/home/hhs/4T/datasets/dummy_datas/seg/gt_boxes3d/gt_boxes3d_%s.npy'%str(index[n]))
 
-
-        # rgb_shape   = rgb.shape
-        # gt_rgb   = project_to_rgb_roi  (gt_box3d  )
-        # keep = np.where((gt_rgb[:,1]>=-200) & (gt_rgb[:,2]>=-200) & (gt_rgb[:,3]<=(rgb_shape[1]+200)) & (gt_rgb[:,4]<=(rgb_shape[0]+200)))[0]
-        # gt_label=gt_label[keep]
-        # gt_box3d=gt_box3d[keep]
-
-
-        top_image   = cv2.imread(data_root+'seg/density_image_70/density_image_70%05d.png'%n,1)
+        top_image   = cv2.imread(tracklet_root+'seg/density_image_70/density_image_70%05d.png'%n,1)
         # top_image   = np.int32(top_image)
         front_image = np.zeros((1,1,3),dtype=np.float32)
 
@@ -166,17 +158,17 @@ def  project_to_front_roi(rois3d):
 
     return rois
 
-
-
 # def  project_to_surround_roi(rois3d):
 #     num  = len(rois3d)
 #     rois = np.zeros((num,5),dtype=np.int32)
 #     rois[:,1:5] = box3d_to_surround_box(rois3d)
 #     return rois
 
-data_root='/home/hhs/4T/datasets/dummy_datas_064/'
-kitti_img_root='/home/hhs/4T/datasets/KITTI/'
-
+tracklet_root='/home/hhs/4T/datasets/dummy_datas_064/'
+mayavi_save_path = tracklet_root+'seg/mayavi_fig'
+rgb_save_path = tracklet_root+'seg/result_rgb'
+makedirs(mayavi_save_path)                          
+makedirs(rgb_save_path)
 
 def run_test():
 
@@ -274,7 +266,7 @@ def run_test():
         saver  = tf.train.Saver()  
 
 
-        saver.restore(sess, './outputs/check_points/snap_RVD_new_lidar_6s_045000.ckpt')  
+        saver.restore(sess, './outputs/check_points/snap_RVD_new_lidar_6s_060000.ckpt')  
 
 
         batch_top_cls_loss =0
@@ -324,13 +316,6 @@ def run_test():
             batch_rois3d        = project_to_roi3d(batch_top_rois)
             batch_front_rois = project_to_front_roi(batch_rois3d )
             batch_rgb_rois      = project_to_rgb_roi     (batch_rois3d, rgb_shape[1], rgb_shape[0])
-            # pdb.set_trace()
-            # keep = np.where((batch_rgb_rois[:,1]>=-200) & (batch_rgb_rois[:,2]>=-200) & (batch_rgb_rois[:,3]<=(rgb_shape[1]+200)) & (batch_rgb_rois[:,4]<=(rgb_shape[0]+200)))[0]
-            # batch_rois3d        = batch_rois3d[keep]      
-            # batch_front_rois    = batch_front_rois[keep]
-            # batch_rgb_rois      = batch_rgb_rois[keep]  
-            # batch_proposal_scores=batch_proposal_scores[keep]
-            # batch_top_rois      =batch_top_rois[keep]
 
             ## run classification and regression  -----------
             fd1={
@@ -382,52 +367,39 @@ def run_test():
                 azimuth,elevation,distance,focalpoint = MM_PER_VIEW1
                 mlab.view(azimuth,elevation,distance,focalpoint)
                 mlab.show(1)
-                mlab.savefig(data_root+'seg/mayavi_fig/mayavi_%05d.png'%iter)
+                mlab.savefig(mayavi_save_path+'/mayavi_%05d.png'%iter)
                 # cv2.waitKey(0)
                 # mlab.close()
 
 
                 ## show rpn score maps
                 p = batch_top_probs.reshape( *(top_feature_shape[0:2]), 2*num_bases)
-                # for n in range(num_bases):
 
-                #     pn = p[:,:,2*n+1]*255
-                #     if num_scales==1 or num_ratios==1:
-                #         axs[n].cla()
-                #         axs[n].imshow(pn, cmap='gray', vmin=0, vmax=255)
-                #     else:
-                #         r=n%num_scales
-                #         s=n//num_scales
-                #         axs[r,s].cla()
-                #         axs[r,s].imshow(pn, cmap='gray', vmin=0, vmax=255)
-                # plt.pause(0.2)
                 # pdb.set_trace()
                 # img_gt     = draw_rpn_gt(top_image, batch_gt_top_boxes, batch_gt_labels)
+                # imshow('img_rpn_gt',img_gt)
                 img_rpn_nms = draw_rpn_nms(top_image, batch_proposals, batch_proposal_scores)
-                # pdb.set_trace()
                 imshow('img_rpn_nms',img_rpn_nms)
                 cv2.waitKey(1)
-                # imshow('img_rpn_gt',img_gt)
+                
 
-                rgb1 =draw_rcnn_nms (rgb, boxes3d, probs)                
+                rgb1 =draw_rcnn_nms (rgb, boxes3d, probs) 
+                imshow('draw_rcnn_nms',rgb1)               
                 # projections=box3d_to_rgb_projections(batch_gt_boxes3d)
                 # img_rcnn_nms = draw_rgb_projections(rgb1, projections, color=(0,0,255), thickness=1)
 
                 # pdb.set_trace()
                 rgb_boxes=project_to_rgb_roi(boxes3d, rgb_shape[1], rgb_shape[0] )
                 # rgb_boxes=batch_rgb_rois
-
                 img_rgb_2d_detection = draw_boxes(rgb, rgb_boxes[:,1:5], color=(255,0,255), thickness=1)
 
-                imshow('draw_rcnn_nms',rgb1)
+                
                 
                 imshow('img_rgb_2d_detection',img_rgb_2d_detection)
                 # cv2.waitKey(0)
                 # plt.pause(0.55)
 
-                cv2.imwrite(data_root+'seg/result_rgb/rgb_%05d.png'%iter,rgb1)
-
-
+                cv2.imwrite(rgb_save_path+'/rgb_%05d.png'%iter,rgb1)
 
 ## main function ##########################################################################
 

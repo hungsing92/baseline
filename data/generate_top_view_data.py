@@ -7,7 +7,6 @@ import pdb
 import tensorflow as tf
 import time
 import glob
-
 import cv2
 from net.utility.draw import *
 # ==============================================================================
@@ -69,14 +68,13 @@ def lidar_to_top(lidar):
 
     return top, density_image
 
-# kitti_dir = "/home/hhs/4T/datasets/KITTI/object/training"
-# train_data_root= '/home/hhs/4T/datasets/dummy_datas/seg'
 velodyne = os.path.join(kitti_dir, "velodyne/")
 files_list=glob.glob(velodyne+'/*.bin')
 
-# kitti_dir = "/home/hhs/4T/datasets/dummy_datas_064/seg/"
-# velodyne = os.path.join('/home/hhs/4T/datasets/raw data/2011_09_26_drive_0064_sync/2011_09_26/2011_09_26_drive_0064_sync/velodyne_points/data')
-# files_list=glob.glob(velodyne+'/*.bin')
+###Generate top view data for tracklet.
+# train_data_root = "/home/hhs/4T/datasets/dummy_datas_064/seg"
+# tracklet_dir = '/home/hhs/4T/datasets/raw data/2011_09_26_drive_0064_sync/2011_09_26/2011_09_26_drive_0064_sync/velodyne_points/data'
+# files_list=glob.glob(tracklet_dir+'/*.bin')
 
 lidar_dir = train_data_root+'/lidar'
 top_dir = train_data_root+'/top_70'

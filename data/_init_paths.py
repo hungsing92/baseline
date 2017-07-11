@@ -26,6 +26,4 @@ add_path(lib_path)
 
 from net.utility.file import *
 
-kitti_dir = "/home/hhs/4T/datasets/KITTI/object/training"
-train_data_root= '/home/hhs/4T/datasets/dummy_datas/seg'
-makedirs(train_data_root)
+

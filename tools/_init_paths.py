@@ -23,7 +23,3 @@ this_dir = osp.dirname(__file__)
 # Add lib to PYTHONPATH
 lib_path = osp.join(this_dir, '..')
 add_path(lib_path)
-
-kitti_dir = "/home/hhs/4T/datasets/KITTI/object/training"
-train_data_root= '/home/hhs/4T/datasets/dummy_datas/seg'
-makedirs(train_data_root)

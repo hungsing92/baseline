@@ -31,6 +31,12 @@ MATRIX_Kt = ([[ 721.5377,    0.    ,    0.    ],
               [   0.    ,  721.5377,    0.    ],
               [ 609.5593,  172.854 ,    1.    ]])
 
+kitti_dir = "/home/hhs/4T/datasets/KITTI/object/training"
+train_data_root= '/home/hhs/4T/datasets/dummy_datas/seg'
+
+from net.utility.file import *
+makedirs(train_data_root)
+
 
 #----------------------------------
 
