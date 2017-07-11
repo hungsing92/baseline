@@ -94,12 +94,11 @@ def project_cam2velo(cam,Tr):
 	lidar_loc=lidar_loc_[:3]
 	return lidar_loc.reshape(1,3)
 
-
 # kitti_dir = "/home/hhs/4T/datasets/KITTI/object/training"
 label_path = os.path.join(kitti_dir, "label_2/")
 calib_path = os.path.join(kitti_dir, "calib/")
 # train_data_root='/home/hhs/4T/datasets/dummy_datas/seg'
-classes = {'__background__':0, 'Car':1, 'Van':1}#, ' Van':1, 'Truck':1, 'Tram':1}
+classes = {'__background__':0, 'Car':1}#, ' Van':1, 'Truck':1, 'Tram':1}
 # result_path='./evaluate_object/val_gt/'
 gt_boxes3d_path = train_data_root + '/gt_boxes3d'
 gt_labels_path = train_data_root + '/gt_labels'
