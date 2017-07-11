@@ -201,18 +201,6 @@ def run_train():
         print ('out_shape=%s'%str(out_shape))
         print ('num_frames=%d'%num_frames)
 
-        #-----------------------
-        #check data
-        # if 0:
-        #     fig = mlab.figure(figure=None, bgcolor=(0,0,0), fgcolor=None, engine=None, size=(1000, 500))
-        #     draw_lidar(lidars[0], fig=fig)
-        #     draw_gt_boxes3d(gt_boxes3d[0], fig=fig)
-        #     mlab.show(1)
-        #     cv2.waitKey(1)
-
-
-
-
     #load model ####################################################################################################
     top_anchors     = tf.placeholder(shape=[None, 4], dtype=tf.int32,   name ='anchors'    )
     top_inside_inds = tf.placeholder(shape=[None   ], dtype=tf.int32,   name ='inside_inds')
@@ -266,8 +254,6 @@ def run_train():
     tf.summary.scalar('l2', l2)
     learning_rate = tf.placeholder(tf.float32, shape=[])
     solver = tf.train.AdamOptimizer(learning_rate)
-    # solver = tf.train.MomentumOptimizer(learning_rate=learning_rate, momentum=0.9)
-    #solver_step = solver.minimize(top_cls_loss+top_reg_loss+l2)
     solver_step = solver.minimize(1*top_cls_loss+1*top_reg_loss+1.5*fuse_cls_loss+2*fuse_reg_loss+l2)
 
     max_iter = 200000
@@ -334,11 +320,7 @@ def run_train():
             # rate=0.001
             start_time=time.time()
 
-
-            # generate train image -------------
-            # idx = np.random.choice(num_frames)     #*10   #num_frames)  #0
-            # shuffle the samples every 4*num_frames
-            if iter%(num_frames*2)==0:
+           if iter%(num_frames*2)==0:
                 idx=0
                 frame=0
                 count=0
@@ -411,10 +393,7 @@ def run_train():
             if ohem==True:
                 batch_top_rois, batch_fuse_labels, batch_fuse_targets  = \
                      rcnn_target_ohem(  batch_proposals, batch_gt_labels, batch_gt_top_boxes, batch_gt_boxes3d )
-    
-                # batch_top_rois, batch_fuse_labels, batch_fuse_targets  = \
-                #      rcnn_target(  batch_proposals, batch_gt_labels, batch_gt_top_boxes, batch_gt_boxes3d )
-    
+        
                 batch_rois3d	 = project_to_roi3d    (batch_top_rois)
                 batch_front_rois = project_to_front_roi(batch_rois3d  ) 
                 batch_rgb_rois   = project_to_rgb_roi  (batch_rois3d, rgb_shape[1], rgb_shape[0])
@@ -492,67 +471,14 @@ def run_train():
             log.write('%5.1f   %5d    %0.4fs   %0.4f   |   %0.5f   %0.5f   |   %0.5f   %0.5f  \n' %\
 				(epoch, iter, speed, rate, batch_top_cls_loss, batch_top_reg_loss, batch_fuse_cls_loss, batch_fuse_reg_loss))
 
-            # print (rcnn_probs[:10,1])
-
-            #print('ok')
-            # debug: ------------------------------------
-
-    #         if vis and iter%iter_debug==0:
-    #             top_image = top_imgs[idx]
-    #             rgb       = rgbs[idx]
-
-    #             batch_top_probs, batch_top_scores, batch_top_deltas  = \
-    #                 sess.run([ top_probs, top_scores, top_deltas ],fd2)
-
-    #             batch_fuse_probs, batch_fuse_deltas = \
-    #                 sess.run([ fuse_probs, fuse_deltas ],fd2)
-
-    #             #batch_fuse_deltas=0*batch_fuse_deltas #disable 3d box prediction
-    #             probs, boxes3d = rcnn_nms(batch_fuse_probs, batch_fuse_deltas, batch_rois3d, threshold=0.05)
-
-
-    #             ## show rpn score maps
-    #             p = batch_top_probs.reshape( *(top_feature_shape[0:2]), 2*num_bases)
-    #             for n in range(num_bases):
-    #                 r=n%num_scales
-    #                 s=n//num_scales
-    #                 pn = p[:,:,2*n+1]*255
-    #                 axs[s,r].cla()
-    #                 if vis :
-    #                     axs[s,r].imshow(pn, cmap='gray', vmin=0, vmax=255)
-    #                     plt.pause(0.01)
-
-				# ## show rpn(top) nms
-    #             img_rpn     = draw_rpn    (top_image, batch_top_probs, batch_top_deltas, anchors, inside_inds)
-    #             img_rpn_nms = draw_rpn_nms(img_gt, batch_proposals, batch_proposal_scores)
-    #             #imshow('img_rpn',img_rpn)
-    #             if vis :
-    #                 imshow('img_rpn_nms',img_rpn_nms)
-    #                 cv2.waitKey(1)
-
-    #             ## show rcnn(fuse) nms
-    #             img_rcnn     = draw_rcnn (top_image, batch_fuse_probs, batch_fuse_deltas, batch_top_rois, batch_rois3d,darker=1)
-    #             img_rcnn_nms = draw_rcnn_nms(rgb, boxes3d, probs)
-    #             if vis :
-    #                 imshow('img_rcnn',img_rcnn)
-    #                 imshow('img_rcnn_nms',img_rcnn_nms)
-    #                 cv2.waitKey(0)
             if (iter)%10==0:
                 summary = sess.run(merged,fd2)
                 train_writer.add_summary(summary, iter)
             # save: ------------------------------------
             if (iter)%5000==0 and (iter!=0):
-                #saver.save(sess, out_dir + '/check_points/%06d.ckpt'%iter)  #iter
                 saver.save(sess, out_dir + '/check_points/snap_RVD_new_lidar_6s_%06d.ckpt'%iter)  #iter
-                # saver.save(sess, out_dir + '/check_points/MobileNet.ckpt')  #iter
-                # pdb.set_trace()
                 pass
-
             idx=idx+1
-
-
-
-
 
 
 ## main function ##########################################################################
