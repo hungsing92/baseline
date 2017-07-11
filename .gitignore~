@@ -1,5 +1,5 @@
 outputs/*
-net/roipooling_op/
+net/roipooling_op/__pycache__/
 0outputs/*
 *.py[cod]
 # Python:
@@ -10,7 +10,8 @@ net/roipooling_op/
 __pycache__/
 kitti_data/
 net/__pycache__/
-net/processing/
-net/utility/
+net/processing/__pycache__/
+net/utility/__pycache__/
 outputs/
 evaluate_object/
+__pycache__/
