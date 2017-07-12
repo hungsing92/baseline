@@ -78,7 +78,7 @@ def  project_to_front_roi(rois3d):
 
 def generat_test_reslut(probs, boxes3d, rgb_shape, index):
     result_path='./evaluate_object/val_R/'
-    makedirs(result_path)
+    # makedirs(result_path)
     # empty(result_path)
     if len(boxes3d)==0:
         return 1
@@ -163,6 +163,9 @@ def load_dummy_datas(index):
 is_show=0
 # MM_PER_VIEW1 = 120, 30, 70, [1,1,0]
 MM_PER_VIEW1 = 180, 70, 60, [1,1,0]#[ 12.0909996 , -1.04700089, -2.03249991]
+result_path='./evaluate_object/val_R/'
+    # makedirs(result_path)
+empty(result_path)
 def run_test():
 
     # output dir, etc
@@ -171,7 +174,7 @@ def run_test():
     makedirs(out_dir +'/check_points')
     log = Logger(out_dir+'/log_%s.txt'%(time.strftime('%Y-%m-%d %H:%M:%S')),mode='a')
 
-    index=np.load(train_data_root+'/val_list.npy')
+    index=np.load(train_data_root+'/train_val_list.npy')
     
     index=sorted(index)
     print('len(index):%d'%len(index))
@@ -258,7 +261,7 @@ def run_test():
         # sess = tf_debug.LocalCLIDebugWrapperSession(sess)
         summary_writer = tf.summary.FileWriter(out_dir+'/tf', sess.graph)
         saver  = tf.train.Saver()  
-        saver.restore(sess, './outputs/check_points/snap_RVD_new_lidar_6s_060000.ckpt')
+        saver.restore(sess, './outputs/check_points/snap_RVD_new_lidar_6s_035000.ckpt')
 
         batch_top_cls_loss =0
         batch_top_reg_loss =0

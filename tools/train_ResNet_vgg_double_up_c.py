@@ -126,6 +126,7 @@ def  project_to_front_roi(rois3d):
     return rois
 
 vis=0
+ohem=False
 def run_train():
 
     # output dir, etc
@@ -219,6 +220,13 @@ def run_train():
 
     fuse_labels  = tf.placeholder(shape=[None            ], dtype=tf.int32,   name='fuse_label' )
     fuse_targets = tf.placeholder(shape=[None, *out_shape], dtype=tf.float32, name='fuse_target')
+    
+    fuse_scores_ohem=tf.stop_gradient(fuse_scores)
+    fuse_deltas_ohem=tf.stop_gradient(fuse_deltas)
+    fuse_labels_ohem=tf.stop_gradient(fuse_labels)
+    fuse_targets_ohem=tf.stop_gradient(fuse_targets)
+    softmax_loss_ohem, rcnn_smooth_l1_ohem = rcnn_loss_ohem(fuse_scores_ohem, fuse_deltas_ohem, fuse_labels_ohem, fuse_targets_ohem)
+
     fuse_cls_loss, fuse_reg_loss = rcnn_loss(fuse_scores, fuse_deltas, fuse_labels, fuse_targets)
     tf.summary.scalar('rpn_cls_loss', top_cls_loss)
     tf.summary.scalar('rpn_reg_loss', top_reg_loss)
@@ -364,9 +372,55 @@ def run_train():
             batch_top_inds, batch_top_pos_inds, batch_top_labels, batch_top_targets  = \
                 rpn_target ( anchors, inside_inds_filtered, batch_gt_labels,  batch_gt_top_boxes)
 
-            batch_top_rois, batch_fuse_labels, batch_fuse_targets  = \
+            if ohem==True:
+                batch_top_rois, batch_fuse_labels, batch_fuse_targets  = \
+                     rcnn_target_ohem(  batch_proposals, batch_gt_labels, batch_gt_top_boxes, batch_gt_boxes3d )
+        
+                batch_rois3d     = project_to_roi3d    (batch_top_rois)
+                batch_front_rois = project_to_front_roi(batch_rois3d  ) 
+                batch_rgb_rois   = project_to_rgb_roi  (batch_rois3d, rgb_shape[1], rgb_shape[0])
+    
+    
+                ## run classification and regression loss -----------
+                fd2={
+                **fd1,
+    
+                    top_images: batch_top_images,
+                    front_images: batch_front_images,
+                    rgb_images: batch_rgb_images,
+    
+                    top_rois:   batch_top_rois,
+                    front_rois: batch_front_rois,
+                    rgb_rois:   batch_rgb_rois,
+    
+                    top_inds:     batch_top_inds,
+                    top_pos_inds: batch_top_pos_inds,
+                    top_labels:   batch_top_labels,
+                    top_targets:  batch_top_targets,
+    
+                    fuse_labels:  batch_fuse_labels,
+                    fuse_targets: batch_fuse_targets,
+                }
+                #_, batch_top_cls_loss, batch_top_reg_loss = sess.run([solver_step, top_cls_loss, top_reg_loss],fd2)
+    
+                rois_per_image    = CFG.TRAIN.RCNN_BATCH_SIZE
+                fg_rois_per_image = int(np.round(CFG.TRAIN.RCNN_FG_FRACTION * rois_per_image))
+                loss_ohem_, rcnn_smooth_l1_ohem_= sess.run([softmax_loss_ohem, rcnn_smooth_l1_ohem],fd2)
+                loss_ohem_[:len(rcnn_smooth_l1_ohem_)] += rcnn_smooth_l1_ohem_
+                # fg_inds=np.arange(len(rcnn_smooth_l1_ohem_))
+                # if len(rcnn_smooth_l1_ohem_)>fg_rois_per_image:
+                #     fg_inds = np.random.choice(fg_inds, size=fg_rois_per_image, replace=False)
+                #     loss_ohem_[fg_inds]=0 
+                # pdb.set_trace()
+                ohem_ind = np.argsort(-loss_ohem_[len(rcnn_smooth_l1_ohem_):])[:(rois_per_image-len(rcnn_smooth_l1_ohem_))]
+                ohem_ind = np.hstack([np.arange(len(rcnn_smooth_l1_ohem_)), ohem_ind])
+                batch_top_rois=batch_top_rois[ohem_ind]
+                batch_fuse_labels=batch_fuse_labels[ohem_ind]
+                batch_fuse_targets=batch_fuse_targets[ohem_ind]
+            else:
+                batch_top_rois, batch_fuse_labels, batch_fuse_targets  = \
                  rcnn_target(  batch_proposals, batch_gt_labels, batch_gt_top_boxes, batch_gt_boxes3d )
-
+            
             batch_rois3d	 = project_to_roi3d    (batch_top_rois)
             batch_front_rois = project_to_front_roi(batch_rois3d  )
             batch_rgb_rois   = project_to_rgb_roi  (batch_rois3d, rgb_shape[1], rgb_shape[0])

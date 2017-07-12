@@ -7,20 +7,23 @@ import glob
 import numpy as np
 import os
 import pdb
+from net.utility.file import *
 
-data_root='/home/hhs/4T/datasets/dummy_datas_064/seg'
+data_root='/home/hhs/4T/datasets/dummy_datas_059/seg'
 files_list=glob.glob(data_root+'/mayavi_fig/*.png')
 index=np.array([file_index.strip().split('/')[-1][10:10+5] for file_index in files_list ])
 num_frames=len(files_list)
 
-video_path=data_root+'/result_video.avi'
+video_path=data_root+'/result_video_new_ohem_059.avi'
 fps = 8
 fourcc = cv2.VideoWriter_fourcc(*'MJPG')
 videoWriter = cv2.VideoWriter(video_path,fourcc,fps,(1600,1200))#最后一个是保存图片的尺寸
 # fig, axes = plt.subplots(2, 1, figsize=(16, 12))
 # ax0, ax1 = axes.ravel()
 
+makedirs(data_root+'/result_video_img')
 for i in range(num_frames):
+	print(i)
 	fig, axes = plt.subplots(2, 1, figsize=(16, 12))
 	ax0, ax1 = axes.ravel()
 	mFig = mpimg.imread(data_root+'/mayavi_fig/mayavi_%05d.png'%i)

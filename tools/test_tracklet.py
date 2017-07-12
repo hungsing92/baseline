@@ -33,9 +33,7 @@ from ResNet50_vgg_double_up_c import *
 from tensorflow.python import debug as tf_debug
 
 
-is_show=1
-# MM_PER_VIEW1 = 120, 30, 70, [1,1,0]
-MM_PER_VIEW1 = 180, None, 60, [1,1,0]#[ 12.0909996 , -1.04700089, -2.03249991]
+
 #---------------------------------------------------------------------------------------------
 #  todo:
 #    -- fix anchor index
@@ -74,7 +72,7 @@ def load_dummy_datas():
         print('num_frames:%d'%num_frames)
     for n in range(num_frames):
         print(n)
-        rgb   = cv2.imread(tracklet_root+'seg/rgb/rgb_%05d.png'%n,1)
+        rgb   = cv2.imread(tracklet_root+'seg/rgb/%010d.png'%n,1)
         rgb=np.float32(rgb)
         rgbs_norm0=(rgb-PIXEL_MEANS)/255
         lidar = np.load(tracklet_root+'seg/lidar/lidar_%05d.npy'%n)
@@ -164,7 +162,11 @@ def  project_to_front_roi(rois3d):
 #     rois[:,1:5] = box3d_to_surround_box(rois3d)
 #     return rois
 
-tracklet_root='/home/hhs/4T/datasets/dummy_datas_064/'
+is_show=1
+# MM_PER_VIEW1 = 120, 30, 70, [1,1,0]
+MM_PER_VIEW1 = 180, 70, 60, [1,1,0]#[ 12.0909996 , -1.04700089, -2.03249991]
+
+tracklet_root='/home/hhs/4T/datasets/dummy_datas_059/'
 mayavi_save_path = tracklet_root+'seg/mayavi_fig'
 rgb_save_path = tracklet_root+'seg/result_rgb'
 makedirs(mayavi_save_path)                          
@@ -266,7 +268,7 @@ def run_test():
         saver  = tf.train.Saver()  
 
 
-        saver.restore(sess, './outputs/check_points/snap_RVD_new_lidar_6s_060000.ckpt')  
+        saver.restore(sess, './outputs/check_points/snap_RVD_new_lidar_6s_035000.ckpt')  
 
 
         batch_top_cls_loss =0
@@ -278,6 +280,7 @@ def run_test():
         for iter in range(num_frames):
             # epoch=1.0*iter
             # rate=0.001
+            print(iter)
             start_time=time.time()
 
             # iter=iter+50
@@ -309,7 +312,7 @@ def run_test():
                 IS_TRAIN_PHASE:  False
             }
             batch_proposals, batch_proposal_scores, batch_top_features = sess.run([proposals, proposal_scores, top_features],fd1)
-            print(batch_proposal_scores[:10])
+            # print(batch_proposal_scores[:10])
             ## generate  train rois  ------------
             batch_top_rois = batch_proposals
             # pdb.set_trace()

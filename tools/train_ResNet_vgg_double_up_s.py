@@ -63,13 +63,6 @@ def load_dummy_datas(index):
         gt_label  = np.load(data_root+'seg/gt_labels/gt_labels_%05d.npy'%int(index[n]))
         gt_box3d = np.load(data_root+'seg/gt_boxes3d/gt_boxes3d_%05d.npy'%int(index[n]))
 
-        rgb_shape   = rgb.shape
-        gt_rgb   = project_to_rgb_roi  (gt_box3d, rgb_shape[1], rgb_shape[0])
-        keep = np.where((gt_rgb[:,1]>=-200) & (gt_rgb[:,2]>=-200) & (gt_rgb[:,3]<=(rgb_shape[1]+200)) & (gt_rgb[:,4]<=(rgb_shape[0]+200)))[0]
-        gt_label=gt_label[keep]
-        gt_box3d=gt_box3d[keep]
-
-
         top_image   = cv2.imread(data_root+'seg/density_image_70/density_image_70%05d.png'%int(index[n]))
         front_image = np.zeros((1,1,3),dtype=np.float32)
 
@@ -83,29 +76,6 @@ def load_dummy_datas(index):
         front_images.append(front_image)
         rgbs_norm.append(rgbs_norm0)
 
-
-        # explore dataset:
-
-        # if 0:
-        #     fig = mlab.figure(figure=None, bgcolor=(0,0,0), fgcolor=None, engine=None, size=(1000, 500))
-        #     projections=box3d_to_rgb_projections(gt_box3d)
-        #     rgb1 = draw_rgb_projections(rgb, projections, color=(255,255,255), thickness=2)
-        #     top_image1 = draw_box3d_on_top(top_image, gt_box3d, color=(255,255,255), thickness=2)
-
-        #     imshow('rgb',rgb1)
-        #     imshow('top_image',top_image1)
-
-        #     mlab.clf(fig)
-        #     draw_lidar(lidar, fig=fig)
-        #     draw_gt_boxes3d(gt_box3d, fig=fig)
-        #     mlab.show(1)
-        #     cv2.waitKey(0)
-
-        #     pass
-    # pdb.set_trace()
-    # rgbs=np.array(rgbs)
-    ##exit(0)
-    # mlab.close(all=True)
     return  rgbs, tops, fronts, gt_labels, gt_boxes3d, top_images, front_images, rgbs_norm, index#, lidars
 
 
