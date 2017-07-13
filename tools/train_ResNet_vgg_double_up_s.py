@@ -168,7 +168,7 @@ def run_train():
 			  [rgb_features,     rgb_rois,     7,7,1./(1*stride)],
               [top_features,     top_rois,     7,7,1./(0.75*stride)],
               [front_features,   front_rois,   0,0,1./(0.75*stride)],  #disable by 0,0
-              [rgb_features,     rgb_rois,     7,7,1./(0.75*stride)]
+              [rgb_features,     rgb_rois,     7,7,1./(0.75*stride)],
               ),
             num_class, out_shape) #<todo>  add non max suppression
 
