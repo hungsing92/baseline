@@ -41,6 +41,7 @@ def load_dummy_datas(index):
     tops      =[]
     fronts    =[]
     gt_labels =[]
+    gt_boxes2d=[]
     gt_boxes3d=[]
     rgbs_norm =[]
 
@@ -62,6 +63,7 @@ def load_dummy_datas(index):
         front = np.zeros((1,1),dtype=np.float32)
         gt_label  = np.load(data_root+'seg/gt_labels/gt_labels_%05d.npy'%int(index[n]))
         gt_box3d = np.load(data_root+'seg/gt_boxes3d/gt_boxes3d_%05d.npy'%int(index[n]))
+        gt_box2d = np.load(train_data_root+'/gt_boxes2d/gt_boxes2d_%05d.npy'%int(index[n]))
 
         rgb_shape   = rgb.shape
         gt_rgb   = project_to_rgb_roi  (gt_box3d, rgb_shape[1], rgb_shape[0])
@@ -79,12 +81,13 @@ def load_dummy_datas(index):
         fronts.append(front)
         gt_labels.append(gt_label)
         gt_boxes3d.append(gt_box3d)
+        gt_boxes2d.append(gt_box2d)
         top_images.append(top_image)
         front_images.append(front_image)
         rgbs_norm.append(rgbs_norm0)
 
 
-    return  rgbs, tops, fronts, gt_labels, gt_boxes3d, top_images, front_images, rgbs_norm, index#, lidars
+    return  rgbs, tops, fronts, gt_labels, gt_boxes3d, gt_boxes2d, top_images, front_images, rgbs_norm, index#, lidars
 
 
 data_root='/home/users/hhs/4T/datasets/dummy_datas/'
@@ -131,7 +134,7 @@ def run_train():
         stride = 4
         out_shape=(8,3)
 
-        rgbs, tops, fronts, gt_labels, gt_boxes3d, top_imgs, front_imgs, rgbs_norm, image_index = load_dummy_datas(index[:3])
+        rgbs, tops, fronts, gt_labels, gt_boxes3d, gt_boxes2d, top_imgs, front_imgs, rgbs_norm, image_index = load_dummy_datas(index[:3])
         # rgbs, tops, fronts, gt_labels, gt_boxes3d, top_imgs, front_imgs, rgbs_norm, image_index, lidars = load_dummy_datas()
         top_shape   = tops[0].shape
         front_shape = fronts[0].shape
@@ -277,7 +280,7 @@ def run_train():
                     if frame_end==num_frames:
                         end_flag=1
                     # pdb.set_trace()
-                    del rgbs, tops, fronts, gt_labels, gt_boxes3d, top_imgs, front_imgs, rgbs_norm, image_index
+                    del rgbs, tops, fronts, gt_labels, gt_boxes3d, gt_boxes2d, top_imgs, front_imgs, rgbs_norm, image_index
                     rgbs, tops, fronts, gt_labels, gt_boxes3d, top_imgs, front_imgs, rgbs_norm, image_index = load_dummy_datas(index[frame_range[frame:frame_end]])
                 idx=0
             if (end_flag==1) and (idx+frame)==num_frames:
