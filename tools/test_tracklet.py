@@ -125,38 +125,38 @@ def load_dummy_datas():
 
 
 
-#<todo>
-def project_to_roi3d(top_rois):
-    num = len(top_rois)
-    rois3d = np.zeros((num,8,3))
-    rois3d = top_box_to_box3d(top_rois[:,1:5])
-    return rois3d
+# #<todo>
+# def project_to_roi3d(top_rois):
+#     num = len(top_rois)
+#     rois3d = np.zeros((num,8,3))
+#     rois3d = top_box_to_box3d(top_rois[:,1:5])
+#     return rois3d
 
 
-def project_to_rgb_roi(rois3d, width, height):
-    num  = len(rois3d)
-    rois = np.zeros((num,5),dtype=np.int32)
-    projections = box3d_to_rgb_projections(rois3d)
-    for n in range(num):
-        qs = projections[n]
-        minx = np.min(qs[:,0])
-        maxx = np.max(qs[:,0])
-        miny = np.min(qs[:,1])
-        maxy = np.max(qs[:,1])
-        minx = np.maximum(np.minimum(minx, width - 1), 0)
-        maxx = np.maximum(np.minimum(maxx, width - 1), 0)
-        miny = np.maximum(np.minimum(miny, height - 1), 0)
-        maxy = np.maximum(np.minimum(maxy, height - 1), 0)
-        rois[n,1:5] = minx,miny,maxx,maxy
+# def project_to_rgb_roi(rois3d, width, height):
+#     num  = len(rois3d)
+#     rois = np.zeros((num,5),dtype=np.int32)
+#     projections = box3d_to_rgb_projections(rois3d)
+#     for n in range(num):
+#         qs = projections[n]
+#         minx = np.min(qs[:,0])
+#         maxx = np.max(qs[:,0])
+#         miny = np.min(qs[:,1])
+#         maxy = np.max(qs[:,1])
+#         minx = np.maximum(np.minimum(minx, width - 1), 0)
+#         maxx = np.maximum(np.minimum(maxx, width - 1), 0)
+#         miny = np.maximum(np.minimum(miny, height - 1), 0)
+#         maxy = np.maximum(np.minimum(maxy, height - 1), 0)
+#         rois[n,1:5] = minx,miny,maxx,maxy
 
-    return rois
+#     return rois
 
 
-def  project_to_front_roi(rois3d):
-    num  = len(rois3d)
-    rois = np.zeros((num,5),dtype=np.int32)
+# def  project_to_front_roi(rois3d):
+#     num  = len(rois3d)
+#     rois = np.zeros((num,5),dtype=np.int32)
 
-    return rois
+#     return rois
 
 # def  project_to_surround_roi(rois3d):
 #     num  = len(rois3d)

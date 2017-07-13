@@ -31,24 +31,6 @@ def project_velo2cam(velo,Tr,R0,P2):
 		projections[i] = box2d
 	return projections
 
-def project_to_rgb_roi(rois3d, width, height,Tr,R0,P2):
-    num  = len(rois3d)
-    rois = np.zeros((num,5),dtype=np.int32)
-    projections = project_velo2cam(rois3d,Tr,R0,P2)
-    for n in range(num):
-        qs = projections[n]
-        minx = np.min(qs[:,0])
-        maxx = np.max(qs[:,0])
-        miny = np.min(qs[:,1])
-        maxy = np.max(qs[:,1])
-        minx = np.maximum(np.minimum(minx, width - 1), 0)
-        maxx = np.maximum(np.minimum(maxx, width - 1), 0)
-        miny = np.maximum(np.minimum(miny, height - 1), 0)
-        maxy = np.maximum(np.minimum(maxy, height - 1), 0)
-        rois[n,1:5] = minx,miny,maxx,maxy
-
-    return rois
-
 def load_kitti_calib(calib_path,index):
     """
     load projection matrix
@@ -171,7 +153,7 @@ for i in range(7481):
 		cornerPosInVelo = np.dot(rotMat, Box) + np.tile(t_lidar, (8,1)).T
 		box3d=cornerPosInVelo.transpose()
 		box2d=np.array([x1, y1, x2, y2])
-		# rgb_boxes=project_to_rgb_roi([box3d], 1242, 375 ,Tr,R0,P2)
+		# rgb_boxes=project_to_rgb_roi([box3d], 1242, 375)
 		# line='Car %.2f %d -10 %.2f %.2f %.2f %.2f -1 -1 -1 -1000 -1000 -1000 -10 %.2f\n'%(truncated, occluded, rgb_boxes[0][1], rgb_boxes[0][2], rgb_boxes[0][3], rgb_boxes[0][4], 1)
 		# file.write(line)
 
