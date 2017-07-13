@@ -307,6 +307,7 @@ def run_train():
                 continue
 
             batch_gt_boxes3d   = gt_boxes3d[idx]
+            batch_gt_boxes2d   = gt_boxes2d[idx]
             # pdb.set_trace()
             batch_gt_top_boxes = box3d_to_top_box(batch_gt_boxes3d)
 
