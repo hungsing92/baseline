@@ -63,7 +63,7 @@ def load_dummy_datas(index):
         front = np.zeros((1,1),dtype=np.float32)
         gt_label  = np.load(data_root+'seg/gt_labels/gt_labels_%05d.npy'%int(index[n]))
         gt_box3d = np.load(data_root+'seg/gt_boxes3d/gt_boxes3d_%05d.npy'%int(index[n]))
-        gt_box2d = np.load(train_data_root+'seg/gt_boxes2d/gt_boxes2d_%05d.npy'%int(index[n]))
+        gt_box2d = np.load(data_root+'seg/gt_boxes2d/gt_boxes2d_%05d.npy'%int(index[n]))
 
         rgb_shape   = rgb.shape
         gt_rgb   = project_to_rgb_roi  (gt_box3d, rgb_shape[1], rgb_shape[0])
