@@ -3,7 +3,7 @@ from net.configuration import *
 from net.processing.boxes import *
 from net.processing.boxes3d import *
 from net.utility.draw import *
-
+import pdb
 
 
 # gt_boxes    : (x1,y1,  x2,y2  label)  #projected 2d
@@ -66,6 +66,134 @@ def rcnn_target(rois, gt_labels, gt_boxes, gt_boxes3d):
         #exit(0)
 
     return rois, labels, targets
+
+# def project_to_rgb_roi(rois3d, width, height):
+#     num  = len(rois3d)
+#     rois = np.zeros((num,5),dtype=np.int32)
+#     projections = box3d_to_rgb_projections(rois3d)
+#     for n in range(num):
+#         qs = projections[n]
+#         minx = np.min(qs[:,0])
+#         maxx = np.max(qs[:,0])
+#         miny = np.min(qs[:,1])
+#         maxy = np.max(qs[:,1])
+#         minx = np.maximum(np.minimum(minx, width - 1), 0)
+#         maxx = np.maximum(np.minimum(maxx, width - 1), 0)
+#         miny = np.maximum(np.minimum(miny, height - 1), 0)
+#         maxy = np.maximum(np.minimum(maxy, height - 1), 0)
+#         rois[n,1:5] = minx,miny,maxx,maxy
+#     return rois
+
+def rcnn_target_2d(rois, gt_labels, gt_boxes, gt_boxes3d, gt_boxes2d, width, height):
+
+    # Include "ground-truth" in the set of candidate rois
+    rois = rois.reshape(-1,5)  # Proposal (i, x1, y1, x2, y2) coming from RPN
+    num           = len(gt_boxes)
+    zeros         = np.zeros((num, 1), dtype=np.float32)
+    extended_rois = np.vstack((rois, np.hstack((zeros, gt_boxes))))
+    assert np.all(extended_rois[:, 0] == 0), 'Only single image batches are supported'
+
+
+    rois_per_image    = CFG.TRAIN.RCNN_BATCH_SIZE
+    fg_rois_per_image = np.round(CFG.TRAIN.RCNN_FG_FRACTION * rois_per_image)
+
+    # overlaps: (rois x gt_boxes)
+    overlaps = box_overlaps(
+        np.ascontiguousarray(extended_rois[:,1:5], dtype=np.float),
+        np.ascontiguousarray(gt_boxes, dtype=np.float)
+    )
+    max_overlaps  = overlaps.max(axis=1)
+    gt_assignment = overlaps.argmax(axis=1)
+    labels        = gt_labels[gt_assignment]
+
+    # Select foreground RoIs as those with >= FG_THRESH overlap
+    fg_inds = np.where(max_overlaps >= CFG.TRAIN.RCNN_FG_THRESH_LO)[0]
+    fg_rois_per_this_image = int(min(fg_rois_per_image, fg_inds.size))
+    if fg_inds.size > 0:
+        fg_inds = np.random.choice(fg_inds, size=fg_rois_per_this_image, replace=False)
+
+    # Select background RoIs as those within [BG_THRESH_LO, BG_THRESH_HI)
+    bg_inds = np.where((max_overlaps < CFG.TRAIN.RCNN_BG_THRESH_HI) &
+                       (max_overlaps >= CFG.TRAIN.RCNN_BG_THRESH_LO))[0]
+    bg_rois_per_this_image = int(min(rois_per_image - fg_rois_per_this_image, 3*fg_rois_per_this_image))
+    bg_rois_per_this_image = int(min(bg_rois_per_this_image, bg_inds.size))
+    if bg_inds.size > 0:
+        bg_inds = np.random.choice(bg_inds, size=bg_rois_per_this_image, replace=False)
+
+
+    # The indices that we're selecting (both fg and bg)
+    keep   = np.append(fg_inds, bg_inds)
+    rois   = extended_rois[keep]
+    labels = labels[keep]                # Select sampled values from various arrays:
+    labels[fg_rois_per_this_image:] = 0  # Clamp la bels for the background RoIs to 0
+
+
+    gt_boxes3d = gt_boxes3d[gt_assignment[keep]]
+    gt_boxes2d = gt_boxes2d[gt_assignment[keep]]
+    et_boxes=rois[:,1:5]
+    if gt_boxes3d.shape[1:]==gt_boxes.shape[1:]:
+        #normal image faster-rcnn .... for debug
+        targets = box_transform(et_boxes, gt_boxes3d)
+        #targets = targets / np.array(CFG.TRAIN.RCNN_box_NORMALIZE_STDS)  # this is for each box
+    else:
+        et_boxes3d = top_box_to_box3d(et_boxes)
+        et_boxes2d = project_to_rgb_roi(et_boxes3d, width, height)
+        targets_2d = box_transform_2d(et_boxes2d, gt_boxes2d)
+        targets = box3d_transform(et_boxes3d, gt_boxes3d)
+        #exit(0)
+
+    return rois, labels, targets, targets_2d
+
+
+def rcnn_target_ohem_2d(rois, gt_labels, gt_boxes, gt_boxes3d, gt_boxes2d, width, height):
+
+    # Include "ground-truth" in the set of candidate rois
+    rois = rois.reshape(-1,5)  # Proposal (i, x1, y1, x2, y2) coming from RPN
+    num           = len(gt_boxes)
+    zeros         = np.zeros((num, 1), dtype=np.float32)
+    extended_rois = np.vstack((rois, np.hstack((zeros, gt_boxes))))
+    assert np.all(extended_rois[:, 0] == 0), 'Only single image batches are supported'
+
+
+    rois_per_image    = CFG.TRAIN.RCNN_BATCH_SIZE
+    fg_rois_per_image = np.round(CFG.TRAIN.RCNN_FG_FRACTION * rois_per_image)
+
+    # overlaps: (rois x gt_boxes)
+    overlaps = box_overlaps(
+        np.ascontiguousarray(extended_rois[:,1:5], dtype=np.float),
+        np.ascontiguousarray(gt_boxes, dtype=np.float)
+    )
+    max_overlaps  = overlaps.max(axis=1)
+    gt_assignment = overlaps.argmax(axis=1)
+    labels        = gt_labels[gt_assignment]
+
+    fg_inds = np.where(max_overlaps >= CFG.TRAIN.RCNN_FG_THRESH_LO)[0]
+    fg_rois_per_this_image = int(fg_inds.size)
+    bg_inds = np.where((max_overlaps < CFG.TRAIN.RCNN_BG_THRESH_HI) &
+                       (max_overlaps >= CFG.TRAIN.RCNN_BG_THRESH_LO))[0]
+    keep   = np.append(fg_inds, bg_inds)
+    rois   = extended_rois[keep]
+    labels = labels[keep]                # Select sampled values from various arrays:
+    labels[fg_rois_per_this_image:] = 0  # Clamp la bels for the background RoIs to 0
+
+
+    gt_boxes3d = gt_boxes3d[gt_assignment[keep]]
+    gt_boxes2d = gt_boxes2d[gt_assignment[keep]]
+    et_boxes=rois[:,1:5]
+    if gt_boxes3d.shape[1:]==gt_boxes.shape[1:]:
+        #normal image faster-rcnn .... for debug
+        targets = box_transform(et_boxes, gt_boxes3d)
+        #targets = targets / np.array(CFG.TRAIN.RCNN_box_NORMALIZE_STDS)  # this is for each box
+    else:
+        et_boxes3d = top_box_to_box3d(et_boxes)
+        targets = box3d_transform(et_boxes3d, gt_boxes3d)
+
+        et_boxes2d = project_to_rgb_roi(et_boxes3d, width, height)
+        targets_2d = box_transform_2d(et_boxes2d, gt_boxes2d)
+
+
+    return rois, labels, targets, targets_2d
+
 
 
 def rcnn_target_ohem(rois, gt_labels, gt_boxes, gt_boxes3d):

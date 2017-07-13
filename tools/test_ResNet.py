@@ -13,7 +13,7 @@ from net.rpn_target_op import make_bases, make_anchors, rpn_target, anchor_filte
 from net.rcnn_target_op import rcnn_target
 
 from net.rpn_nms_op     import draw_rpn_before_nms, draw_rpn_after_nms, draw_rpn_nms
-from net.rcnn_nms_op    import rcnn_nms, draw_rcnn_berfore_nms, draw_rcnn_after_nms_top,draw_rcnn_nms
+from net.rcnn_nms_op    import rcnn_nms, draw_rcnn_berfore_nms, draw_rcnn_after_nms_top,draw_rcnn_nms, rcnn_nms_2d
 from net.rpn_target_op  import draw_rpn_gt, draw_rpn_targets, draw_rpn_labels
 from net.rcnn_target_op import draw_rcnn_targets, draw_rcnn_labels
 
@@ -22,12 +22,7 @@ import time
 import glob
 import tensorflow as tf
 slim = tf.contrib.slim
-# from mobilenet import *
 
-# from vgg16 import *
-
-# from ResNet50 import *
-# from ResNet50_vgg_c import *
 from ResNet50_vgg_double_up_c import *
 from tensorflow.python import debug as tf_debug
 
@@ -35,7 +30,6 @@ from tensorflow.python import debug as tf_debug
 
 #---------------------------------------------------------------------------------------------
 #  todo:
-#    -- fix anchor index
 #    -- 3d box prameterisation
 #    -- batch renormalisation
 #    -- multiple image training
@@ -44,37 +38,6 @@ from tensorflow.python import debug as tf_debug
 #http://3dimage.ee.tsinghua.edu.cn/cxz
 # "Multi-View 3D Object Detection Network for Autonomous Driving" - Xiaozhi Chen, CVPR 2017
 #<todo>
-def project_to_roi3d(top_rois):
-    num = len(top_rois)
-    rois3d = np.zeros((num,8,3))
-    rois3d = top_box_to_box3d(top_rois[:,1:5])
-    return rois3d
-
-
-def project_to_rgb_roi(rois3d, width, height):
-    num  = len(rois3d)
-    rois = np.zeros((num,5),dtype=np.int32)
-    projections = box3d_to_rgb_projections(rois3d)
-    for n in range(num):
-        qs = projections[n]
-        minx = np.min(qs[:,0])
-        maxx = np.max(qs[:,0])
-        miny = np.min(qs[:,1])
-        maxy = np.max(qs[:,1])
-        minx = np.maximum(np.minimum(minx, width - 1), 0)
-        maxx = np.maximum(np.minimum(maxx, width - 1), 0)
-        miny = np.maximum(np.minimum(miny, height - 1), 0)
-        maxy = np.maximum(np.minimum(maxy, height - 1), 0)
-        rois[n,1:5] = minx,miny,maxx,maxy
-
-    return rois
-
-
-def  project_to_front_roi(rois3d):
-    num  = len(rois3d)
-    rois = np.zeros((num,5),dtype=np.int32)
-
-    return rois
 
 def generat_test_reslut(probs, boxes3d, rgb_shape, index):
     result_path='./evaluate_object/val_R/'
@@ -160,7 +123,7 @@ def load_dummy_datas(index):
     return  rgbs, tops, fronts, gt_labels, gt_boxes3d, top_images, front_images, lidars, rgbs_norm
 
 
-is_show=0
+is_show=1
 # MM_PER_VIEW1 = 120, 30, 70, [1,1,0]
 MM_PER_VIEW1 = 180, 70, 60, [1,1,0]#[ 12.0909996 , -1.04700089, -2.03249991]
 def run_test():
@@ -170,7 +133,12 @@ def run_test():
     makedirs(out_dir +'/tf')
     makedirs(out_dir +'/check_points')
     log = Logger(out_dir+'/log_%s.txt'%(time.strftime('%Y-%m-%d %H:%M:%S')),mode='a')
-    index=np.load(train_data_root+'/val_list.npy')
+
+    # index=np.load(train_data_root+'/val_list.npy')
+    index_file=open(train_data_root+'/val.txt')
+    index = [ int(i.strip()) for i in index_file]
+    index_file.close()
+    
     index=sorted(index)
     print('len(index):%d'%len(index))
     num_frames=len(index)
@@ -240,11 +208,15 @@ def run_test():
     front_features = front_feature_net(front_images)
     rgb_features   = rgb_feature_net(rgb_images)
 
-    fuse_scores, fuse_probs, fuse_deltas = \
+    fuse_scores, fuse_probs, fuse_deltas, fuse_deltas_2d = \
         fusion_net(
             ( [top_features,     top_rois,     7,7,1./stride],
               [front_features,   front_rois,   0,0,1./stride],  #disable by 0,0
-              [rgb_features,     rgb_rois,     7,7,1./(1*stride)],),
+              [rgb_features,     rgb_rois,     7,7,1./(1*stride)],
+              [top_features,     top_rois,     7,7,1./(0.75*stride)],
+              [front_features,   front_rois,   0,0,1./(0.75*stride)],  #disable by 0,0
+              [rgb_features,     rgb_rois,     7,7,1./(0.75*stride)],
+              ),
             num_class, out_shape) #<todo>  add non max suppression
 
 
@@ -256,7 +228,7 @@ def run_test():
         # sess = tf_debug.LocalCLIDebugWrapperSession(sess)
         summary_writer = tf.summary.FileWriter(out_dir+'/tf', sess.graph)
         saver  = tf.train.Saver()  
-        saver.restore(sess, './outputs/check_points/snap_RVD_new_lidar_6s_060000.ckpt')
+        saver.restore(sess, './outputs/check_points/snap_RVD_new_lidar_050000.ckpt')
 
         batch_top_cls_loss =0
         batch_top_reg_loss =0
@@ -265,7 +237,7 @@ def run_test():
 
         for iter in range(num_frames):
             start_time=time.time()
-
+            # iter=iter+20
             print('Processing Img: %d  %s'%(iter, index[iter]))
             rgbs, tops, fronts, gt_labels, gt_boxes3d, top_imgs, front_imgs, lidars,rgbs_norm0 = load_dummy_datas(index[iter])
             idx=0
@@ -304,20 +276,20 @@ def run_test():
                 **fd1,
 
                 top_images:      batch_top_images,
-                front_images: batch_front_images,
+                front_images:    batch_front_images,
                 rgb_images:      batch_rgb_images,
 
                 top_rois:        batch_top_rois,
-                front_rois: batch_front_rois,
+                front_rois:      batch_front_rois,
                 rgb_rois:        batch_rgb_rois,
 
             }
             batch_top_probs,  batch_top_deltas  =  sess.run([ top_probs,  top_deltas  ],fd2)
-            batch_fuse_probs, batch_fuse_deltas =  sess.run([ fuse_probs, fuse_deltas ],fd2)
-            probs, boxes3d = rcnn_nms(batch_fuse_probs, batch_fuse_deltas, batch_rois3d, threshold=0.05)
+            batch_fuse_probs, batch_fuse_deltas, batch_fuse_deltas_2d =  sess.run([ fuse_probs, fuse_deltas, fuse_deltas_2d ],fd2)
+            probs, boxes3d, boxes2d = rcnn_nms_2d(batch_fuse_probs, batch_fuse_deltas, batch_rois3d, batch_fuse_deltas_2d, batch_rgb_rois[:,1:], rgb_shape, threshold=0.05)
             # print('nums of boxes3d : %d'%len(boxes3d))
 
-            generat_test_reslut(probs, boxes3d, rgb_shape, int(index[iter]))
+            # generat_test_reslut(probs, boxes3d, rgb_shape, int(index[iter]))
             speed=time.time()-start_time
             print('speed: %0.4fs'%speed)
             # pdb.set_trace()
@@ -358,7 +330,7 @@ def run_test():
                 # pdb.set_trace()
                 rgb_boxes=project_to_rgb_roi(boxes3d, rgb_shape[1], rgb_shape[0] )
                 # rgb_boxes=batch_rgb_rois
-                img_rgb_2d_detection = draw_boxes(rgb, rgb_boxes[:,1:5], color=(255,0,255), thickness=1)
+                img_rgb_2d_detection = draw_boxes(rgb, boxes2d, color=(255,0,255), thickness=1)
 
                 imshow('draw_rcnn_nms',img_rcnn_nms)
                 imshow('img_rgb_2d_detection',img_rgb_2d_detection)
