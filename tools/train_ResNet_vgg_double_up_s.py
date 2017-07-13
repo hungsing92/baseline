@@ -90,7 +90,7 @@ def load_dummy_datas(index):
 data_root='/home/users/hhs/4T/datasets/dummy_datas/'
 kitti_img_root='/mnt/disk_4T/KITTI/'
 vis=0
-ohem=True
+ohem=False
 def run_train():
 
     # output dir, etc
@@ -129,9 +129,7 @@ def run_train():
         # pdb.set_trace()
         num_bases = len(bases)
         stride = 4
-
         out_shape=(8,3)
-
 
         rgbs, tops, fronts, gt_labels, gt_boxes3d, top_imgs, front_imgs, rgbs_norm, image_index = load_dummy_datas(index[:3])
         # rgbs, tops, fronts, gt_labels, gt_boxes3d, top_imgs, front_imgs, rgbs_norm, image_index, lidars = load_dummy_datas()
