@@ -161,7 +161,7 @@ def run_train():
     front_features = front_feature_net(front_images)
     rgb_features   = rgb_feature_net(rgb_images)
 
-    fuse_scores, fuse_probs, fuse_deltas = \
+    fuse_scores, fuse_probs, fuse_deltas, fuse_deltas_2d = \
         fusion_net(
 			( [top_features,     top_rois,     7,7,1./stride],
 			  [front_features,   front_rois,   0,0,1./stride],  #disable by 0,0
