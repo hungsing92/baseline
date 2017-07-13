@@ -2,7 +2,7 @@ outputs/*
 net/roipooling_op/__pycache__/
 *.py[cod]
 # Python:
-#*.so
+*.so
 *.egg
 *.egg-info
 *.pyc
