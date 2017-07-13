@@ -281,7 +281,7 @@ def run_train():
                         end_flag=1
                     # pdb.set_trace()
                     del rgbs, tops, fronts, gt_labels, gt_boxes3d, gt_boxes2d, top_imgs, front_imgs, rgbs_norm, image_index
-                    rgbs, tops, fronts, gt_labels, gt_boxes3d, top_imgs, front_imgs, rgbs_norm, image_index = load_dummy_datas(index[frame_range[frame:frame_end]])
+                    rgbs, tops, fronts, gt_labels, gt_boxes3d, gt_boxes2d, top_imgs, front_imgs, rgbs_norm, image_index = load_dummy_datas(index[frame_range[frame:frame_end]])
                 idx=0
             if (end_flag==1) and (idx+frame)==num_frames:
                 idx=0
