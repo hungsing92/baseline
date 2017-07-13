@@ -345,7 +345,7 @@ def run_test():
             batch_fuse_probs, batch_fuse_deltas, batch_fuse_deltas_2d =  sess.run([ fuse_probs, fuse_deltas, fuse_deltas_2d],fd2)
             # pdb.set_trace()
 
-            probs, boxes3d, boxes2d = rcnn_nms_2d(batch_fuse_probs, batch_fuse_deltas, batch_rois3d, batch_fuse_deltas_2d, batch_rgb_rois[:,1:], threshold=0.05)
+            probs, boxes3d, boxes2d = rcnn_nms_2d(batch_fuse_probs, batch_fuse_deltas, batch_rois3d, batch_fuse_deltas_2d, batch_rgb_rois[:,1:], rgb_shape, threshold=0.05)
             speed=time.time()-start_time
             print('speed: %0.4fs'%speed)
             # pdb.set_trace()

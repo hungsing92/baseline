@@ -108,10 +108,6 @@ for i in range(7481):
 	gt_boxes2d = []
 	gt_labels  = []
 	cam=np.ones([4,1])
-	z_0=0
-	z_1=0
-	
-	
 
 	for j in range(num_objs):
 		obj=lines[j].strip().split(' ')
@@ -135,8 +131,6 @@ for i in range(7481):
 		ty = float(obj[12])
 		tz = float(obj[13])
 		ry = float(obj[14])
-		if 	tx==-1000:
-			print(lines[j].strip())
 		cam[0]=tx
 		cam[1]=ty
 		cam[2]=tz
@@ -163,8 +157,8 @@ for i in range(7481):
 			gt_boxes2d.append(box2d)
 			gt_labels.append(clss)
 
-	if len(gt_labels) == 0:
-		continue
+	# if len(gt_labels) == 0:
+	# 	continue
 	# file.close()
 	gt_boxes3d = np.array(gt_boxes3d,dtype=np.float32)
 	gt_boxes2d = np.array(gt_boxes2d,dtype=np.float32)
@@ -176,18 +170,18 @@ for i in range(7481):
 	np.save(gt_labels_path+'/gt_labels_%05d.npy'%i,gt_labels)
 
 
-#Generate train and val list
-#3DOP train val list http://www.cs.toronto.edu/objprop3d/data/ImageSets.tar.gz
-files_list=glob.glob(gt_labels_path+"/gt_labels_*.npy")
-index=np.array([file_index.strip().split('_')[-1].split('.')[0] for file_index in files_list ])
-num_frames=len(files_list)
-train_num=int(np.round(num_frames*0.7))
-random_index=np.random.permutation(index)
-train_list=random_index[:train_num]
-val_list=random_index[train_num:]
-np.save(train_data_root+'/train_list.npy',train_list)
-np.save(train_data_root+'/val_list.npy',val_list)
-np.save(train_data_root+'/train_val_list.npy',random_index)
+# #Generate train and val list
+# #3DOP train val list http://www.cs.toronto.edu/objprop3d/data/ImageSets.tar.gz
+# files_list=glob.glob(gt_labels_path+"/gt_labels_*.npy")
+# index=np.array([file_index.strip().split('_')[-1].split('.')[0] for file_index in files_list ])
+# num_frames=len(files_list)
+# train_num=int(np.round(num_frames*0.7))
+# random_index=np.random.permutation(index)
+# train_list=random_index[:train_num]
+# val_list=random_index[train_num:]
+# np.save(train_data_root+'/train_list.npy',train_list)
+# np.save(train_data_root+'/val_list.npy',val_list)
+# np.save(train_data_root+'/train_val_list.npy',random_index)
 
 
 

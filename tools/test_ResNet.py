@@ -22,12 +22,7 @@ import time
 import glob
 import tensorflow as tf
 slim = tf.contrib.slim
-# from mobilenet import *
 
-# from vgg16 import *
-
-# from ResNet50 import *
-# from ResNet50_vgg_c import *
 from ResNet50_vgg_double_up_c import *
 from tensorflow.python import debug as tf_debug
 
@@ -35,7 +30,6 @@ from tensorflow.python import debug as tf_debug
 
 #---------------------------------------------------------------------------------------------
 #  todo:
-#    -- fix anchor index
 #    -- 3d box prameterisation
 #    -- batch renormalisation
 #    -- multiple image training
@@ -140,7 +134,10 @@ def run_test():
     makedirs(out_dir +'/check_points')
     log = Logger(out_dir+'/log_%s.txt'%(time.strftime('%Y-%m-%d %H:%M:%S')),mode='a')
 
-    index=np.load(train_data_root+'/val_list.npy')
+    # index=np.load(train_data_root+'/val_list.npy')
+    index_file=open(train_data_root+'/val.txt')
+    index = [ int(i.strip()) for i in index_file]
+    index_file.close()
     
     index=sorted(index)
     print('len(index):%d'%len(index))
