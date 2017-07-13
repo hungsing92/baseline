@@ -14,7 +14,7 @@ from net.rpn_target_op import make_bases, make_anchors, rpn_target, anchor_filte
 from net.rcnn_target_op import rcnn_target
 
 from net.rpn_nms_op     import draw_rpn_before_nms, draw_rpn_after_nms, draw_rpn_nms
-from net.rcnn_nms_op    import rcnn_nms, draw_rcnn_berfore_nms, draw_rcnn_after_nms_top,draw_rcnn_nms
+from net.rcnn_nms_op    import rcnn_nms, draw_rcnn_berfore_nms, draw_rcnn_after_nms_top,draw_rcnn_nms,rcnn_nms_2d
 from net.rpn_target_op  import draw_rpn_gt, draw_rpn_targets, draw_rpn_labels
 from net.rcnn_target_op import draw_rcnn_targets, draw_rcnn_labels
 
@@ -64,8 +64,8 @@ def load_dummy_datas():
     fig = mlab.figure(figure=None, bgcolor=(0,0,0), fgcolor=None, engine=None, size=(1000, 500))
     files_list=glob.glob(tracklet_root+'seg/rgb/*.png')
     index=np.array([file_index.strip().split('/')[-1][10:10+5] for file_index in files_list ])
-    num_frames=len(files_list)
-    # num_frames=30
+    # num_frames=len(files_list)
+    num_frames=50
     index=sorted(index)
     print('len(index):%d'%len(index))
     # pdb.set_trace()
@@ -245,11 +245,15 @@ def run_test():
     front_features = front_feature_net(front_images)
     rgb_features   = rgb_feature_net(rgb_images)
 
-    fuse_scores, fuse_probs, fuse_deltas = \
+    fuse_scores, fuse_probs, fuse_deltas, fuse_deltas_2d = \
         fusion_net(
             ( [top_features,     top_rois,     7,7,1./stride],
               [front_features,   front_rois,   0,0,1./stride],  #disable by 0,0
-              [rgb_features,     rgb_rois,     7,7,1./(1*stride)],),
+              [rgb_features,     rgb_rois,     7,7,1./(1*stride)],
+              [top_features,     top_rois,     7,7,1./(0.75*stride)],
+              [front_features,   front_rois,   0,0,1./(0.75*stride)],  #disable by 0,0
+              [rgb_features,     rgb_rois,     7,7,1./(0.75*stride)],
+              ),
             num_class, out_shape) #<todo>  add non max suppression
 
 
@@ -266,7 +270,7 @@ def run_test():
         saver  = tf.train.Saver()  
 
 
-        saver.restore(sess, './outputs/check_points/snap_RVD_new_lidar_6s_060000.ckpt')  
+        saver.restore(sess, './outputs/check_points/snap_RVD_new_lidar_050000.ckpt')  
 
 
         batch_top_cls_loss =0
@@ -333,15 +337,15 @@ def run_test():
                 rgb_images:      batch_rgb_images,
 
                 top_rois:        batch_top_rois,
-                front_rois: batch_front_rois,
+                front_rois:      batch_front_rois,
                 rgb_rois:        batch_rgb_rois,
 
             }
             batch_top_probs,  batch_top_deltas  =  sess.run([ top_probs,  top_deltas  ],fd2)
-            batch_fuse_probs, batch_fuse_deltas =  sess.run([ fuse_probs, fuse_deltas ],fd2)
+            batch_fuse_probs, batch_fuse_deltas, batch_fuse_deltas_2d =  sess.run([ fuse_probs, fuse_deltas, fuse_deltas_2d],fd2)
             # pdb.set_trace()
 
-            probs, boxes3d = rcnn_nms(batch_fuse_probs, batch_fuse_deltas, batch_rois3d, threshold=0.05)
+            probs, boxes3d, boxes2d = rcnn_nms_2d(batch_fuse_probs, batch_fuse_deltas, batch_rois3d, batch_fuse_deltas_2d, batch_rgb_rois[:,1:], threshold=0.05)
             speed=time.time()-start_time
             print('speed: %0.4fs'%speed)
             # pdb.set_trace()
@@ -391,7 +395,7 @@ def run_test():
                 # pdb.set_trace()
                 rgb_boxes=project_to_rgb_roi(boxes3d, rgb_shape[1], rgb_shape[0] )
                 # rgb_boxes=batch_rgb_rois
-                img_rgb_2d_detection = draw_boxes(rgb, rgb_boxes[:,1:5], color=(255,0,255), thickness=1)
+                img_rgb_2d_detection = draw_boxes(rgb, boxes2d, color=(255,0,255), thickness=1)
 
                 
                 

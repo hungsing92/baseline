@@ -36,7 +36,7 @@ train_data_root= '/home/hhs/4T/datasets/dummy_datas/seg'
 
 from net.utility.file import *
 makedirs(train_data_root)
-
+import pdb
 
 #----------------------------------
 

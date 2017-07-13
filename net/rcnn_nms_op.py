@@ -120,3 +120,35 @@ def rcnn_nms( probs,  deltas,  rois3d,  threshold = 0.05):
         boxes3d  = regularise_box3d(boxes3d)
 
         return probs, boxes3d
+
+
+def rcnn_nms_2d( probs,  deltas,  rois3d, deltas2d, rois2d, threshold = 0.05):
+
+
+    cls=1  # do for class-one only
+    probs = probs[:,cls] #see only class-1
+    idx = np.where(probs>0.8)[0]
+
+    #post processing
+    rois3d = rois3d[idx]
+    rois2d = rois2d[idx]
+    deltas = deltas[idx,cls]
+    deltas2d = deltas2d[idx,cls]
+    probs  = probs [idx]
+
+    if deltas.shape[1:]==(4,):
+        boxes = box_transform_inv(priors,deltas)
+        return probs,boxes
+
+
+    if deltas.shape[1:]==(8,3):
+        boxes3d  = box3d_transform_inv(rois3d, deltas)
+        top_boxes=box3d_to_top_box(boxes3d)
+        keep = nms(np.hstack((top_boxes, probs.reshape(-1,1))), threshold)
+        boxes3d=boxes3d[keep]
+        boxes3d  = regularise_box3d(boxes3d)
+
+        boxes2d = box2d_transform_inv(rois2d, deltas2d)
+        boxes2d = boxes2d[keep]
+
+        return probs, boxes3d, boxes2d

@@ -52,6 +52,11 @@ def load_dummy_datas(index):
         print('num_frames:%d'%num_frames)
     for n in range(num_frames):
         print('processing img:%d,%05d'%(n,int(index[n])))
+        try:
+            gt_label  = np.load(train_data_root+'/gt_labels/gt_labels_%05d.npy'%int(index[n]))
+        except:
+            print('No target in this image')
+            continue
         rgb   = cv2.imread(kitti_dir+'/image_2/%06d.png'%int(index[n]))
         rgbs_norm0=(rgb-PIXEL_MEANS)/255
         # lidar = np.load(train_data_root+'/lidar/lidar_%05d.npy'%int(index[n]))
@@ -137,7 +142,7 @@ def run_train():
     makedirs(out_dir +'/check_points')
     makedirs(out_dir +'/log')
     log = Logger(out_dir+'/log/log_%s.txt'%(time.strftime('%Y-%m-%d %H:%M:%S')),mode='a')
-    index=np.load(train_data_root+'/train_list.npy')
+    index=np.load(train_data_root+'/train.npy')
     index=sorted(index)
     index=np.array(index)
     num_frames = len(index)
@@ -213,7 +218,8 @@ def run_train():
 			  [rgb_features,     rgb_rois,     7,7,1./stride],
               [top_features,     top_rois,     7,7,1./(0.75*stride)],
               [front_features,   front_rois,   0,0,1./(0.75*stride)],  #disable by 0,0
-              [rgb_features,     rgb_rois,     7,7,1./(0.75*stride)]),
+              [rgb_features,     rgb_rois,     7,7,1./(0.75*stride)]
+              ),
             num_class, out_shape) #<todo>  add non max suppression
 
     #loss ########################################################################################################
@@ -225,6 +231,7 @@ def run_train():
 
     fuse_labels  = tf.placeholder(shape=[None            ], dtype=tf.int32,   name='fuse_label' )
     fuse_targets = tf.placeholder(shape=[None, *out_shape], dtype=tf.float32, name='fuse_target')
+
     fuse_targets_2d = tf.placeholder(shape=[None, 4], dtype=tf.float32, name='fuse_target')
     # fuse_cls_loss, fuse_reg_loss = rcnn_loss(fuse_scores, fuse_deltas, fuse_labels, fuse_targets)
     fuse_cls_loss, fuse_reg_loss, fuse_reg_loss_2d = rcnn_loss_2d(fuse_scores, fuse_deltas, fuse_labels, fuse_targets, fuse_deltas_2d, fuse_targets_2d)
@@ -238,7 +245,6 @@ def run_train():
     l2 = l2_regulariser(decay=0.00001)
     tf.summary.scalar('l2', l2)
     learning_rate = tf.placeholder(tf.float32, shape=[])
-    rate=0.0005
     solver = tf.train.AdamOptimizer(learning_rate)
     solver_step = solver.minimize(1*top_cls_loss+1*top_reg_loss+1.5*fuse_cls_loss+2*fuse_reg_loss+fuse_reg_loss_2d+l2)
 
@@ -263,24 +269,23 @@ def run_train():
         # sess = tf_debug.LocalCLIDebugWrapperSession(sess)
         # summary_writer = tf.summary.FileWriter(out_dir+'/tf', sess.graph)
         saver  = tf.train.Saver() 
-
-        # saver_0.restore(sess, './outputs/check_points/snap_RVD_FreezeBN_NGT_OHEM_s_070000.ckpt') 
-        # saver.restore(sess, './outputs/check_points/snap_RVD_FreezeBN_NGT_OHEM_s_070000.ckpt') 
+ 
+        saver.restore(sess, './outputs/check_points/snap_RVD_new_lidar_030000.ckpt') 
         # # saver.restore(sess, './outputs/check_points/MobileNet.ckpt')  
 
-        var_lt_res=[v for v in tf.trainable_variables() if v.name.startswith('res')]#resnet_v1_50
-        saver_0=tf.train.Saver(var_lt_res)        
-        saver_0.restore(sess, './outputs/check_points/resnet_v1_50.ckpt')
-        # # pdb.set_trace()
-        top_lt=[v for v in tf.trainable_variables() if v.name.startswith('top_base')]
-        top_lt.pop(0)
-        # # top_lt.pop(0)
-        for v in top_lt:
-            # pdb.set_trace()
-            for v_rgb in var_lt_res:
-                if v.name[9:]==v_rgb.name:
-                    print ("assign weights:%s"%v.name)
-                    v.assign(v_rgb)
+        # var_lt_res=[v for v in tf.trainable_variables() if v.name.startswith('res')]#resnet_v1_50
+        # saver_0=tf.train.Saver(var_lt_res)        
+        # saver_0.restore(sess, './outputs/check_points/resnet_v1_50.ckpt')
+        # # # pdb.set_trace()
+        # top_lt=[v for v in tf.trainable_variables() if v.name.startswith('top_base')]
+        # top_lt.pop(0)
+        # # # top_lt.pop(0)
+        # for v in top_lt:
+        #     # pdb.set_trace()
+        #     for v_rgb in var_lt_res:
+        #         if v.name[9:]==v_rgb.name:
+        #             print ("assign weights:%s"%v.name)
+        #             v.assign(v_rgb)
 
 #         # var_lt_vgg=[v for v in tf.trainable_variables() if v.name.startswith('vgg')]
 #         # var_lt_vgg.pop(0)
@@ -297,7 +302,7 @@ def run_train():
         frame_range = np.arange(num_frames)
         idx=0
         frame=0
-        rate=0.0005
+        rate=0.0004
         for iter in range(max_iter):
             epoch=iter//num_frames+1
             # rate=0.001
@@ -421,6 +426,7 @@ def run_train():
 
                 fuse_labels:  batch_fuse_labels,
                 fuse_targets: batch_fuse_targets,
+
                 fuse_targets_2d: batch_fuse_targets_2d
             }
             _, rcnn_probs, batch_top_cls_loss, batch_top_reg_loss, batch_fuse_cls_loss, batch_fuse_reg_loss, batch_fuse_reg_loss_2d = \

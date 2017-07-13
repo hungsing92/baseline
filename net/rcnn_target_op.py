@@ -139,7 +139,7 @@ def rcnn_target_2d(rois, gt_labels, gt_boxes, gt_boxes3d, gt_boxes2d, width, hei
         et_boxes3d = top_box_to_box3d(et_boxes)
         et_boxes2d = project_to_rgb_roi(et_boxes3d, width, height)
         # pdb.set_trace()
-        targets_2d = box_transform(et_boxes2d, gt_boxes2d)
+        targets_2d = box_transform_2d(et_boxes2d, gt_boxes2d)
         targets = box3d_transform(et_boxes3d, gt_boxes3d)
         #exit(0)
 
