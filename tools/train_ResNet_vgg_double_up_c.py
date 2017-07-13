@@ -107,7 +107,7 @@ def load_dummy_datas(index):
     return  rgbs, tops, fronts, gt_labels, gt_boxes3d, gt_boxes2d, top_images, front_images, rgbs_norm, index#, lidars
 
 vis=0
-ohem=True
+ohem=False
 def run_train():
 
     # output dir, etc
