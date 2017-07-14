@@ -39,23 +39,65 @@ from tensorflow.python import debug as tf_debug
 # "Multi-View 3D Object Detection Network for Autonomous Driving" - Xiaozhi Chen, CVPR 2017
 #<todo>
 
-def generat_test_reslut(probs, boxes3d, rgb_shape, index):
+def generat_test_reslut(probs, boxes3d, rgb_shape, index, boxes2d=None ):
     result_path='./evaluate_object/val_R/'
     makedirs(result_path)
     # empty(result_path)
     if len(boxes3d)==0:
         return 1
     file=open(result_path+'%06d'%index+'.txt', 'w')
-    rgb_boxes=project_to_rgb_roi(boxes3d, rgb_shape[1], rgb_shape[0] )
+    if box2d==None:
+        rgb_boxes=project_to_rgb_roi(boxes3d, rgb_shape[1], rgb_shape[0] )
+    else:
+        rgb_boxes=boxes2d
     reuslts=[]
     for i in np.arange(len(rgb_boxes)):
         box= rgb_boxes[i]
-        if probs == [] :
-            for i in range(1):
-                line='Car -1 -1 -10 %.2f %.2f %.2f %.2f -1 -1 -1 -1000 -1000 -1000 -10 %.2f\n'%(box[1], box[2], box[3], box[4], 1-(i+1)*0.06)
-                file.write(line)
+        box3d = boxes3d[i]
+        center = np.sum(box3d,axis=0, keepdims=True)/8
+        dis=0
+        for k in [0, 2, 4, 6]:
+            i,j=k,k+1
+            dis +=np.sum((b[i]-b[j])**2) **0.5
+        w = dis/4
+        dis=0
+        for k in [3, 7]:
+            i,j=k,k-3
+            dis +=np.sum((b[i]-b[j])**2) **0.5
+            i,j=k-2,k-1
+            dis +=np.sum((b[i]-b[j])**2) **0.5
+        l = dis/4
+        dis=0
+        for k in range(0,4):
+            i,j=k,k+4
+            dis +=np.sum((b[i]-b[j])**2) **0.5
+            corners[k] = (b[i]+b[j])/2
+        h = dis/4
+
+        x = center[0]
+        y = center[1]
+        z = center[2]-h/2
+        velo=np.array([x,y,z]).reshape(1,3)
+        tx,ty,tz = project_velo2cam(velo)
+
+        x1 = float(box3d[3,0])
+        y1 = float(box3d[3,1])
+        x2 = float(box3d[0,0])
+        y2 = float(box3d[0,1])
+        vect = (x2-x1,y2-y1)
+        ry= np.arctan((x1-x2)/-(y2-y1))
+        if vect[0]>0:
+            if ry<0:
+                ry = ry + np.pi
         else:
-            line='Car -1 -1 -10 %.2f %.2f %.2f %.2f -1 -1 -1 -1000 -1000 -1000 -10 %.2f\n'%(box[1], box[2], box[3], box[4], probs[i])
+            if ry>0:
+                ry = ry - np.pi
+
+        if probs == [] :
+            line='Car -1 -1 -10 %.2f %.2f %.2f %.2f %.2f %.2f %.2f %.2f %.2f %.2f %.2f %.2f\n'%(box[1], box[2], box[3], box[4],h,w,l,tx,ty,tz,ry,1-(i+1)*0.06)
+            file.write(line)
+        else:
+            line='Car -1 -1 -10 %.2f %.2f %.2f %.2f %.2f %.2f %.2f %.2f %.2f %.2f %.2f %.2f\n'%(box[1], box[2], box[3], box[4],h,w,l,tx,ty,tz,ry,probs[i])
             file.write(line)
 
     file.close()
@@ -74,19 +116,19 @@ def load_dummy_datas(index):
     top_images  =[]
     front_images=[]
 
-    rgb   = cv2.imread(kitti_dir+'/image_2/0%s.png'%str(index),1).astype(np.float32, copy=False)
+    rgb   = cv2.imread(kitti_dir+'/image_2/%06d.png'%int(index),1).astype(np.float32, copy=False)
     rgbs_norm0=(rgb-PIXEL_MEANS)/255
-    lidar = np.load(train_data_root+'/lidar/lidar_%s.npy'%str(index))
-    top   = np.load(train_data_root+'/top_70/top_70%s.npy'%str(index))
+    lidar = np.load(train_data_root+'/lidar/lidar_%05d.npy'%int(index))
+    top   = np.load(train_data_root+'/top_70/top_70%05d.npy'%int(index))
     front = np.zeros((1,1),dtype=np.float32)
-    gt_label  = np.load(train_data_root+'/gt_labels/gt_labels_%s.npy'%str(index))
-    gt_box3d = np.load(train_data_root+'/gt_boxes3d/gt_boxes3d_%s.npy'%str(index))
+    gt_label  = np.load(train_data_root+'/gt_labels/gt_labels_%05d.npy'%int(index))
+    gt_box3d = np.load(train_data_root+'/gt_boxes3d/gt_boxes3d_%05d.npy'%int(index))
     rgb_shape   = rgb.shape
     # gt_rgb   = project_to_rgb_roi  (gt_box3d, rgb_shape[1], rgb_shape[0] )
     # keep = np.where((gt_rgb[:,1]>=-200) & (gt_rgb[:,2]>=-200) & (gt_rgb[:,3]<=(rgb_shape[1]+200)) & (gt_rgb[:,4]<=(rgb_shape[0]+200)))[0]
     # gt_label=gt_label[keep]
     # gt_box3d=gt_box3d[keep]
-    top_image   = cv2.imread(train_data_root+'/density_image_70/density_image_70%s.png'%str(index),1)
+    top_image   = cv2.imread(train_data_root+'/density_image_70/density_image_70%05d.png'%int(index))
     front_image = np.zeros((1,1,3),dtype=np.float32)
     rgbs.append(rgb)
     lidars.append(lidar)
@@ -228,7 +270,7 @@ def run_test():
         # sess = tf_debug.LocalCLIDebugWrapperSession(sess)
         summary_writer = tf.summary.FileWriter(out_dir+'/tf', sess.graph)
         saver  = tf.train.Saver()  
-        saver.restore(sess, './outputs/check_points/snap_RVD_new_lidar_050000.ckpt')
+        saver.restore(sess, './outputs/check_points/snap_R2R_contxt_055000.ckpt')
 
         batch_top_cls_loss =0
         batch_top_reg_loss =0
@@ -331,9 +373,11 @@ def run_test():
                 rgb_boxes=project_to_rgb_roi(boxes3d, rgb_shape[1], rgb_shape[0] )
                 # rgb_boxes=batch_rgb_rois
                 img_rgb_2d_detection = draw_boxes(rgb, boxes2d, color=(255,0,255), thickness=1)
+                img_rgb_3d_2_2d = draw_boxes(rgb, rgb_boxes[:,1:], color=(255,0,255), thickness=1)
 
                 imshow('draw_rcnn_nms',img_rcnn_nms)
                 imshow('img_rgb_2d_detection',img_rgb_2d_detection)
+                imshow('img_rgb_3d_2_2d',img_rgb_3d_2_2d)
                 cv2.waitKey(0)
                 # plt.pause(0.25)
                 # mlab.clf(mfig)
