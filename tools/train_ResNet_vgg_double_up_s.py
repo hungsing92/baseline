@@ -86,8 +86,8 @@ def load_dummy_datas(index):
     return  rgbs, tops, fronts, gt_labels, gt_boxes3d, gt_boxes2d, top_images, front_images, rgbs_norm, index#, lidars
 
 
-# train_data_root='/home/users/hhs/4T/datasets/dummy_datas/seg/training'
-# kitti_dir='/mnt/disk_4T/KITTI/'
+train_data_root='/home/users/hhs/4T/datasets/dummy_datas/seg/training'
+kitti_dir='/mnt/disk_4T/KITTI/'
 vis=0
 ohem=True
 def run_train():
