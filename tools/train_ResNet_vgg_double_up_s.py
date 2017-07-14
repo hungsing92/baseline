@@ -5,8 +5,7 @@ from net.processing.boxes import *
 from net.processing.boxes3d import *
 from net.utility.draw import *
 
-# from dummynet import *
-# from data import *
+# from data import *       
 
 from net.rpn_loss_op import *
 from net.rcnn_loss_op import *
@@ -24,7 +23,7 @@ import time
 import glob
 import tensorflow as tf
 slim = tf.contrib.slim
-# from mobilenet import *
+
 from ResNet50_vgg_double_up_c import *
 from tensorflow.python import debug as tf_debug
 from net.configuration import *
@@ -48,22 +47,20 @@ def load_dummy_datas(index):
     top_images  =[]
     front_images=[]
 
-    
-
     # pdb.set_trace()
     if num_frames==[]:
         num_frames=len(index)
         print('num_frames:%d'%num_frames)
     for n in range(num_frames):
         print('processing img:%d,%05d'%(n,int(index[n])))
-        rgb   = cv2.imread(kitti_img_root+'/training/image_2/%06d.png'%int(index[n]))
+        rgb   = cv2.imread(kitti_dir+'/training/image_2/%06d.png'%int(index[n]))
         rgbs_norm0=(rgb-PIXEL_MEANS)/255
-        # lidar = np.load(data_root+'seg/lidar/lidar_%05d.npy'%index[n]
-        top   = np.load(data_root+'seg/top_70/top_70%05d.npy'%int(index[n]))
+        # lidar = np.load(train_data_root+'/lidar/lidar_%05d.npy'%index[n]
+        top   = np.load(train_data_root+'/top_70/top_70%05d.npy'%int(index[n]))
         front = np.zeros((1,1),dtype=np.float32)
-        gt_label  = np.load(data_root+'seg/gt_labels/gt_labels_%05d.npy'%int(index[n]))
-        gt_box3d = np.load(data_root+'seg/gt_boxes3d/gt_boxes3d_%05d.npy'%int(index[n]))
-        gt_box2d = np.load(data_root+'seg/gt_boxes2d/gt_boxes2d_%05d.npy'%int(index[n]))
+        gt_label  = np.load(train_data_root+'/gt_labels/gt_labels_%05d.npy'%int(index[n]))
+        gt_box3d = np.load(train_data_root+'/gt_boxes3d/gt_boxes3d_%05d.npy'%int(index[n]))
+        gt_box2d = np.load(train_data_root+'/gt_boxes2d/gt_boxes2d_%05d.npy'%int(index[n]))
 
         rgb_shape   = rgb.shape
         gt_rgb   = project_to_rgb_roi  (gt_box3d, rgb_shape[1], rgb_shape[0])
@@ -71,8 +68,7 @@ def load_dummy_datas(index):
         gt_label=gt_label[keep]
         gt_box3d=gt_box3d[keep]
 
-
-        top_image   = cv2.imread(data_root+'seg/density_image_70/density_image_70%05d.png'%int(index[n]))
+        top_image   = cv2.imread(train_data_root+'/density_image_70/density_image_70%05d.png'%int(index[n]))
         front_image = np.zeros((1,1,3),dtype=np.float32)
 
         rgbs.append(rgb)
@@ -90,8 +86,8 @@ def load_dummy_datas(index):
     return  rgbs, tops, fronts, gt_labels, gt_boxes3d, gt_boxes2d, top_images, front_images, rgbs_norm, index#, lidars
 
 
-data_root='/home/users/hhs/4T/datasets/dummy_datas/'
-kitti_img_root='/mnt/disk_4T/KITTI/'
+# train_data_root='/home/users/hhs/4T/datasets/dummy_datas/seg'
+# kitti_dir='/mnt/disk_4T/KITTI/'
 vis=0
 ohem=False
 def run_train():
@@ -102,8 +98,8 @@ def run_train():
     makedirs(out_dir +'/check_points')
     makedirs(out_dir +'/log')
     log = Logger(out_dir+'/log/log_%s.txt'%(time.strftime('%Y-%m-%d %H:%M:%S')),mode='a')
-    # index=np.load(data_root+'seg/train_list.npy')
-    index_file=open(data_root+'seg/train.txt')
+    # index=np.load(train_data_root+'/train_list.npy')
+    index_file=open(train_data_root+'/train.txt')
     index = [ int(i.strip()) for i in index_file]
     index_file.close()
     index=sorted(index)
@@ -206,7 +202,7 @@ def run_train():
     tf.summary.scalar('l2', l2)
     learning_rate = tf.placeholder(tf.float32, shape=[])
     solver = tf.train.AdamOptimizer(learning_rate)
-    solver_step = solver.minimize(1*top_cls_loss+1*top_reg_loss+1.5*fuse_cls_loss+2*fuse_reg_loss+fuse_reg_loss_2d+l2)
+    solver_step = solver.minimize(1*top_cls_loss+1*top_reg_loss+1.5*fuse_cls_loss+2*fuse_reg_loss+4*fuse_reg_loss_2d+l2)
 
     max_iter = 200000
     iter_debug=1
@@ -359,14 +355,13 @@ def run_train():
                 rois_per_image    = CFG.TRAIN.RCNN_BATCH_SIZE
                 fg_rois_per_image = int(np.round(CFG.TRAIN.RCNN_FG_FRACTION * rois_per_image))
                 loss_ohem_, rcnn_smooth_l1_ohem_= sess.run([softmax_loss_ohem, rcnn_smooth_l1_ohem],fd2)
-                loss_ohem_[:len(rcnn_smooth_l1_ohem_)] += rcnn_smooth_l1_ohem_
-                # fg_inds=np.arange(len(rcnn_smooth_l1_ohem_))
-                # if len(rcnn_smooth_l1_ohem_)>fg_rois_per_image:
-                #     fg_inds = np.random.choice(fg_inds, size=fg_rois_per_image, replace=False)
-                #     loss_ohem_[fg_inds]=0 
+                # loss_ohem_[:len(rcnn_smooth_l1_ohem_)] += rcnn_smooth_l1_ohem_
+                fg_inds=np.arange(len(rcnn_smooth_l1_ohem_))
+                if len(rcnn_smooth_l1_ohem_)>fg_rois_per_image:
+                    fg_inds = np.argsort(-loss_ohem_[:len(rcnn_smooth_l1_ohem_)])[:fg_rois_per_image]
                 # pdb.set_trace()
-                ohem_ind = np.argsort(-loss_ohem_[len(rcnn_smooth_l1_ohem_):])[:(rois_per_image-len(rcnn_smooth_l1_ohem_))]
-                ohem_ind = np.hstack([np.arange(len(rcnn_smooth_l1_ohem_)), ohem_ind])
+                ohem_ind = np.argsort(-loss_ohem_[len(rcnn_smooth_l1_ohem_):])[:min(rois_per_image-len(fg_inds),3*len(fg_inds))]
+                ohem_ind = np.hstack([fg_inds, ohem_ind])
                 batch_top_rois=batch_top_rois[ohem_ind]
                 batch_fuse_labels=batch_fuse_labels[ohem_ind]
                 batch_fuse_targets=batch_fuse_targets[ohem_ind]
@@ -378,7 +373,6 @@ def run_train():
             batch_rois3d     = project_to_roi3d    (batch_top_rois)
             batch_front_rois = project_to_front_roi(batch_rois3d  ) 
             batch_rgb_rois   = project_to_rgb_roi  (batch_rois3d, rgb_shape[1], rgb_shape[0])
-
 
             fd2={
                 **fd1,

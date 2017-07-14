@@ -65,7 +65,7 @@ def load_dummy_datas():
     files_list=glob.glob(tracklet_root+'seg/rgb/*.png')
     index=np.array([file_index.strip().split('/')[-1][10:10+5] for file_index in files_list ])
     # num_frames=len(files_list)
-    num_frames=50
+    # num_frames=50
     index=sorted(index)
     print('len(index):%d'%len(index))
     # pdb.set_trace()
@@ -270,7 +270,7 @@ def run_test():
         saver  = tf.train.Saver()  
 
 
-        saver.restore(sess, './outputs/check_points/snap_RVD_new_lidar_050000.ckpt')  
+        saver.restore(sess, './outputs/check_points/snap_R2R_contxt_055000.ckpt')  
 
 
         batch_top_cls_loss =0
@@ -396,10 +396,11 @@ def run_test():
                 rgb_boxes=project_to_rgb_roi(boxes3d, rgb_shape[1], rgb_shape[0] )
                 # rgb_boxes=batch_rgb_rois
                 img_rgb_2d_detection = draw_boxes(rgb, boxes2d, color=(255,0,255), thickness=1)
-
+                img_rgb_3d_2_2d = draw_boxes(rgb, rgb_boxes[:,1:], color=(255,0,255), thickness=1)
                 
                 
                 imshow('img_rgb_2d_detection',img_rgb_2d_detection)
+                imshow('img_rgb_3d_2_2d',img_rgb_3d_2_2d)
                 # cv2.waitKey(0)
                 # plt.pause(0.55)
 

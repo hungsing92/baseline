@@ -144,7 +144,10 @@ def IoM(rect_1, rect_2):
     rect1_area = (y12 - y11) * (x12 - x11)
     rect2_area = (y22 - y21) * (x22 - x21)
     min_area = np.min([rect1_area, rect2_area],axis=0)
-    return intersection.reshape(-1,1) / min_area.reshape(-1,1)
+    iom = intersection.reshape(-1,1) / min_area.reshape(-1,1)
+    area_compare = np.where(rect1_area<10*rect2_area)[0]
+
+    return iom, area_compare
 
 def rcnn_nms_2d( probs,  deltas,  rois3d, deltas2d, rois2d, rgb_shape, threshold = 0.05):
 
@@ -177,8 +180,10 @@ def rcnn_nms_2d( probs,  deltas,  rois3d, deltas2d, rois2d, rgb_shape, threshold
 
         rgb_boxes=project_to_rgb(boxes3d, rgb_shape[1], rgb_shape[0] )
         image = np.array([0, 0, rgb_shape[1], rgb_shape[0]]).reshape(-1,4)
-        iom = IoM(rgb_boxes, image)
-        keep = np.where(iom>0.1)[0]
+        iom, area_compare = IoM(rgb_boxes, image)
+
+        keep = np.intersect1d(np.where(iom>0.1)[0],area_compare)
+
         boxes3d = boxes3d[keep]
         boxes2d = boxes2d[keep]
 

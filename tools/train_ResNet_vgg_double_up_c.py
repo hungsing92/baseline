@@ -5,8 +5,7 @@ from net.processing.boxes import *
 from net.processing.boxes3d import *
 from net.utility.draw import *
 
-# from dummynet import *
-from data.data import *
+from data.data import *      #################
 
 from net.rpn_loss_op import *
 from net.rcnn_loss_op import *
@@ -24,17 +23,14 @@ import time
 import glob
 import tensorflow as tf
 slim = tf.contrib.slim
-# from mobilenet import *
+
 from ResNet50_vgg_double_up_c import *
 from tensorflow.python import debug as tf_debug
 # os.environ["QT_API"] = "pyqt"
 
 #http://3dimage.ee.tsinghua.edu.cn/cxz
 # "Multi-View 3D Object Detection Network for Autonomous Driving" - Xiaozhi Chen, CVPR 2017
-index_list=open(train_data_root+'/train.txt')
-index = [ int(i.strip()) for i in index_list]
 
-MM_PER_VIEW1 = 180, 70, 30, [1,1,0]
 def load_dummy_datas(index):
 
     num_frames = []
@@ -106,6 +102,9 @@ def load_dummy_datas(index):
     mlab.close(all=True)
     return  rgbs, tops, fronts, gt_labels, gt_boxes3d, gt_boxes2d, top_images, front_images, rgbs_norm, index#, lidars
 
+index_list=open(train_data_root+'/train.txt')
+index = [ int(i.strip()) for i in index_list]
+MM_PER_VIEW1 = 180, 70, 30, [1,1,0]
 vis=0
 ohem=False
 def run_train():
@@ -233,7 +232,7 @@ def run_train():
     tf.summary.scalar('l2', l2)
     learning_rate = tf.placeholder(tf.float32, shape=[])
     solver = tf.train.AdamOptimizer(learning_rate)
-    solver_step = solver.minimize(1*top_cls_loss+1*top_reg_loss+1.5*fuse_cls_loss+2*fuse_reg_loss+fuse_reg_loss_2d+l2)
+    solver_step = solver.minimize(1*top_cls_loss+1*top_reg_loss+1.5*fuse_cls_loss+2*fuse_reg_loss+4*fuse_reg_loss_2d+l2)
 
     max_iter = 200000
     iter_debug=1
@@ -386,10 +385,16 @@ def run_train():
                 }
 
                 loss_ohem_, rcnn_smooth_l1_ohem_= sess.run([softmax_loss_ohem, rcnn_smooth_l1_ohem],fd2)
+                # loss_ohem_[:len(rcnn_smooth_l1_ohem_)] += rcnn_smooth_l1_ohem_
+
                 rois_per_image    = CFG.TRAIN.RCNN_BATCH_SIZE
                 fg_rois_per_image = int(np.round(CFG.TRAIN.RCNN_FG_FRACTION * rois_per_image))
-                ohem_ind = np.argsort(-loss_ohem_[len(rcnn_smooth_l1_ohem_):])[:(rois_per_image-len(rcnn_smooth_l1_ohem_))]
-                ohem_ind = np.hstack([np.arange(len(rcnn_smooth_l1_ohem_)), ohem_ind])
+                fg_inds=np.arange(len(rcnn_smooth_l1_ohem_))
+                if len(rcnn_smooth_l1_ohem_)>fg_rois_per_image:
+                    fg_inds = np.argsort(-loss_ohem_[:len(rcnn_smooth_l1_ohem_)])[:fg_rois_per_image]
+                # pdb.set_trace()
+                ohem_ind = np.argsort(-loss_ohem_[len(rcnn_smooth_l1_ohem_):])[:min(rois_per_image-len(fg_inds),3*len(fg_inds))]
+                ohem_ind = np.hstack([fg_inds, ohem_ind])
                 
                 batch_top_rois=batch_top_rois[ohem_ind]
                 batch_fuse_labels=batch_fuse_labels[ohem_ind]

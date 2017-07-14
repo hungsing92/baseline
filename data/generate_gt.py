@@ -12,7 +12,7 @@ from net.utility.file import *
 #                                                         POINT_CLOUD_2_BIRDSEYE
 # ==============================================================================
 
-def project_velo2cam(velo,Tr,R0,P2):
+def project_velo2rgb(velo,Tr,R0,P2):
 	T=np.zeros([4,4],dtype=np.float32)
 	T[:3,:]=Tr
 	T[3,3]=1
@@ -67,14 +67,7 @@ def load_kitti_calib(calib_path,index):
             'R0' : R0.reshape(3,3),
             'Tr_velo2cam' : Tr_velo_to_cam.reshape(3, 4)}
 
-def project_cam2velo(cam,Tr):
-	T=np.zeros([4,4],dtype=np.float32)
-	T[:3,:]=Tr
-	T[3,3]=1
-	T_inv=np.linalg.inv(T)
-	lidar_loc_=np.dot(T_inv,cam)
-	lidar_loc=lidar_loc_[:3]
-	return lidar_loc.reshape(1,3)
+
 
 # kitti_dir = "/home/hhs/4T/datasets/KITTI/object/training"
 label_path = os.path.join(kitti_dir, "label_2/")
@@ -150,7 +143,7 @@ for i in range(7481):
 		# rgb_boxes=project_to_rgb_roi([box3d], 1242, 375)
 		# line='Car %.2f %d -10 %.2f %.2f %.2f %.2f -1 -1 -1 -1000 -1000 -1000 -10 %.2f\n'%(truncated, occluded, rgb_boxes[0][1], rgb_boxes[0][2], rgb_boxes[0][3], rgb_boxes[0][4], 1)
 		# file.write(line)
-
+		
 		top_box=box3d_to_top_box([box3d])
 		if (top_box[0][0]>=Top_X0) and (top_box[0][1]>=Top_Y0) and (top_box[0][2]<=Top_Xn) and (top_box[0][3]<=Top_Yn):
 			gt_boxes3d.append(box3d)
