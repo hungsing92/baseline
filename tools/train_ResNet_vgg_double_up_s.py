@@ -221,21 +221,21 @@ def run_train():
         # sess = tf_debug.LocalCLIDebugWrapperSession(sess)
         # summary_writer = tf.summary.FileWriter(out_dir+'/tf', sess.graph)
         saver  = tf.train.Saver() 
-        # saver.restore(sess, './outputs/check_points/snap_RVD_new_lidar_6s_075000.ckpt') 
+        saver.restore(sess, './outputs/check_points/snap_R2R_contxt_050000.ckpt') 
 
-        var_lt_res=[v for v in tf.trainable_variables() if v.name.startswith('res')]#resnet_v1_50
-        saver_0=tf.train.Saver(var_lt_res)        
-        saver_0.restore(sess, './outputs/check_points/resnet_v1_50.ckpt')
-        # # pdb.set_trace()
-        top_lt=[v for v in tf.trainable_variables() if v.name.startswith('top_base')]
-        top_lt.pop(0)
-        # # top_lt.pop(0)
-        for v in top_lt:
-            # pdb.set_trace()
-            for v_rgb in var_lt_res:
-                if v.name[9:]==v_rgb.name:
-                    print ("assign weights:%s"%v.name)
-                    v.assign(v_rgb)
+        # var_lt_res=[v for v in tf.trainable_variables() if v.name.startswith('res')]#resnet_v1_50
+        # saver_0=tf.train.Saver(var_lt_res)        
+        # saver_0.restore(sess, './outputs/check_points/resnet_v1_50.ckpt')
+        # # # pdb.set_trace()
+        # top_lt=[v for v in tf.trainable_variables() if v.name.startswith('top_base')]
+        # top_lt.pop(0)
+        # # # top_lt.pop(0)
+        # for v in top_lt:
+        #     # pdb.set_trace()
+        #     for v_rgb in var_lt_res:
+        #         if v.name[9:]==v_rgb.name:
+        #             print ("assign weights:%s"%v.name)
+        #             v.assign(v_rgb)
 
         # # var_lt_vgg=[v for v in tf.trainable_variables() if v.name.startswith('vgg')]
         # # var_lt_vgg.pop(0)
