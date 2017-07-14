@@ -221,7 +221,7 @@ def run_train():
         # sess = tf_debug.LocalCLIDebugWrapperSession(sess)
         # summary_writer = tf.summary.FileWriter(out_dir+'/tf', sess.graph)
         saver  = tf.train.Saver() 
-        saver.restore(sess, './outputs/check_points/snap_R2R_contxt_070000.ckpt') 
+        saver.restore(sess, './outputs/check_points/snap_R2R_contxt_075000.ckpt') 
 
         # var_lt_res=[v for v in tf.trainable_variables() if v.name.startswith('res')]#resnet_v1_50
         # saver_0=tf.train.Saver(var_lt_res)        
