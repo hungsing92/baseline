@@ -53,7 +53,7 @@ def load_dummy_datas(index):
         print('num_frames:%d'%num_frames)
     for n in range(num_frames):
         print('processing img:%d,%05d'%(n,int(index[n])))
-        rgb   = cv2.imread(kitti_dir+'/training/image_2/%06d.png'%int(index[n]))
+        rgb   = cv2.imread(kitti_dir+'/image_2/%06d.png'%int(index[n]))
         rgbs_norm0=(rgb-PIXEL_MEANS)/255
         # lidar = np.load(train_data_root+'/lidar/lidar_%05d.npy'%index[n]
         top   = np.load(train_data_root+'/top_70/top_70%05d.npy'%int(index[n]))
@@ -86,10 +86,10 @@ def load_dummy_datas(index):
     return  rgbs, tops, fronts, gt_labels, gt_boxes3d, gt_boxes2d, top_images, front_images, rgbs_norm, index#, lidars
 
 
-# train_data_root='/home/users/hhs/4T/datasets/dummy_datas/seg'
+# train_data_root='/home/users/hhs/4T/datasets/dummy_datas/seg/training'
 # kitti_dir='/mnt/disk_4T/KITTI/'
 vis=0
-ohem=False
+ohem=True
 def run_train():
 
     # output dir, etc
@@ -221,7 +221,7 @@ def run_train():
         # sess = tf_debug.LocalCLIDebugWrapperSession(sess)
         # summary_writer = tf.summary.FileWriter(out_dir+'/tf', sess.graph)
         saver  = tf.train.Saver() 
-        saver.restore(sess, './outputs/check_points/snap_R2R_contxt_050000.ckpt') 
+        saver.restore(sess, './outputs/check_points/snap_R2R_contxt_070000.ckpt') 
 
         # var_lt_res=[v for v in tf.trainable_variables() if v.name.startswith('res')]#resnet_v1_50
         # saver_0=tf.train.Saver(var_lt_res)        
