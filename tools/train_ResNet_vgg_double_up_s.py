@@ -89,7 +89,7 @@ def load_dummy_datas(index):
 train_data_root='/home/users/hhs/4T/datasets/dummy_datas/seg'
 kitti_dir='/mnt/disk_4T/KITTI/training'
 vis=0
-ohem=False
+ohem=True
 def run_train():
 
     # output dir, etc
@@ -360,7 +360,7 @@ def run_train():
                 if len(rcnn_smooth_l1_ohem_)>fg_rois_per_image:
                     fg_inds = np.argsort(-loss_ohem_[:len(rcnn_smooth_l1_ohem_)])[:fg_rois_per_image]
                 # pdb.set_trace()
-                ohem_ind = np.argsort(-loss_ohem_[len(rcnn_smooth_l1_ohem_):])[:min(rois_per_image-len(fg_inds),3*len(fg_inds))]
+                ohem_ind = (np.argsort(-loss_ohem_[len(rcnn_smooth_l1_ohem_):])+len(rcnn_smooth_l1_ohem_))[:min(rois_per_image-len(fg_inds),3*len(fg_inds))]
                 ohem_ind = np.hstack([fg_inds, ohem_ind])
                 batch_top_rois=batch_top_rois[ohem_ind]
                 batch_fuse_labels=batch_fuse_labels[ohem_ind]
