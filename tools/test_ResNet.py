@@ -46,38 +46,40 @@ def generat_test_reslut(probs, boxes3d, rgb_shape, index, boxes2d=None ):
     if len(boxes3d)==0:
         return 1
     file=open(result_path+'%06d'%index+'.txt', 'w')
-    if box2d==None:
+    if boxes2d==None:
         rgb_boxes=project_to_rgb_roi(boxes3d, rgb_shape[1], rgb_shape[0] )
+        rgb_boxes=rgb_boxes[:,1:5]
     else:
         rgb_boxes=boxes2d
     reuslts=[]
-    for i in np.arange(len(rgb_boxes)):
-        box= rgb_boxes[i]
-        box3d = boxes3d[i]
+    # pdb.set_trace()
+    for num in np.arange(len(probs)):
+        box= rgb_boxes[num]
+        box3d = boxes3d[num]
         center = np.sum(box3d,axis=0, keepdims=True)/8
+        # pdb.set_trace()
         dis=0
         for k in [0, 2, 4, 6]:
             i,j=k,k+1
-            dis +=np.sum((b[i]-b[j])**2) **0.5
+            dis +=np.sum((box3d[i]-box3d[j])**2) **0.5
         w = dis/4
         dis=0
         for k in [3, 7]:
             i,j=k,k-3
-            dis +=np.sum((b[i]-b[j])**2) **0.5
+            dis +=np.sum((box3d[i]-box3d[j])**2) **0.5
             i,j=k-2,k-1
-            dis +=np.sum((b[i]-b[j])**2) **0.5
+            dis +=np.sum((box3d[i]-box3d[j])**2) **0.5
         l = dis/4
         dis=0
         for k in range(0,4):
             i,j=k,k+4
-            dis +=np.sum((b[i]-b[j])**2) **0.5
-            corners[k] = (b[i]+b[j])/2
+            dis +=np.sum((box3d[i]-box3d[j])**2) **0.5
         h = dis/4
 
-        x = center[0]
-        y = center[1]
-        z = center[2]-h/2
-        velo=np.array([x,y,z]).reshape(1,3)
+        x = center[:,0]
+        y = center[:,1]
+        z = center[:,2]-h/2
+        velo=np.array([x,y,z,1]).reshape(4,1)
         tx,ty,tz = project_velo2cam(velo)
 
         x1 = float(box3d[3,0])
@@ -92,12 +94,12 @@ def generat_test_reslut(probs, boxes3d, rgb_shape, index, boxes2d=None ):
         else:
             if ry>0:
                 ry = ry - np.pi
-
+        # pdb.set_trace()
         if probs == [] :
-            line='Car -1 -1 -10 %.2f %.2f %.2f %.2f %.2f %.2f %.2f %.2f %.2f %.2f %.2f %.2f\n'%(box[1], box[2], box[3], box[4],h,w,l,tx,ty,tz,ry,1-(i+1)*0.06)
+            line='Car -1 -1 -10 %.2f %.2f %.2f %.2f %.2f %.2f %.2f %.2f %.2f %.2f %.2f %.2f\n'%(box[0], box[1], box[2], box[3],h,w,l,tx,ty,tz,ry,1-(i+1)*0.06)
             file.write(line)
         else:
-            line='Car -1 -1 -10 %.2f %.2f %.2f %.2f %.2f %.2f %.2f %.2f %.2f %.2f %.2f %.2f\n'%(box[1], box[2], box[3], box[4],h,w,l,tx,ty,tz,ry,probs[i])
+            line='Car -1 -1 -10 %.2f %.2f %.2f %.2f %.2f %.2f %.2f %.2f %.2f %.2f %.2f %.2f\n'%(box[0], box[1], box[2], box[3],h,w,l,tx,ty,tz,ry,probs[num])
             file.write(line)
 
     file.close()
@@ -165,7 +167,7 @@ def load_dummy_datas(index):
     return  rgbs, tops, fronts, gt_labels, gt_boxes3d, top_images, front_images, lidars, rgbs_norm
 
 
-is_show=1
+is_show=0
 # MM_PER_VIEW1 = 120, 30, 70, [1,1,0]
 MM_PER_VIEW1 = 180, 70, 60, [1,1,0]#[ 12.0909996 , -1.04700089, -2.03249991]
 def run_test():
@@ -177,7 +179,7 @@ def run_test():
     log = Logger(out_dir+'/log_%s.txt'%(time.strftime('%Y-%m-%d %H:%M:%S')),mode='a')
 
     # index=np.load(train_data_root+'/val_list.npy')
-    index_file=open(train_data_root+'/train.txt')
+    index_file=open(train_data_root+'/val.txt')
     index = [ int(i.strip()) for i in index_file]
     index_file.close()
     
@@ -270,7 +272,7 @@ def run_test():
         # sess = tf_debug.LocalCLIDebugWrapperSession(sess)
         summary_writer = tf.summary.FileWriter(out_dir+'/tf', sess.graph)
         saver  = tf.train.Saver()  
-        saver.restore(sess, './outputs/check_points/snap_R2R_contxt_065000.ckpt')
+        saver.restore(sess, './outputs/check_points/snap_R2R_contxt_040000.ckpt')
 
         batch_top_cls_loss =0
         batch_top_reg_loss =0
@@ -330,8 +332,7 @@ def run_test():
             batch_fuse_probs, batch_fuse_deltas, batch_fuse_deltas_2d =  sess.run([ fuse_probs, fuse_deltas, fuse_deltas_2d ],fd2)
             probs, boxes3d, boxes2d = rcnn_nms_2d(batch_fuse_probs, batch_fuse_deltas, batch_rois3d, batch_fuse_deltas_2d, batch_rgb_rois[:,1:], rgb_shape, threshold=0.05)
             # print('nums of boxes3d : %d'%len(boxes3d))
-
-            # generat_test_reslut(probs, boxes3d, rgb_shape, int(index[iter]))
+            generat_test_reslut(probs, boxes3d, rgb_shape, int(index[iter]), boxes2d)
             speed=time.time()-start_time
             print('speed: %0.4fs'%speed)
             # pdb.set_trace()

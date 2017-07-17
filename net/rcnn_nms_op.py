@@ -100,7 +100,7 @@ def rcnn_nms( probs,  deltas,  rois3d,  threshold = 0.05):
 
     cls=1  # do for class-one only
     probs = probs[:,cls] #see only class-1
-    idx = np.where(probs>0.8)[0]
+    idx = np.where(probs>0.5)[0]
 
     #post processing
     rois3d = rois3d[idx]
@@ -154,7 +154,7 @@ def rcnn_nms_2d( probs,  deltas,  rois3d, deltas2d, rois2d, rgb_shape, threshold
 
     cls=1  # do for class-one only
     probs = probs[:,cls] #see only class-1
-    idx = np.where(probs>0.8)[0]
+    idx = np.where(probs>0.5)[0]
 
     #post processing
     rois3d = rois3d[idx]
@@ -174,6 +174,7 @@ def rcnn_nms_2d( probs,  deltas,  rois3d, deltas2d, rois2d, rgb_shape, threshold
         keep = nms(np.hstack((top_boxes, probs.reshape(-1,1))), threshold)
         boxes3d=boxes3d[keep]
         boxes3d  = regularise_box3d(boxes3d)
+        probs    = probs[keep]
 
         boxes2d = box2d_transform_inv(rois2d, deltas2d)
         boxes2d = boxes2d[keep]
@@ -186,5 +187,6 @@ def rcnn_nms_2d( probs,  deltas,  rois3d, deltas2d, rois2d, rgb_shape, threshold
 
         boxes3d = boxes3d[keep]
         boxes2d = boxes2d[keep]
+        probs    = probs[keep]
 
         return probs, boxes3d, boxes2d
