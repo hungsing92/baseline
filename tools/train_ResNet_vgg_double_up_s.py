@@ -355,8 +355,8 @@ def run_train():
                 IS_TRAIN_PHASE:  True
             }
             batch_proposals, batch_proposal_scores, batch_top_features = sess.run([proposals, proposal_scores, top_features],fd1)
-            print('Nums of batch_proposals: %d'%len(batch_proposals))
-            print(batch_proposal_scores[:50])
+            # print('Nums of batch_proposals: %d'%len(batch_proposals))
+            # print(batch_proposal_scores[:50])
             
             ## generate  train rois  ------------
             batch_top_inds, batch_top_pos_inds, batch_top_labels, batch_top_targets  = \
