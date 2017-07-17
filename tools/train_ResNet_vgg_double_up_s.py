@@ -127,6 +127,7 @@ def run_train():
     log = Logger(out_dir+'/log/log_%s.txt'%(time.strftime('%Y-%m-%d %H:%M:%S')),mode='a')
     index_file=open(data_root+'seg/train.txt')
     index=[ int(i.strip()) for i in index_file]
+    print(len(index))
     index=sorted(index)
     index=np.array(index)
     num_frames = len(index)
@@ -164,7 +165,7 @@ def run_train():
         rgb_shape   = rgbs[0].shape
         # top_feature_shape = ((top_shape[0]-1)//stride+1, (top_shape[1]-1)//stride+1)
         top_feature_shape = ((top_shape[0]-1)//stride+1, (top_shape[1]-1)//stride+1)
-        # pdb.set_trace()
+        pdb.set_trace()
         # set anchor boxes
         num_class = 2 #incude background
         anchors, inside_inds =  make_anchors(bases, stride, top_shape[0:2], top_feature_shape[0:2])
