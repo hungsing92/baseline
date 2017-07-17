@@ -14,7 +14,7 @@ def project_cam2velo(cam,Tr):
 def project_velo2cam(velo):
     lidar_loc_=np.dot(MATRIX_TR,velo)
     lidar_loc=lidar_loc_[:3]
-    return lidar_loc.reshape(1,3)
+    return lidar_loc[0],lidar_loc[1],lidar_loc[2]
     
 
 def project_to_roi3d(top_rois):

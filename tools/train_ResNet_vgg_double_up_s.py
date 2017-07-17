@@ -165,9 +165,9 @@ def run_train():
 			( [top_features,     top_rois,     7,7,1./stride],
 			  [front_features,   front_rois,   0,0,1./stride],  #disable by 0,0
 			  [rgb_features,     rgb_rois,     7,7,1./(1*stride)],
-              [top_features,     top_rois,     7,7,1./(0.75*stride)],
-              [front_features,   front_rois,   0,0,1./(0.75*stride)],  #disable by 0,0
-              [rgb_features,     rgb_rois,     7,7,1./(0.75*stride)],
+              # [top_features,     top_rois,     7,7,1./(0.75*stride)],
+              # [front_features,   front_rois,   0,0,1./(0.75*stride)],  #disable by 0,0
+              # [rgb_features,     rgb_rois,     7,7,1./(0.75*stride)],
               ),
             num_class, out_shape) #<todo>  add non max suppression
 
@@ -214,28 +214,28 @@ def run_train():
     merged = tf.summary.merge_all()
 
     sess = tf.InteractiveSession()
-    train_writer = tf.summary.FileWriter( './outputs/tensorboard/RR_context_s',
+    train_writer = tf.summary.FileWriter( './outputs/tensorboard/RR_s',
                                       sess.graph)
     with sess.as_default():
         sess.run( tf.global_variables_initializer(), { IS_TRAIN_PHASE : True } )
         # sess = tf_debug.LocalCLIDebugWrapperSession(sess)
         # summary_writer = tf.summary.FileWriter(out_dir+'/tf', sess.graph)
         saver  = tf.train.Saver() 
-        saver.restore(sess, './outputs/check_points/snap_R2R_contxt_065000.ckpt') 
+        # saver.restore(sess, './outputs/check_points/snap_R2R_contxt_065000.ckpt') 
 
-        # var_lt_res=[v for v in tf.trainable_variables() if v.name.startswith('res')]#resnet_v1_50
-        # saver_0=tf.train.Saver(var_lt_res)        
-        # saver_0.restore(sess, './outputs/check_points/resnet_v1_50.ckpt')
-        # # # pdb.set_trace()
-        # top_lt=[v for v in tf.trainable_variables() if v.name.startswith('top_base')]
-        # top_lt.pop(0)
-        # # # top_lt.pop(0)
-        # for v in top_lt:
-        #     # pdb.set_trace()
-        #     for v_rgb in var_lt_res:
-        #         if v.name[9:]==v_rgb.name:
-        #             print ("assign weights:%s"%v.name)
-        #             v.assign(v_rgb)
+        var_lt_res=[v for v in tf.trainable_variables() if v.name.startswith('res')]#resnet_v1_50
+        saver_0=tf.train.Saver(var_lt_res)        
+        saver_0.restore(sess, './outputs/check_points/resnet_v1_50.ckpt')
+        # # pdb.set_trace()
+        top_lt=[v for v in tf.trainable_variables() if v.name.startswith('top_base')]
+        top_lt.pop(0)
+        # # top_lt.pop(0)
+        for v in top_lt:
+            # pdb.set_trace()
+            for v_rgb in var_lt_res:
+                if v.name[9:]==v_rgb.name:
+                    print ("assign weights:%s"%v.name)
+                    v.assign(v_rgb)
 
         # # var_lt_vgg=[v for v in tf.trainable_variables() if v.name.startswith('vgg')]
         # # var_lt_vgg.pop(0)
@@ -407,7 +407,7 @@ def run_train():
                 train_writer.add_summary(summary, iter)
             # save: ------------------------------------
             if (iter)%5000==0 and (iter!=0):
-                saver.save(sess, out_dir + '/check_points/snap_R2R_contxt_%06d.ckpt'%iter)  #iter
+                saver.save(sess, out_dir + '/check_points/snap_R2R_%06d.ckpt'%iter)  #iter
                 pass
             idx=idx+1
 
