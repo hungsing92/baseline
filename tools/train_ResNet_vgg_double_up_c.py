@@ -97,7 +97,7 @@ def load_dummy_datas(index):
 
 
 vis=0
-ohem=False
+ohem=True
 def run_train():
 
     # output dir, etc
@@ -106,7 +106,8 @@ def run_train():
     makedirs(out_dir +'/check_points')
     makedirs(out_dir +'/log')
     log = Logger(out_dir+'/log/log_%s.txt'%(time.strftime('%Y-%m-%d %H:%M:%S')),mode='a')
-    index=np.load(train_data_root+'/train_list.npy')
+    index_file=open(train_data_root+'/train.txt')
+    index=[ int(i.strip()) for i in index_file]
     index=sorted(index)
     index=np.array(index)
     num_frames = len(index)
@@ -235,35 +236,35 @@ def run_train():
         saver  = tf.train.Saver() 
 
         # saver_0.restore(sess, './outputs/check_points/snap_RVD_FreezeBN_NGT_OHEM_s_070000.ckpt') 
-        # saver.restore(sess, './outputs/check_points/snap_RVD_FreezeBN_NGT_OHEM_s_070000.ckpt') 
-        # # saver.restore(sess, './outputs/check_points/MobileNet.ckpt')  
+        saver.restore(sess, './outputs/check_points/snap_RVD_new_lidar_6s_090000.ckpt') 
+ 
 
-        var_lt_res=[v for v in tf.trainable_variables() if v.name.startswith('res')]#resnet_v1_50
-        # pdb.set_trace()
-        ## var_lt=[v for v in tf.trainable_variables() if not(v.name.startswith('fuse-block-1')) and not(v.name.startswith('fuse')) and not(v.name.startswith('fuse-input'))]
+        # var_lt_res=[v for v in tf.trainable_variables() if v.name.startswith('res')]#resnet_v1_50
+        # # pdb.set_trace()
+        # ## var_lt=[v for v in tf.trainable_variables() if not(v.name.startswith('fuse-block-1')) and not(v.name.startswith('fuse')) and not(v.name.startswith('fuse-input'))]
 
-        # # var_lt.pop(0)
-        # # var_lt.pop(0)
-        # # pdb.set_trace()
-        saver_0=tf.train.Saver(var_lt_res)        
-        # # 
-        saver_0.restore(sess, './outputs/check_points/resnet_v1_50.ckpt')
-        # # pdb.set_trace()
-        # top_lt=[v for v in tf.trainable_variables() if v.name.startswith('top_base')]
-        # top_lt.pop(0)
-        # # # top_lt.pop(0)
-        # for v in top_lt:
-        #     # pdb.set_trace()
-        #     for v_rgb in var_lt:
-        #         if v.name[9:]==v_rgb.name:
-        #             print ("assign weights:%s"%v.name)
-        #             v.assign(v_rgb)
-        var_lt_vgg=[v for v in tf.trainable_variables() if v.name.startswith('vgg')]
-        var_lt_vgg.pop(0)
-        saver_1=tf.train.Saver(var_lt_vgg)
+        # # # var_lt.pop(0)
+        # # # var_lt.pop(0)
+        # # # pdb.set_trace()
+        # saver_0=tf.train.Saver(var_lt_res)        
+        # # # 
+        # saver_0.restore(sess, './outputs/check_points/resnet_v1_50.ckpt')
+        # # # pdb.set_trace()
+        # # top_lt=[v for v in tf.trainable_variables() if v.name.startswith('top_base')]
+        # # top_lt.pop(0)
+        # # # # top_lt.pop(0)
+        # # for v in top_lt:
+        # #     # pdb.set_trace()
+        # #     for v_rgb in var_lt:
+        # #         if v.name[9:]==v_rgb.name:
+        # #             print ("assign weights:%s"%v.name)
+        # #             v.assign(v_rgb)
+        # var_lt_vgg=[v for v in tf.trainable_variables() if v.name.startswith('vgg')]
+        # var_lt_vgg.pop(0)
+        # saver_1=tf.train.Saver(var_lt_vgg)
         
-        # # pdb.set_trace()
-        saver_1.restore(sess, './outputs/check_points/vgg_16.ckpt')
+        # # # pdb.set_trace()
+        # saver_1.restore(sess, './outputs/check_points/vgg_16.ckpt')
 
         batch_top_cls_loss =0
         batch_top_reg_loss =0
@@ -273,7 +274,7 @@ def run_train():
         frame_range = np.arange(num_frames)
         idx=0
         frame=0
-        rate=0.0005
+        rate=0.00001
         for iter in range(max_iter):
             epoch=iter//num_frames+1
             # rate=0.001
@@ -308,8 +309,8 @@ def run_train():
                 idx=0
             print('processing image : %s'%image_index[idx])
 
-            if (iter+1)%(20000)==0:
-                rate=0.8*rate
+            # if (iter+1)%(20000)==0:
+            #     rate=0.8*rate
 
             rgb_shape   = rgbs[idx].shape
             batch_top_images    = tops[idx].reshape(1,*top_shape)
@@ -377,14 +378,13 @@ def run_train():
                 rois_per_image    = CFG.TRAIN.RCNN_BATCH_SIZE
                 fg_rois_per_image = int(np.round(CFG.TRAIN.RCNN_FG_FRACTION * rois_per_image))
                 loss_ohem_, rcnn_smooth_l1_ohem_= sess.run([softmax_loss_ohem, rcnn_smooth_l1_ohem],fd2)
-                loss_ohem_[:len(rcnn_smooth_l1_ohem_)] += rcnn_smooth_l1_ohem_
-                # fg_inds=np.arange(len(rcnn_smooth_l1_ohem_))
-                # if len(rcnn_smooth_l1_ohem_)>fg_rois_per_image:
-                #     fg_inds = np.random.choice(fg_inds, size=fg_rois_per_image, replace=False)
-                #     loss_ohem_[fg_inds]=0 
+                # loss_ohem_[:len(rcnn_smooth_l1_ohem_)] += rcnn_smooth_l1_ohem_
+                fg_inds=np.arange(len(rcnn_smooth_l1_ohem_))
+                if len(rcnn_smooth_l1_ohem_)>fg_rois_per_image:
+                    fg_inds = np.argsort(-loss_ohem_[:len(rcnn_smooth_l1_ohem_)])[:fg_rois_per_image]
                 # pdb.set_trace()
-                ohem_ind = np.argsort(-loss_ohem_[len(rcnn_smooth_l1_ohem_):])[:(rois_per_image-len(rcnn_smooth_l1_ohem_))]
-                ohem_ind = np.hstack([np.arange(len(rcnn_smooth_l1_ohem_)), ohem_ind])
+                ohem_ind = (np.argsort(-loss_ohem_[len(rcnn_smooth_l1_ohem_):])+len(rcnn_smooth_l1_ohem_))[:min(rois_per_image-len(fg_inds),3*len(fg_inds))]
+                ohem_ind = np.hstack([fg_inds, ohem_ind])
                 batch_top_rois=batch_top_rois[ohem_ind]
                 batch_fuse_labels=batch_fuse_labels[ohem_ind]
                 batch_fuse_targets=batch_fuse_targets[ohem_ind]

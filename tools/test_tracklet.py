@@ -227,7 +227,7 @@ def run_test():
         saver  = tf.train.Saver()  
 
 
-        saver.restore(sess, './outputs/check_points/snap_RVD_new_lidar_6s_090000.ckpt')  
+        saver.restore(sess, './outputs/check_points/snap_RVD_new_lidar_060000.ckpt')  
 
 
         batch_top_cls_loss =0
