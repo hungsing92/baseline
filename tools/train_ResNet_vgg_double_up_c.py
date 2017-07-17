@@ -104,6 +104,7 @@ def load_dummy_datas(index):
 
 index_list=open(train_data_root+'/train.txt')
 index = [ int(i.strip()) for i in index_list]
+print ('length of index : %d'%len(index))
 MM_PER_VIEW1 = 180, 70, 30, [1,1,0]
 vis=0
 ohem=False
