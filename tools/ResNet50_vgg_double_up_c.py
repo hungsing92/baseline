@@ -11,20 +11,19 @@ from net.rpn_nms_op import tf_rpn_nms
 from net.roipooling_op import roi_pool as tf_roipooling
 import pdb
 from tensorflow.contrib.slim.python.slim.nets import resnet_v1
-from tensorflow.contrib.slim.python.slim.nets import vgg
+import vgg
 
 keep_prob=0.5
 nms_pre_topn_=5000
 nms_post_topn_=2000
 is_training=False
+
 def top_feature_net(input, anchors, inds_inside, num_bases):
   stride=4
     # arg_scope = resnet_v1.resnet_arg_scope(weight_decay=0.0)
     # with slim.arg_scope(arg_scope) :
   with slim.arg_scope(vgg.vgg_arg_scope()):
-    # net, end_points = resnet_v1.resnet_v1_50(input, None, global_pool=False, output_stride=8)
     block5, end_points = vgg.vgg_16(input)
-    # pdb.set_trace()
     block3 = end_points['vgg_16/conv3/conv3_3']
     block4 = end_points['vgg_16/conv4/conv4_3']
   with tf.variable_scope("top_base") as sc:
@@ -37,10 +36,7 @@ def top_feature_net(input, anchors, inds_inside, num_bases):
     up       = tf.add(up_,block3_, name='fpn_up_')
     block    = conv2d_relu(up, num_kernels=256, kernel_size=(3,3), stride=[1,1,1,1], padding='SAME', name='fpn_up')
     tf.summary.histogram('rpn_top_block', block) 
-    # tf.summary.histogram('rpn_top_block_weights', tf.get_collection('2/conv_weight')[0])
     with tf.variable_scope('top') as scope:
-      #up     = upsample2d(block, factor = 2, has_bias=True, trainable=True, name='1')
-      #up     = block
       up      = conv2d_relu(block, num_kernels=256, kernel_size=(3,3), stride=[1,1,1,1], padding='SAME', name='2')
       scores  = conv2d(up, num_kernels=2*num_bases, kernel_size=(1,1), stride=[1,1,1,1], padding='SAME', name='score')
       probs   = tf.nn.softmax( tf.reshape(scores,[-1,2]), name='prob')

@@ -33,9 +33,7 @@ from ResNet50_vgg_double_up_c import *
 from tensorflow.python import debug as tf_debug
 
 
-is_show=1
-# MM_PER_VIEW1 = 120, 30, 70, [1,1,0]
-MM_PER_VIEW1 = 180, None, 60, [1,1,0]#[ 12.0909996 , -1.04700089, -2.03249991]
+
 #---------------------------------------------------------------------------------------------
 #  todo:
 #    -- fix anchor index
@@ -64,7 +62,7 @@ def load_dummy_datas():
     fig = mlab.figure(figure=None, bgcolor=(0,0,0), fgcolor=None, engine=None, size=(1000, 500))
     files_list=glob.glob(tracklet_root+'seg/rgb/*.png')
     index=np.array([file_index.strip().split('/')[-1][10:10+5] for file_index in files_list ])
-    num_frames=len(files_list)
+    # num_frames=len(files_list)
     # num_frames=30
     index=sorted(index)
     print('len(index):%d'%len(index))
@@ -122,47 +120,9 @@ def load_dummy_datas():
     mlab.close(all=True)
     return  rgbs, tops, fronts, top_images, front_images, lidars, rgbs_norm
 
-
-
-
-#<todo>
-def project_to_roi3d(top_rois):
-    num = len(top_rois)
-    rois3d = np.zeros((num,8,3))
-    rois3d = top_box_to_box3d(top_rois[:,1:5])
-    return rois3d
-
-
-def project_to_rgb_roi(rois3d, width, height):
-    num  = len(rois3d)
-    rois = np.zeros((num,5),dtype=np.int32)
-    projections = box3d_to_rgb_projections(rois3d)
-    for n in range(num):
-        qs = projections[n]
-        minx = np.min(qs[:,0])
-        maxx = np.max(qs[:,0])
-        miny = np.min(qs[:,1])
-        maxy = np.max(qs[:,1])
-        minx = np.maximum(np.minimum(minx, width - 1), 0)
-        maxx = np.maximum(np.minimum(maxx, width - 1), 0)
-        miny = np.maximum(np.minimum(miny, height - 1), 0)
-        maxy = np.maximum(np.minimum(maxy, height - 1), 0)
-        rois[n,1:5] = minx,miny,maxx,maxy
-
-    return rois
-
-
-def  project_to_front_roi(rois3d):
-    num  = len(rois3d)
-    rois = np.zeros((num,5),dtype=np.int32)
-
-    return rois
-
-# def  project_to_surround_roi(rois3d):
-#     num  = len(rois3d)
-#     rois = np.zeros((num,5),dtype=np.int32)
-#     rois[:,1:5] = box3d_to_surround_box(rois3d)
-#     return rois
+is_show=1
+# MM_PER_VIEW1 = 120, 30, 70, [1,1,0]
+MM_PER_VIEW1 = 180, 70, 60, [1,1,0]#[ 12.0909996 , -1.04700089, -2.03249991]
 
 tracklet_root='/home/hhs/4T/datasets/dummy_datas_064/'
 mayavi_save_path = tracklet_root+'seg/mayavi_fig'
@@ -201,6 +161,7 @@ def run_test():
 
         rgbs, tops, fronts, top_imgs, front_imgs, lidars,rgbs_norm0 = load_dummy_datas()
         num_frames = len(rgbs)
+        # num_frames=10
 
         top_shape   = tops[0].shape
         front_shape = fronts[0].shape
@@ -266,7 +227,7 @@ def run_test():
         saver  = tf.train.Saver()  
 
 
-        saver.restore(sess, './outputs/check_points/snap_RVD_new_lidar_6s_060000.ckpt')  
+        saver.restore(sess, './outputs/check_points/snap_RVD_new_lidar_060000.ckpt')  
 
 
         batch_top_cls_loss =0
@@ -278,6 +239,7 @@ def run_test():
         for iter in range(num_frames):
             # epoch=1.0*iter
             # rate=0.001
+            print(iter)
             start_time=time.time()
 
             # iter=iter+50
@@ -287,7 +249,7 @@ def run_test():
             idx = frame_range[iter%num_frames]    #*10   #num_frames)  #0
             rgb_shape   = rgbs[idx].shape
             # top_img=top_imgs[idx]
-
+            # pdb.set_trace()
             batch_top_images    = tops[idx].reshape(1,*top_shape)
             batch_front_images  = fronts[idx].reshape(1,*front_shape)
             batch_rgb_images    = rgbs_norm0[idx].reshape(1,*rgb_shape)
@@ -309,7 +271,7 @@ def run_test():
                 IS_TRAIN_PHASE:  False
             }
             batch_proposals, batch_proposal_scores, batch_top_features = sess.run([proposals, proposal_scores, top_features],fd1)
-            print(batch_proposal_scores[:10])
+            # print(batch_proposal_scores[:10])
             ## generate  train rois  ------------
             batch_top_rois = batch_proposals
             # pdb.set_trace()
@@ -341,7 +303,7 @@ def run_test():
             batch_fuse_probs, batch_fuse_deltas =  sess.run([ fuse_probs, fuse_deltas ],fd2)
             # pdb.set_trace()
 
-            probs, boxes3d = rcnn_nms(batch_fuse_probs, batch_fuse_deltas, batch_rois3d, threshold=0.05)
+            probs, boxes3d = rcnn_nms(batch_fuse_probs, batch_fuse_deltas, batch_rois3d, rgb_shape, threshold=0.05)
             speed=time.time()-start_time
             print('speed: %0.4fs'%speed)
             # pdb.set_trace()

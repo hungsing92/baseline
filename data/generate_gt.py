@@ -31,24 +31,6 @@ def project_velo2cam(velo,Tr,R0,P2):
 		projections[i] = box2d
 	return projections
 
-def project_to_rgb_roi(rois3d, width, height,Tr,R0,P2):
-    num  = len(rois3d)
-    rois = np.zeros((num,5),dtype=np.int32)
-    projections = project_velo2cam(rois3d,Tr,R0,P2)
-    for n in range(num):
-        qs = projections[n]
-        minx = np.min(qs[:,0])
-        maxx = np.max(qs[:,0])
-        miny = np.min(qs[:,1])
-        maxy = np.max(qs[:,1])
-        minx = np.maximum(np.minimum(minx, width - 1), 0)
-        maxx = np.maximum(np.minimum(maxx, width - 1), 0)
-        miny = np.maximum(np.minimum(miny, height - 1), 0)
-        maxy = np.maximum(np.minimum(maxy, height - 1), 0)
-        rois[n,1:5] = minx,miny,maxx,maxy
-
-    return rois
-
 def load_kitti_calib(calib_path,index):
     """
     load projection matrix
@@ -94,17 +76,18 @@ def project_cam2velo(cam,Tr):
 	lidar_loc=lidar_loc_[:3]
 	return lidar_loc.reshape(1,3)
 
-
 # kitti_dir = "/home/hhs/4T/datasets/KITTI/object/training"
 label_path = os.path.join(kitti_dir, "label_2/")
 calib_path = os.path.join(kitti_dir, "calib/")
 # train_data_root='/home/hhs/4T/datasets/dummy_datas/seg'
-classes = {'__background__':0, 'Car':1, 'Van':1}#, ' Van':1, 'Truck':1, 'Tram':1}
+classes = {'__background__':0, 'Car':1}#, ' Van':1, 'Truck':1, 'Tram':1}
 # result_path='./evaluate_object/val_gt/'
 gt_boxes3d_path = train_data_root + '/gt_boxes3d'
+gt_boxes2d_path = train_data_root + '/gt_boxes2d'
 gt_labels_path = train_data_root + '/gt_labels'
 
 empty(gt_boxes3d_path)
+empty(gt_boxes2d_path)
 empty(gt_labels_path)
 
 for i in range(7481):
@@ -122,6 +105,7 @@ for i in range(7481):
 	if num_objs == 0:
 		continue
 	gt_boxes3d = []
+	gt_boxes2d = []
 	gt_labels  = []
 	cam=np.ones([4,1])
 	z_0=0
@@ -140,6 +124,10 @@ for i in range(7481):
 		
 		truncated = float(obj[1])
 		occluded = float(obj[2])
+		x1 = float(obj[4])
+		y1 = float(obj[5])
+		x2 = float(obj[6])
+		y2 = float(obj[7])
 		h = float(obj[8])
 		w = float(obj[9])
 		l = float(obj[10])
@@ -164,28 +152,28 @@ for i in range(7481):
 
 		cornerPosInVelo = np.dot(rotMat, Box) + np.tile(t_lidar, (8,1)).T
 		box3d=cornerPosInVelo.transpose()
-
-		# rgb_boxes=project_to_rgb_roi([box3d], 1242, 375 ,Tr,R0,P2)
+		box2d=np.array([x1, y1, x2, y2])
+		# rgb_boxes=project_to_rgb_roi([box3d], 1242, 375)
 		# line='Car %.2f %d -10 %.2f %.2f %.2f %.2f -1 -1 -1 -1000 -1000 -1000 -10 %.2f\n'%(truncated, occluded, rgb_boxes[0][1], rgb_boxes[0][2], rgb_boxes[0][3], rgb_boxes[0][4], 1)
 		# file.write(line)
 
 		top_box=box3d_to_top_box([box3d])
 		if (top_box[0][0]>=Top_X0) and (top_box[0][1]>=Top_Y0) and (top_box[0][2]<=Top_Xn) and (top_box[0][3]<=Top_Yn):
-
 			gt_boxes3d.append(box3d)
+			gt_boxes2d.append(box2d)
 			gt_labels.append(clss)
 
 	if len(gt_labels) == 0:
 		continue
-
+	# file.close()
 	gt_boxes3d = np.array(gt_boxes3d,dtype=np.float32)
+	gt_boxes2d = np.array(gt_boxes2d,dtype=np.float32)
 	gt_labels  = np.array(gt_labels ,dtype=np.uint8)
-	file.close()
+	
 
 	np.save(gt_boxes3d_path+'/gt_boxes3d_%05d.npy'%i,gt_boxes3d)
+	np.save(gt_boxes2d_path+'/gt_boxes2d_%05d.npy'%i,gt_boxes2d)
 	np.save(gt_labels_path+'/gt_labels_%05d.npy'%i,gt_labels)
-
-
 
 
 #Generate train and val list

@@ -68,21 +68,21 @@ def lidar_to_top(lidar):
 
     return top, density_image
 
-velodyne = os.path.join(kitti_dir, "velodyne/")
-files_list=glob.glob(velodyne+'/*.bin')
+# velodyne = os.path.join(kitti_dir, "velodyne/")
+# files_list=glob.glob(velodyne+'/*.bin')
 
 ###Generate top view data for tracklet.
-# train_data_root = "/home/hhs/4T/datasets/dummy_datas_064/seg"
-# tracklet_dir = '/home/hhs/4T/datasets/raw data/2011_09_26_drive_0064_sync/2011_09_26/2011_09_26_drive_0064_sync/velodyne_points/data'
-# files_list=glob.glob(tracklet_dir+'/*.bin')
+train_data_root = "/home/hhs/4T/datasets/dummy_datas_059/seg"
+velodyne = '/home/hhs/4T/datasets/raw data/2011_09_26_drive_0059_sync/2011_09_26/2011_09_26_drive_0059_sync/velodyne_points/data'
+files_list=glob.glob(velodyne+'/*.bin')
 
 lidar_dir = train_data_root+'/lidar'
 top_dir = train_data_root+'/top_70'
 density_image_dir = train_data_root+'/density_image_70'
 
-empty(lidar_dir)
-empty(top_dir)
-empty(density_image_dir)
+makedirs(lidar_dir)
+makedirs(top_dir)
+makedirs(density_image_dir)
 
 file=[i.strip().split('/')[-1] for i in files_list]
 ind=[int(i.strip().split('.')[0]) for i in file]
@@ -102,7 +102,7 @@ for i in range(num):
     speed=time.time()-start_time
     print('speed: %0.4fs'%speed)
 
-    np.save(lidar_dir+'/lidar_%05d.npy'%i,lidar)
+    np.save(lidar_dir+'/lidar_%05d.npy'%ind[i],lidar)
     np.save(top_dir+'/top_70%05d.npy'%ind[i],top_new)
     cv2.imwrite(density_image_dir+'/density_image_70%05d.png'%ind[i],density_image)
    

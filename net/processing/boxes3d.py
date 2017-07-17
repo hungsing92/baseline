@@ -2,6 +2,55 @@ from net.common import *
 
 
 ##extension for 3d
+def project_to_roi3d(top_rois):
+    num = len(top_rois)
+    rois3d = np.zeros((num,8,3))
+    rois3d = top_box_to_box3d(top_rois[:,1:5])
+    return rois3d
+
+
+def project_to_rgb_roi(rois3d, width, height):
+    num  = len(rois3d)
+    rois = np.zeros((num,5),dtype=np.int32)
+    projections = box3d_to_rgb_projections(rois3d)
+    for n in range(num):
+        qs = projections[n]
+        minx = np.min(qs[:,0])
+        maxx = np.max(qs[:,0])
+        miny = np.min(qs[:,1])
+        maxy = np.max(qs[:,1])
+        minx = np.maximum(np.minimum(minx, width - 1), 0)
+        maxx = np.maximum(np.minimum(maxx, width - 1), 0)
+        miny = np.maximum(np.minimum(miny, height - 1), 0)
+        maxy = np.maximum(np.minimum(maxy, height - 1), 0)
+        rois[n,1:5] = minx,miny,maxx,maxy
+
+    return rois
+
+
+def project_to_rgb(rois3d, width, height):
+    num  = len(rois3d)
+    rois = np.zeros((num,4),dtype=np.int32)
+    projections = box3d_to_rgb_projections(rois3d)
+    for n in range(num):
+        qs = projections[n]
+        minx = np.min(qs[:,0])
+        maxx = np.max(qs[:,0])
+        miny = np.min(qs[:,1])
+        maxy = np.max(qs[:,1])
+        rois[n,:] = minx,miny,maxx,maxy
+
+    return rois
+
+
+def  project_to_front_roi(rois3d):
+    num  = len(rois3d)
+    rois = np.zeros((num,5),dtype=np.int32)
+
+    return rois
+
+
+
 def top_to_lidar_coords(xx,yy):
     X0, Xn = 0, int((TOP_X_MAX-TOP_X_MIN)//TOP_X_DIVISION)+1
     Y0, Yn = 0, int((TOP_Y_MAX-TOP_Y_MIN)//TOP_Y_DIVISION)+1
@@ -112,14 +161,14 @@ def box3d_to_top_projections(boxes3d):
 
 
 def draw_rgb_projections(image, projections, color=(255,255,255), thickness=2, darker=0.7):
-    def length_filter(x1,x2,img):
-        x1=np.array(x1)
-        x2=np.array(x2)
-        dist=np.sqrt(np.sum((x1-x2)**2))
-        if dist>0.75*img.shape[1]:
-            return True
-        else:
-            return False
+    # def length_filter(x1,x2,img):
+    #     x1=np.array(x1)
+    #     x2=np.array(x2)
+    #     dist=np.sqrt(np.sum((x1-x2)**2))
+    #     if dist>0.75*img.shape[1]:
+    #         return True
+    #     else:
+    #         return False
 
     img = image.copy()*darker
     num=len(projections)
@@ -129,8 +178,8 @@ def draw_rgb_projections(image, projections, color=(255,255,255), thickness=2, d
         for k in range(0,4):
             #http://docs.enthought.com/mayavi/mayavi/auto/mlab_helper_functions.html
             i,j=k,(k+1)%4
-            if length_filter((qs[i,0],qs[i,1]),(qs[j,0],qs[j,1]),img):
-                break
+            # if length_filter((qs[i,0],qs[i,1]),(qs[j,0],qs[j,1]),img):
+            #     break
             cv2.line(img, (qs[i,0],qs[i,1]), (qs[j,0],qs[j,1]), color, thickness, cv2.LINE_AA)
 
             i,j=k+4,(k+1)%4 + 4
@@ -173,7 +222,7 @@ def draw_boxes(image, boxes, color=(0,0,255), thickness=1, darken=0.7):
     num =len(boxes)
     for n in range(num):
         b = boxes[n]
-        cv2.rectangle(img,(b[0],b[1]),(b[2],b[3]),color,thickness)
+        cv2.rectangle(img,(int(b[0]),int(b[1])),(int(b[2]),int(b[3])),color,thickness)
 
     return img
 
@@ -202,25 +251,7 @@ def box3d_transform_inv0(et_boxes3d, deltas):
 #               [        0.0,          0.0, 1.0]])
 
 def box3d_transform(et_boxes3d, gt_boxes3d):
-    # num=len(et_boxes3d)
-    # deltas=np.zeros((num,8,3),dtype=np.float32)
-    # for n in range(num):
-    #     e=et_boxes3d[n]
-    #     center = np.sum(e,axis=0, keepdims=True)/8
-    #     scale = (np.sum((e-center)**2)/8)**0.5
-    #     g=[]
-    #     g.append(gt_boxes3d[n])
-    #     g.append(np.vstack([g[0][1:4,:],g[0][0,:],g[0][5:8,:],g[0][4,:]]))
-    #     g.append(np.vstack([g[1][1:4,:],g[1][0,:],g[1][5:8,:],g[1][4,:]]))
-    #     g.append(np.vstack([g[2][1:4,:],g[2][0,:],g[2][5:8,:],g[2][4,:]]))
-    #     min0=np.inf
-    #     for i in range(4):
-    #         if (np.sum((g[i]-e)**2)/8)**0.5 <min0:
-    #             min_idx=i
-    #             min0=(np.sum((g[i]-e)**2)/8)**0.5
 
-    #     deltas[n]= (g[min_idx]-e)/scale
-    # return deltas
     num=len(et_boxes3d)
     deltas=np.zeros((num,8,3),dtype=np.float32)
     for n in range(num):
@@ -232,6 +263,26 @@ def box3d_transform(et_boxes3d, gt_boxes3d):
         deltas[n]= (g-e)/scale
     return deltas
 
+def box_transform_2d(et_boxes2d, gt_boxes):
+    # pdb.set_trace()
+    et_boxes=et_boxes2d[:,1:]
+    num=len(et_boxes)
+    deltas=np.zeros((num,4),dtype=np.float32)
+    et_ws  = et_boxes[:, 2] - et_boxes[:, 0] + 1.0
+    et_hs  = et_boxes[:, 3] - et_boxes[:, 1] + 1.0
+    scale = ((0.5*et_ws)**2+(0.5*et_hs)**2)**0.5
+    deltas = (gt_boxes-et_boxes)/scale.reshape(-1,1)
+
+    return deltas
+
+def box2d_transform_inv(et_boxes, deltas):
+    num=len(et_boxes)
+    boxes2d=np.zeros((num,4),dtype=np.float32)    
+    et_ws  = et_boxes[:, 2] - et_boxes[:, 0] + 1.0
+    et_hs  = et_boxes[:, 3] - et_boxes[:, 1] + 1.0
+    scale = ((0.5*et_ws)**2+(0.5*et_hs)**2)**0.5
+    boxes2d = deltas*scale.reshape(-1,1)+et_boxes
+    return boxes2d
 
 def box3d_transform_inv(et_boxes3d, deltas):
 

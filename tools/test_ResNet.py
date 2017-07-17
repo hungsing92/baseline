@@ -43,42 +43,11 @@ from tensorflow.python import debug as tf_debug
 
 #http://3dimage.ee.tsinghua.edu.cn/cxz
 # "Multi-View 3D Object Detection Network for Autonomous Driving" - Xiaozhi Chen, CVPR 2017
-#<todo>
-def project_to_roi3d(top_rois):
-    num = len(top_rois)
-    rois3d = np.zeros((num,8,3))
-    rois3d = top_box_to_box3d(top_rois[:,1:5])
-    return rois3d
 
-
-def project_to_rgb_roi(rois3d, width, height):
-    num  = len(rois3d)
-    rois = np.zeros((num,5),dtype=np.int32)
-    projections = box3d_to_rgb_projections(rois3d)
-    for n in range(num):
-        qs = projections[n]
-        minx = np.min(qs[:,0])
-        maxx = np.max(qs[:,0])
-        miny = np.min(qs[:,1])
-        maxy = np.max(qs[:,1])
-        minx = np.maximum(np.minimum(minx, width - 1), 0)
-        maxx = np.maximum(np.minimum(maxx, width - 1), 0)
-        miny = np.maximum(np.minimum(miny, height - 1), 0)
-        maxy = np.maximum(np.minimum(maxy, height - 1), 0)
-        rois[n,1:5] = minx,miny,maxx,maxy
-
-    return rois
-
-
-def  project_to_front_roi(rois3d):
-    num  = len(rois3d)
-    rois = np.zeros((num,5),dtype=np.int32)
-
-    return rois
 
 def generat_test_reslut(probs, boxes3d, rgb_shape, index):
     result_path='./evaluate_object/val_R/'
-    makedirs(result_path)
+    # makedirs(result_path)
     # empty(result_path)
     if len(boxes3d)==0:
         return 1
@@ -163,6 +132,9 @@ def load_dummy_datas(index):
 is_show=0
 # MM_PER_VIEW1 = 120, 30, 70, [1,1,0]
 MM_PER_VIEW1 = 180, 70, 60, [1,1,0]#[ 12.0909996 , -1.04700089, -2.03249991]
+result_path='./evaluate_object/val_R/'
+    # makedirs(result_path)
+empty(result_path)
 def run_test():
 
     # output dir, etc
@@ -170,7 +142,9 @@ def run_test():
     makedirs(out_dir +'/tf')
     makedirs(out_dir +'/check_points')
     log = Logger(out_dir+'/log_%s.txt'%(time.strftime('%Y-%m-%d %H:%M:%S')),mode='a')
+
     index=np.load(train_data_root+'/val_list.npy')
+    
     index=sorted(index)
     print('len(index):%d'%len(index))
     num_frames=len(index)
@@ -256,7 +230,7 @@ def run_test():
         # sess = tf_debug.LocalCLIDebugWrapperSession(sess)
         summary_writer = tf.summary.FileWriter(out_dir+'/tf', sess.graph)
         saver  = tf.train.Saver()  
-        saver.restore(sess, './outputs/check_points/snap_RVD_new_lidar_6s_060000.ckpt')
+        saver.restore(sess, './outputs/check_points/snap_RVD_new_lidar_6s_090000.ckpt')
 
         batch_top_cls_loss =0
         batch_top_reg_loss =0
@@ -314,7 +288,7 @@ def run_test():
             }
             batch_top_probs,  batch_top_deltas  =  sess.run([ top_probs,  top_deltas  ],fd2)
             batch_fuse_probs, batch_fuse_deltas =  sess.run([ fuse_probs, fuse_deltas ],fd2)
-            probs, boxes3d = rcnn_nms(batch_fuse_probs, batch_fuse_deltas, batch_rois3d, threshold=0.05)
+            probs, boxes3d = rcnn_nms(batch_fuse_probs, batch_fuse_deltas, batch_rois3d, rgb_shape, threshold=0.05)
             # print('nums of boxes3d : %d'%len(boxes3d))
 
             generat_test_reslut(probs, boxes3d, rgb_shape, int(index[iter]))
