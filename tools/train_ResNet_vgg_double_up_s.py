@@ -292,7 +292,7 @@ def run_train():
             # rate=0.001
             start_time=time.time()
 
-           if iter%(num_frames*2)==0:
+            if iter%(num_frames*2)==0:
                 idx=0
                 frame=0
                 count=0
