@@ -248,7 +248,7 @@ def run_train():
         batch_top_reg_loss =0
         batch_fuse_cls_loss=0
         batch_fuse_reg_loss=0
-        rate=0.00004
+        rate=0.00001
         frame_range = np.arange(num_frames)
         idx=0
         frame=0
@@ -283,8 +283,8 @@ def run_train():
                 idx=0
             print('processing image : %s'%image_index[idx])
 
-            if (iter+1)%(10000)==0:
-                rate=0.8*rate
+            # if (iter+1)%(10000)==0:
+            #     rate=0.8*rate
 
             rgb_shape   = rgbs[idx].shape
             batch_top_images    = tops[idx].reshape(1,*top_shape)
