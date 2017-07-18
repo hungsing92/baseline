@@ -142,12 +142,14 @@ def rcnn_nms( probs,  deltas,  rois3d, rgb_shape, threshold = 0.05):
         keep = nms(np.hstack((top_boxes, probs.reshape(-1,1))), threshold)
         boxes3d=boxes3d[keep]
         boxes3d  = regularise_box3d(boxes3d)
+        probs  = probs [keep]
 
         rgb_boxes=project_to_rgb(boxes3d, rgb_shape[1], rgb_shape[0] )
         image = np.array([0, 0, rgb_shape[1], rgb_shape[0]]).reshape(-1,4)
         iom = IoM(rgb_boxes, image)
         keep = np.where(iom>0.1)[0]
         boxes3d = boxes3d[keep]
+        probs  = probs [keep]
 
 
         return probs, boxes3d
