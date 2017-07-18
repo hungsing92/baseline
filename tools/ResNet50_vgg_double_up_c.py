@@ -156,7 +156,7 @@ def fusion_net(feature_list, num_class, out_shape=(8,3)):
   #include background class
   with tf.variable_scope('fuse') as scope:
     block = linear_bn_relu(input, num_hiddens=512, name='4')#512, so small?
-    # block = tf.nn.dropout(block, keep_prob, name='drop4')
+    block = tf.nn.dropout(block, keep_prob, name='drop4')
     with tf.variable_scope('3D') as sc:
       dim = np.product([*out_shape])
       scores_3d  = linear(block, num_hiddens=num_class,     name='score')
