@@ -121,6 +121,7 @@ def load_dummy_datas(index):
     rgb   = cv2.imread(kitti_dir+'/image_2/%06d.png'%int(index),1).astype(np.float32, copy=False)
     rgbs_norm0=(rgb-PIXEL_MEANS)/255
     # lidar = np.load(train_data_root+'/lidar/lidar_%05d.npy'%int(index))
+    lidar=[]
     top   = np.load(train_data_root+'/top_70/top_70%05d.npy'%int(index))
     front = np.zeros((1,1),dtype=np.float32)
     gt_label  = np.load(train_data_root+'/gt_labels/gt_labels_%05d.npy'%int(index))
