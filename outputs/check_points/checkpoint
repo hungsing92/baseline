@@ -1,6 +1,2 @@
-model_checkpoint_path: "snap_R2R_contxt_040000.ckpt"
-all_model_checkpoint_paths: "snap_R2R_contxt_020000.ckpt"
-all_model_checkpoint_paths: "snap_R2R_contxt_025000.ckpt"
-all_model_checkpoint_paths: "snap_R2R_contxt_030000.ckpt"
-all_model_checkpoint_paths: "snap_R2R_contxt_035000.ckpt"
-all_model_checkpoint_paths: "snap_R2R_contxt_040000.ckpt"
+model_checkpoint_path: "snap_v2v_new_rgb_005000.ckpt"
+all_model_checkpoint_paths: "snap_v2v_new_rgb_005000.ckpt"
