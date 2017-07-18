@@ -40,7 +40,7 @@ from tensorflow.python import debug as tf_debug
 #<todo>
 
 def generat_test_reslut(probs, boxes3d, rgb_shape, index, boxes2d=None ):
-    result_path='./evaluate_object/val_R/'
+    result_path='./evaluate_object/val_R/data/'
     makedirs(result_path)
     # empty(result_path)
     if len(boxes3d)==0:

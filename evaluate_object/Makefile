@@ -1,7 +1,7 @@
 make:
-	g++ -O3 -DNDEBUG -o evaluate_object2 evaluate_object.cpp
+	g++ -O3 -DNDEBUG -o evaluate_object3d evaluate_object_3d_offline.cpp
 
-install:
+install:s
 	cp evaluate_object ~/bin
 
 clean:
