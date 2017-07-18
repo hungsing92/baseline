@@ -56,44 +56,15 @@ def load_dummy_datas(index):
         # lidar = np.load(train_data_root+'/lidar/lidar_%05d.npy'%int(index[n]))
         top   = np.load(train_data_root+'/top_70/top_70%05d.npy'%int(index[n]))
         front = np.zeros((1,1),dtype=np.float32)
-<<<<<<< HEAD
+
         gt_label  = np.load(data_root+'seg/gt_labels/gt_labels_%05d.npy'%int(index[n]))
         gt_box3d = np.load(data_root+'seg/gt_boxes3d/gt_boxes3d_%05d.npy'%int(index[n]))
 
-<<<<<<< HEAD
-        rgb_shape   = rgb.shape
-<<<<<<< HEAD
-<<<<<<< HEAD
-=======
->>>>>>> b2714c03a93ad97ea2c7a602928e43cb7840f68b
-        gt_rgb   = project_to_rgb_roi  (gt_box3d, rgb_shape[1], rgb_shape[0]  )
-        keep = np.where((gt_rgb[:,1]>=-200) & (gt_rgb[:,2]>=-200) & (gt_rgb[:,3]<=(rgb_shape[1]+200)) & (gt_rgb[:,4]<=(rgb_shape[0]+200)))[0]
-        gt_label=gt_label[keep]
-        gt_box3d=gt_box3d[keep]
-<<<<<<< HEAD
-=======
-        # gt_rgb   = project_to_rgb_roi  (gt_box3d  )
-        # keep = np.where((gt_rgb[:,1]>=-200) & (gt_rgb[:,2]>=-200) & (gt_rgb[:,3]<=(rgb_shape[1]+200)) & (gt_rgb[:,4]<=(rgb_shape[0]+200)))[0]
-        # gt_label=gt_label[keep]
-        # gt_box3d=gt_box3d[keep]
->>>>>>> 343b663154474e9553c601f824134c07d551a72e
-=======
->>>>>>> b2714c03a93ad97ea2c7a602928e43cb7840f68b
-=======
-        # rgb_shape   = rgb.shape
-        # gt_rgb   = project_to_rgb_roi  (gt_box3d, rgb_shape[1], rgb_shape[0]  )
-        # keep = np.where((gt_rgb[:,1]>=-200) & (gt_rgb[:,2]>=-200) & (gt_rgb[:,3]<=(rgb_shape[1]+200)) & (gt_rgb[:,4]<=(rgb_shape[0]+200)))[0]
-        # gt_label=gt_label[keep]
-        # gt_box3d=gt_box3d[keep]
->>>>>>> e39bc02e36acd6240edcf88ea478363ba08a2d26
-
-
         top_image   = cv2.imread(data_root+'seg/density_image_70/density_image_70%05d.png'%int(index[n]))
-=======
+
         gt_label  = np.load(train_data_root+'/gt_labels/gt_labels_%05d.npy'%int(index[n]))
         gt_box3d = np.load(train_data_root+'/gt_boxes3d/gt_boxes3d_%05d.npy'%int(index[n]))
         top_image   = cv2.imread(train_data_root+'/density_image_70/density_image_70%05d.png'%int(index[n]))
->>>>>>> cb276e044dc652fa665f6f0bf130ce3b6d35966c
         front_image = np.zeros((1,1,3),dtype=np.float32)
 
         rgbs.append(rgb)
@@ -269,35 +240,7 @@ def run_train():
         # sess = tf_debug.LocalCLIDebugWrapperSession(sess)
         # summary_writer = tf.summary.FileWriter(out_dir+'/tf', sess.graph)
         saver  = tf.train.Saver() 
-<<<<<<< HEAD
-<<<<<<< HEAD
-<<<<<<< HEAD
-<<<<<<< HEAD
-        saver.restore(sess, './outputs/check_points/snap_RVD_FreezeBN_NGT_s_120000.ckpt') 
-=======
-        # saver.restore(sess, './outputs/check_points/snap_ResNet_vgg_double_up_rm_fc_NGT_070000.ckpt') 
->>>>>>> 343b663154474e9553c601f824134c07d551a72e
-=======
-        saver.restore(sess, './outputs/check_points/snap_ResNet_vgg_double_up_rm_fc_NGT_new_lidar_070000.ckpt') 
->>>>>>> 810b1be4d78255816eaa452f7d5eb83b7cb81c05
-=======
-        saver.restore(sess, './outputs/check_points/snap_RVD_FreezeBN_NGT_OHEM_s_070000.ckpt') 
->>>>>>> a42debc46a19045849a064af08df0a5ed16b2db9
-=======
-
-        # saver_0.restore(sess, './outputs/check_points/snap_RVD_FreezeBN_NGT_OHEM_s_070000.ckpt') 
-<<<<<<< HEAD
-<<<<<<< HEAD
-        saver.restore(sess, './outputs/check_points/snap_RVD_new_lidar_015000.ckpt') 
->>>>>>> b2714c03a93ad97ea2c7a602928e43cb7840f68b
-=======
-        saver.restore(sess, './outputs/check_points/snap_RVD_FreezeBN_NGT_OHEM_s_070000.ckpt') 
->>>>>>> e39bc02e36acd6240edcf88ea478363ba08a2d26
-        # # saver.restore(sess, './outputs/check_points/MobileNet.ckpt')  
-=======
-        saver.restore(sess, './outputs/check_points/snap_RVD_new_lidar_6s_090000.ckpt') 
- 
->>>>>>> cb276e044dc652fa665f6f0bf130ce3b6d35966c
+        saver.restore(sess, './outputs/check_points/snap_RVD_6s_080000.ckpt')
 
         # var_lt_res=[v for v in tf.trainable_variables() if v.name.startswith('res')]#resnet_v1_50
         # # pdb.set_trace()

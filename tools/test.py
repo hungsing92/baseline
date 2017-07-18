@@ -40,7 +40,7 @@ from tensorflow.python import debug as tf_debug
 #<todo>
 
 def generat_test_reslut(probs, boxes3d, rgb_shape, index, boxes2d=None ):
-    result_path='./evaluate_object/val_R/data/'
+    result_path='./evaluate_object/val_R_O/data/'
     makedirs(result_path)
     # empty(result_path)
     if len(boxes3d)==0:
@@ -120,7 +120,7 @@ def load_dummy_datas(index):
 
     rgb   = cv2.imread(kitti_dir+'/image_2/%06d.png'%int(index),1).astype(np.float32, copy=False)
     rgbs_norm0=(rgb-PIXEL_MEANS)/255
-    lidar = np.load(train_data_root+'/lidar/lidar_%05d.npy'%int(index))
+    # lidar = np.load(train_data_root+'/lidar/lidar_%05d.npy'%int(index))
     top   = np.load(train_data_root+'/top_70/top_70%05d.npy'%int(index))
     front = np.zeros((1,1),dtype=np.float32)
     gt_label  = np.load(train_data_root+'/gt_labels/gt_labels_%05d.npy'%int(index))
@@ -223,9 +223,9 @@ def run_test():
             ( [top_features,     top_rois,     7,7,1./stride],
               [front_features,   front_rois,   0,0,1./stride],  #disable by 0,0
               [rgb_features,     rgb_rois,     7,7,1./(1*stride)],
-              [top_features,     top_rois,     7,7,1./(0.75*stride)],
-              [front_features,   front_rois,   0,0,1./(0.75*stride)],  #disable by 0,0
-              [rgb_features,     rgb_rois,     7,7,1./(0.75*stride)],
+              # [top_features,     top_rois,     7,7,1./(0.75*stride)],
+              # [front_features,   front_rois,   0,0,1./(0.75*stride)],  #disable by 0,0
+              # [rgb_features,     rgb_rois,     7,7,1./(0.75*stride)],
               ),
             num_class, out_shape) #<todo>  add non max suppression
 
@@ -237,7 +237,7 @@ def run_test():
         # sess = tf_debug.LocalCLIDebugWrapperSession(sess)
         summary_writer = tf.summary.FileWriter(out_dir+'/tf', sess.graph)
         saver  = tf.train.Saver()  
-        saver.restore(sess, './outputs/check_points/snap_R2R_contxt_040000.ckpt')
+        saver.restore(sess, './outputs/check_points/snap_RVD_6s_080000.ckpt')
 
         batch_top_cls_loss =0
         batch_top_reg_loss =0

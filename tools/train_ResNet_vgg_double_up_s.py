@@ -249,7 +249,7 @@ def run_train():
         # sess = tf_debug.LocalCLIDebugWrapperSession(sess)
         # summary_writer = tf.summary.FileWriter(out_dir+'/tf', sess.graph)
         saver  = tf.train.Saver() 
-        saver.restore(sess, './outputs/check_points/snap_RVD_6s_005000.ckpt') 
+        saver.restore(sess, './outputs/check_points/snap_RVD_6s_080000.ckpt') 
         # # saver.restore(sess, './outputs/check_points/MobileNet.ckpt')  
 
         # var_lt_res=[v for v in tf.trainable_variables() if v.name.startswith('res')]#resnet_v1_50
@@ -396,14 +396,12 @@ def run_train():
                 rois_per_image    = CFG.TRAIN.RCNN_BATCH_SIZE
                 fg_rois_per_image = int(np.round(CFG.TRAIN.RCNN_FG_FRACTION * rois_per_image))
                 loss_ohem_, rcnn_smooth_l1_ohem_= sess.run([softmax_loss_ohem, rcnn_smooth_l1_ohem],fd2)
-                loss_ohem_[:len(rcnn_smooth_l1_ohem_)] += rcnn_smooth_l1_ohem_
-                # fg_inds=np.arange(len(rcnn_smooth_l1_ohem_))
-                # if len(rcnn_smooth_l1_ohem_)>fg_rois_per_image:
-                #     fg_inds = np.random.choice(fg_inds, size=fg_rois_per_image, replace=False)
-                #     loss_ohem_[fg_inds]=0 
+                fg_inds=np.arange(len(rcnn_smooth_l1_ohem_))
+                if len(rcnn_smooth_l1_ohem_)>fg_rois_per_image:
+                    fg_inds = np.argsort(-loss_ohem_[:len(rcnn_smooth_l1_ohem_)])[:fg_rois_per_image]
                 # pdb.set_trace()
-                ohem_ind = np.argsort(-loss_ohem_[len(rcnn_smooth_l1_ohem_):])[:(rois_per_image-len(rcnn_smooth_l1_ohem_))]
-                ohem_ind = np.hstack([np.arange(len(rcnn_smooth_l1_ohem_)), ohem_ind])
+                ohem_ind = (np.argsort(-loss_ohem_[len(rcnn_smooth_l1_ohem_):])+len(rcnn_smooth_l1_ohem_))[:min(rois_per_image-len(fg_inds),3*len(fg_inds))]
+                ohem_ind = np.hstack([fg_inds, ohem_ind])
                 batch_top_rois=batch_top_rois[ohem_ind]
                 batch_fuse_labels=batch_fuse_labels[ohem_ind]
                 batch_fuse_targets=batch_fuse_targets[ohem_ind]
