@@ -89,7 +89,7 @@ def load_dummy_datas(index):
 train_data_root='/home/users/hhs/4T/datasets/dummy_datas/seg'
 kitti_dir='/mnt/disk_4T/KITTI/training'
 vis=0
-ohem=False
+ohem=True
 def run_train():
 
     # output dir, etc
@@ -221,7 +221,7 @@ def run_train():
         # sess = tf_debug.LocalCLIDebugWrapperSession(sess)
         # summary_writer = tf.summary.FileWriter(out_dir+'/tf', sess.graph)
         saver  = tf.train.Saver() 
-        saver.restore(sess, './outputs/check_points/snap_context_ohem_050000.ckpt') 
+        saver.restore(sess, './outputs/check_points/snap_context__080000.ckpt') 
 
         # var_lt_res=[v for v in tf.trainable_variables() if v.name.startswith('res')]#resnet_v1_50
         # saver_0=tf.train.Saver(var_lt_res)        
@@ -407,7 +407,7 @@ def run_train():
                 train_writer.add_summary(summary, iter)
             # save: ------------------------------------
             if (iter)%5000==0 and (iter!=0):
-                saver.save(sess, out_dir + '/check_points/snap_context_ohem_%06d.ckpt'%iter)  #iter
+                saver.save(sess, out_dir + '/check_points/snap_context__%06d.ckpt'%iter)  #iter
                 pass
             idx=idx+1
 
