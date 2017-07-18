@@ -1,5 +1,6 @@
 outputs/*
 net/roipooling_op/__pycache__/
+evaluate_object/
 *.py[cod]
 # Python:
 *.so
