@@ -1,6 +1,19 @@
 from net.common import *
 
+def project_velo2cam(velo):
+    lidar_loc_=np.dot(MATRIX_TR,velo)
+    lidar_loc=lidar_loc_[:3]
+    return lidar_loc[0],lidar_loc[1],lidar_loc[2]
 
+def project_cam2velo(cam,Tr):
+    T=np.zeros([4,4],dtype=np.float32)
+    T[:3,:]=Tr
+    T[3,3]=1
+    T_inv=np.linalg.inv(T)
+    lidar_loc_=np.dot(T_inv,cam)
+    lidar_loc=lidar_loc_[:3]
+    return lidar_loc.reshape(1,3)
+    
 ##extension for 3d
 def project_to_roi3d(top_rois):
     num = len(top_rois)
