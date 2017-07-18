@@ -116,7 +116,7 @@ def  project_to_front_roi(rois3d):
 data_root='/home/users/hhs/4T/datasets/dummy_datas/'
 kitti_img_root='/mnt/disk_4T/KITTI/'
 vis=0
-ohem=False
+ohem=True
 def run_train():
 
     # output dir, etc
