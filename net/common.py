@@ -16,7 +16,8 @@ TOP_Z_DIVISION=0.4
 Top_Y0, Top_Yn = 0, int((TOP_X_MAX-TOP_X_MIN)//TOP_X_DIVISION)+1
 Top_X0, Top_Xn = 0, int((TOP_Y_MAX-TOP_Y_MIN)//TOP_Y_DIVISION)+1
 
-
+Car_Z0=-1.6
+Car_Zn=0.4
 
 import numpy as np
 PIXEL_MEANS = np.array([[[95.8814, 98.7743, 93.8549]]])

@@ -193,6 +193,63 @@ def rpn_target( anchors, inside_inds, gt_labels,  gt_boxes):
 
     return inds, pos_inds, labels, targets
 
+def rpn_target_Z( anchors, inside_inds, gt_labels,  gt_boxes, gt_boxesZ):
+
+    inside_anchors = anchors[inside_inds, :]
+
+    # label: 1 is positive, 0 is negative, -1 is dont care
+    labels = np.empty((len(inside_inds), ), dtype=np.int32)
+    labels.fill(-1)
+
+    # overlaps between the anchors and the gt process
+    overlaps = box_overlaps(
+        np.ascontiguousarray(inside_anchors,  dtype=np.float),
+        np.ascontiguousarray(gt_boxes,        dtype=np.float))
+
+    argmax_overlaps    = overlaps.argmax(axis=1)
+    max_overlaps       = overlaps[np.arange(len(inside_inds)), argmax_overlaps]
+    gt_argmax_overlaps = overlaps.argmax(axis=0)
+    gt_max_overlaps    = overlaps[gt_argmax_overlaps, np.arange(overlaps.shape[1])]
+    gt_argmax_overlaps = np.where(overlaps == gt_max_overlaps)[0]
+
+    labels[max_overlaps <  CFG.TRAIN.RPN_BG_THRESH_HI] = 0   # bg label
+    labels[gt_argmax_overlaps] = 1                           # fg label: for each gt, anchor with highest overlap
+    labels[max_overlaps >= CFG.TRAIN.RPN_FG_THRESH_LO] = 1   # fg label: above threshold IOU
+
+
+    # subsample positive labels
+    num_fg = int(CFG.TRAIN.RPN_FG_FRACTION * CFG.TRAIN.RPN_BATCHSIZE)
+    fg_inds = np.where(labels == 1)[0]
+    if len(fg_inds) > num_fg:
+        disable_inds = np.random.choice( fg_inds, size=(len(fg_inds) - num_fg), replace=False)
+        labels[disable_inds] = -1
+
+    # subsample negative labels
+    num_bg = CFG.TRAIN.RPN_BATCHSIZE - np.sum(labels == 1)
+    # num_bg = int(min(1.5*np.sum(labels == 1),num_bg))
+    bg_inds = np.where(labels == 0)[0]
+    if len(bg_inds) > num_bg:
+        disable_inds = np.random.choice(bg_inds, size=(len(bg_inds) - num_bg), replace=False)
+        labels[disable_inds] = -1
+
+    idx_label  = np.where(labels != -1)[0]
+    idx_target = np.where(labels ==  1)[0]
+
+    inds   = inside_inds[idx_label]
+    labels = labels[idx_label]
+
+    pos_inds = inside_inds[idx_target]
+    pos_anchors  = inside_anchors[idx_target]
+    pos_gt_boxes = (gt_boxes[argmax_overlaps])[idx_target]
+    pos_gt_Zs   = (gt_boxesZ[argmax_overlaps])[idx_target]
+    targetsZ= pos_gt_Zs-np.array([Car_Z0,Car_Zn])
+    targets = box_transform(pos_anchors, pos_gt_boxes)
+
+    return inds, pos_inds, labels, targets,targetsZ
+
+
+
+
 
 
 # def tf_rpn_target(gt_boxes, anchors, inside_inds, name='rpn_target'):

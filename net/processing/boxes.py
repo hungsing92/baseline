@@ -1,5 +1,5 @@
 from net.configuration import CFG
-
+from net.common import *
 from net.processing.cython_bbox import bbox_overlaps as box_overlaps
 #from net.processing.cython_box import box_vote
 #from net.processing.gpu_nms import gpu_nms as nms   ##unknown bug ???
@@ -24,7 +24,6 @@ def clip_boxes(boxes, width, height):
     boxes[:, 3::4] = np.maximum(np.minimum(boxes[:, 3::4], height - 1), 0)
     return boxes
 
-
 # et_boxes = estimated 
 # gt_boxes = ground truth 
 
@@ -48,6 +47,9 @@ def box_transform(et_boxes, gt_boxes):
     return deltas
 
 
+def z_transform_inv(deltas):
+    proposals_z=deltas+np.array([Car_Z0, Car_Zn],dtype=np.float32)
+    return proposals_z
 
 def box_transform_inv(et_boxes, deltas):
 

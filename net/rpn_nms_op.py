@@ -125,24 +125,26 @@ def filter_boxes(boxes, min_size):
 
 
 def rpn_nms_generator(
-    stride, img_width, img_height, img_scale=1,
+    stride, img_width, img_height,deltasZ, img_scale=1,
     nms_thresh   =CFG.TRAIN.RPN_NMS_THRESHOLD,
     min_size     =CFG.TRAIN.RPN_NMS_MIN_SIZE,
     nms_pre_topn =CFG.TRAIN.RPN_NMS_PRE_TOPN,
     nms_post_topn=CFG.TRAIN.RPN_NMS_POST_TOPN):
 
 
-    def rpn_nms(scores, deltas, anchors, inside_inds):
+    def rpn_nms(scores, deltas, anchors, inside_inds,deltasZ):
         # 1. Generate proposals from box deltas and shifted anchors
         #batch_size, H, W, C = scores.shape
         #assert(C==2)
         scores = scores.reshape((-1, 2,1))
         scores = scores[:,1,:]
         deltas = deltas.reshape((-1, 4))
+        deltasZ = deltasZ.reshape((-1, 2))
 
         scores = scores[inside_inds]
         deltas = deltas[inside_inds]
         anchors = anchors[inside_inds]
+        deltasZ = deltasZ[inside_inds]
         # keep = np.where(scores>0.2)[0]
         # scores = scores[keep]
         # deltas = deltas[keep]
@@ -151,7 +153,8 @@ def rpn_nms_generator(
 
         # Convert anchors into proposals via box transformations
         proposals = box_transform_inv(anchors, deltas)
-
+        proposals_z= z_transform_inv(deltasZ)
+        # proposals_z=deltasZ
         # 2. clip predicted boxes to image
         proposals = clip_boxes(proposals, img_width, img_height)
 
@@ -159,6 +162,7 @@ def rpn_nms_generator(
         # (NOTE: convert min_size to input image scale stored in im_info[2])
         keep      = filter_boxes(proposals, min_size*img_scale)
         proposals = proposals[keep, :]
+        proposals_z = proposals_z[keep, :]
         scores    = scores[keep]
 
         # 4. sort all (proposal, score) pairs by score from highest to lowest
@@ -167,6 +171,7 @@ def rpn_nms_generator(
         if (nms_pre_topn > 0) and (len(scores)>nms_pre_topn):
             order = order[:nms_pre_topn]
             proposals = proposals[order, :]
+            proposals_z = proposals_z[order, :]
             scores = scores[order]
 
         # 6. apply nms (e.g. threshold = 0.7)
@@ -176,6 +181,7 @@ def rpn_nms_generator(
         if (nms_post_topn > 0) and (len(keep)>nms_post_topn):
             keep = keep[:nms_post_topn]
         proposals = proposals[keep, :]
+        proposals_z = proposals_z[keep, :]
         scores = scores[keep]
 
         # Output rois blob
@@ -187,26 +193,26 @@ def rpn_nms_generator(
         batch_inds = np.zeros((num_proposals, 1), dtype=np.float32)
         rois = np.hstack((batch_inds, proposals))
 
-        return rois, roi_scores
+        return rois, roi_scores, proposals_z
     return rpn_nms
 
 
 
 def tf_rpn_nms(
     scores, deltas, anchors, inside_inds,
-    stride, img_width,img_height,img_scale,
+    stride, img_width,img_height,img_scale, deltasZ,
     nms_thresh, min_size, nms_pre_topn, nms_post_topn,
     name='rpn_mns'):
 
     #<todo>
     #assert batch_size == 1, 'Only single image batches are supported'
 
-    rpn_nms = rpn_nms_generator(stride, img_width, img_height, img_scale, nms_thresh, min_size, nms_pre_topn, nms_post_topn)
+    rpn_nms = rpn_nms_generator(stride, img_width, img_height,deltasZ, img_scale, nms_thresh, min_size, nms_pre_topn, nms_post_topn)
     return  \
         tf.py_func(
             rpn_nms,
-            [scores, deltas, anchors, inside_inds],
-            [tf.float32, tf.float32],
+            [scores, deltas, anchors, inside_inds,deltasZ],
+            [tf.float32, tf.float32, tf.float32],
         name = name)
 
 ## main ##----------------------------------------------------------------

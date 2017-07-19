@@ -6,6 +6,7 @@ net/roipooling_op/__pycache__/
 *.egg
 *.egg-info
 *.pyc
+evaluate_object/
 __pycache__/
 net/__pycache__/
 net/processing/__pycache__/

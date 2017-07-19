@@ -2,6 +2,23 @@ from net.common import *
 
 
 ##extension for 3d
+def get_boxes3d_z(boxes3d):
+    boxes3d_z=np.zeros((len(boxes3d),2), dtype=np.float32)
+    for num in np.arange(len(boxes3d)):
+        box3d = boxes3d[num]
+        # center = np.sum(box3d,axis=0, keepdims=True)/8
+        # dis=0
+        # for k in range(0,4):
+        #     i,j=k,k+4
+        #     dis +=np.sum((box3d[i]-box3d[j])**2) **0.5
+        # h = dis/4
+        # z0 = center[:,2]-h/2
+        # zn = center[:,2]+h/2
+        z0 = np.min(box3d[:,2])
+        zn = np.max(box3d[:,2])
+        boxes3d_z[num,:]=np.array([z0,zn]).reshape(-1,2)
+    return boxes3d_z
+
 def project_cam2velo(cam,Tr):
     T=np.zeros([4,4],dtype=np.float32)
     T[:3,:]=Tr
@@ -98,6 +115,23 @@ def top_box_to_box3d(boxes):
             boxes3d[n,4+k,:] = x,y,0.2  #0.4
 
     return boxes3d
+
+def top_z_to_box3d(boxes,proposals_z):
+
+    num=len(boxes)
+    boxes3d = np.zeros((num,8,3),dtype=np.float32)
+    for n in range(num):
+        x1,y1,x2,y2 = boxes[n]
+        z0,zn = proposals_z[n]
+        points = [ (x1,y2), (x2,y2), (x2,y1), (x1,y1) ]
+        for k in range(4):
+            xx,yy = points[k]
+            x,y  = top_to_lidar_coords(xx,yy)
+            boxes3d[n,k,  :] = x,y, z0  ## <todo>-2
+            boxes3d[n,4+k,:] = x,y, zn  #0.4
+
+    return boxes3d
+
 
 
 def box3d_to_top_box(boxes3d):
