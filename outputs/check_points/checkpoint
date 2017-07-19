@@ -1,6 +1,0 @@
-model_checkpoint_path: "pretrained_Res_top_model000012.ckpt"
-all_model_checkpoint_paths: "pretrained_Res_top_model000008.ckpt"
-all_model_checkpoint_paths: "pretrained_Res_top_model000009.ckpt"
-all_model_checkpoint_paths: "pretrained_Res_top_model000010.ckpt"
-all_model_checkpoint_paths: "pretrained_Res_top_model000011.ckpt"
-all_model_checkpoint_paths: "pretrained_Res_top_model000012.ckpt"
