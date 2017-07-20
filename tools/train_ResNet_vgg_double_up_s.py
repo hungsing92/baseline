@@ -241,7 +241,7 @@ def run_train():
         saver  = tf.train.Saver() 
         # saver.restore(sess, './outputs/check_points/snap_context_ohem_005000.ckpt') 
 
-        var_lt_res=[v for v in tf.trainable_variables() if v.name.startswith('res')]#resnet_v1_50
+        var_lt_res=[v for v in tf.trainable_variables() if v.name.startswith('resnet_v1')]#resnet_v1_50
         saver_0=tf.train.Saver(var_lt_res)        
         saver_0.restore(sess, './outputs/check_points/resnet_v1_50.ckpt')
         # # pdb.set_trace()
