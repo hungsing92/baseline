@@ -12,6 +12,7 @@ from net.roipooling_op import roi_pool as tf_roipooling
 import pdb
 from tensorflow.contrib.slim.python.slim.nets import resnet_v1
 import vgg
+from fpn import build_pyramid
 
 keep_prob=0.5
 nms_pre_topn_=5000
@@ -45,7 +46,7 @@ def top_feature_net(input, anchors, inds_inside, num_bases):
     up_34      =tf.add(up4, up3, name="up_add_3_4")
     up      =tf.add(up_34, up2, name="up_add_3_4_2")
     block    = conv2d_relu(up, num_kernels=256, kernel_size=(3,3), stride=[1,1,1,1], padding='SAME', name='rgb_ft')
-  with tf.variable_scope('top') as scope:
+  with tf.variable_scope('rpn_top') as scope:
     up      = conv2d_relu(block, num_kernels=256, kernel_size=(3,3), stride=[1,1,1,1], padding='SAME', name='2')
     scores  = conv2d(up, num_kernels=2*num_bases, kernel_size=(1,1), stride=[1,1,1,1], padding='SAME', name='score')
     probs   = tf.nn.softmax( tf.reshape(scores,[-1,2]), name='prob')
@@ -53,7 +54,7 @@ def top_feature_net(input, anchors, inds_inside, num_bases):
     deltasZ  = conv2d(up, num_kernels=2*num_bases, kernel_size=(1,1), stride=[1,1,1,1], padding='SAME', name='deltaZ')
 
   #<todo> flip to train and test mode nms (e.g. different nms_pre_topn values): use tf.cond
-  with tf.variable_scope('top-nms') as scope:    #non-max
+  with tf.variable_scope('nms_top') as scope:    #non-max
     batch_size, img_height, img_width, img_channel = input.get_shape().as_list()
     img_scale = 1
     # pdb.set_trace()
@@ -113,15 +114,17 @@ def rgb_feature_net(input, num_bases):
 
     arg_scope = resnet_v1.resnet_arg_scope(is_training=False)
     with slim.arg_scope(arg_scope):
-      net, end_points = resnet_v1.resnet_v1_50(input, None, global_pool=False, output_stride=8)
+      net, end_points = resnet_v1.resnet_v1_50(input, None, global_pool=False)#, output_stride=8)
       # pdb.set_trace()
+      pyramid=build_pyramid('resnet50', end_points, bilinear=True)
+      pdb.set_trace()
       block4=end_points['resnet_v1_50/block4']
       block3=end_points['resnet_v1_50/block3']
       block2=end_points['resnet_v1_50/block2']
       tf.summary.histogram('rgb_block4', block4)
       tf.summary.histogram('rgb_block3', block3)
       tf.summary.histogram('rgb_block2', block2)
-      with tf.variable_scope("rgb_up") as sc:
+      with tf.variable_scope("res_rgb_up") as sc:
         block4_   = conv2d_relu(block4, num_kernels=256, kernel_size=(1,1), stride=[1,1,1,1], padding='SAME', name='4')
         up4     = upsample2d(block4_, factor = 2, has_bias=True, trainable=True, name='up4')
         block3_   = conv2d_relu(block3, num_kernels=256, kernel_size=(1,1), stride=[1,1,1,1], padding='SAME', name='3')
