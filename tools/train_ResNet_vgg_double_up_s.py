@@ -55,6 +55,7 @@ def load_dummy_datas(index):
         print('processing img:%d,%05d'%(n,int(index[n])))
         rgb   = cv2.imread(kitti_dir+'/image_2/%06d.png'%int(index[n]))
         rgbs_norm0=(rgb-PIXEL_MEANS)/255
+        # rgbs_norm0   = np.load(train_data_root+'/image_stack_lidar/image_stack_lidar%05d .npy'%int(index[n]))
         # lidar = np.load(train_data_root+'/lidar/lidar_%05d.npy'%index[n]
         top   = np.load(train_data_root+'/top_70/top_70%05d.npy'%int(index[n]))
         front = np.zeros((1,1),dtype=np.float32)
@@ -169,8 +170,8 @@ def run_train():
     fuse_scores, fuse_probs, fuse_deltas, fuse_deltas_2d = \
         fusion_net(
 			( [top_features,     top_rois,     7,7,1./stride],
-			  # [front_features,   front_rois,   0,0,1./stride],  #disable by 0,0
-			  # [rgb_features,     rgb_rois,     7,7,1./(1*stride)],
+			  [front_features,   front_rois,   0,0,1./stride],  #disable by 0,0
+			  [rgb_features,     rgb_rois,     7,7,1./(1*stride)],
               # [top_features,     top_rois,     7,7,1./(0.75*stride)],
               # [front_features,   front_rois,   0,0,1./(0.75*stride)],  #disable by 0,0
               # [rgb_features,     rgb_rois,     7,7,1./(0.75*stride)],
@@ -273,7 +274,7 @@ def run_train():
         batch_top_reg_loss =0
         batch_fuse_cls_loss=0
         batch_fuse_reg_loss=0
-        rate=0.00008
+        rate=0.0005
         frame_range = np.arange(num_frames)
         idx=0
         frame=0
@@ -309,7 +310,7 @@ def run_train():
             print('processing image : %s'%image_index[idx])
 
             if (iter+1)%(10000)==0:
-                rate=0.8*rate
+                rate=0.6*rate
 
             rgb_shape   = rgbs[idx].shape
             batch_top_images    = tops[idx].reshape(1,*top_shape)
@@ -455,9 +456,9 @@ def run_train():
                 train_writer.add_summary(summary, iter)
             # save: ------------------------------------
             if (iter)%5000==0 and (iter!=0):
-                saver.save(sess, out_dir + '/check_points/snap_R2R_only_lidar_%06d.ckpt'%iter)  #iter
-                saver_rgb.save(sess, out_dir + '/check_points/pretrained_Res_rgb_model_Nfpn%06d.ckpt'%iter)
-                saver_top.save(sess, out_dir + '/check_points/pretrained_Res_top_model_Nfpn%06d.ckpt'%iter)
+                saver.save(sess, out_dir + '/check_points/snap_R2R_Nfpn_with_rgb%06d.ckpt'%iter)  #iter
+                # saver_rgb.save(sess, out_dir + '/check_points/pretrained_Res_rgb_model_Nfpn%06d.ckpt'%iter)
+                # saver_top.save(sess, out_dir + '/check_points/pretrained_Res_top_model_Nfpn%06d.ckpt'%iter)
                 pass
             idx=idx+1
 
