@@ -443,13 +443,13 @@ def run_train():
                 fuse_targets_2d: batch_fuse_targets_2d
             }
 
-            _, rcnn_probs, batch_top_cls_loss, batch_top_reg_loss, batch_fuse_cls_loss, batch_fuse_reg_loss, batch_fuse_reg_loss_2d, batch_rgb_cls_loss, batch_rgb_reg_loss,batch_top_reg_loss_z = \
-               sess.run([solver_step, fuse_probs, top_cls_loss, top_reg_loss, fuse_cls_loss, fuse_reg_loss, fuse_reg_loss_2d, rgb_cls_loss, rgb_reg_loss,top_reg_loss_z],fd2)
+            _, rcnn_probs, batch_top_cls_loss, batch_top_reg_loss, batch_fuse_cls_loss, batch_fuse_reg_loss, batch_fuse_reg_loss_2d, batch_rgb_cls_loss, batch_rgb_reg_loss,batch_top_reg_loss_z,rgb_features_ = \
+               sess.run([solver_step, fuse_probs, top_cls_loss, top_reg_loss, fuse_cls_loss, fuse_reg_loss, fuse_reg_loss_2d, rgb_cls_loss, rgb_reg_loss,top_reg_loss_z,rgb_features],fd2)
 
             speed=time.time()-start_time
             log.write('%5.1f   %5d    %0.4fs   %0.4f   |   %0.5f   %0.5f   %0.5f   |   %0.5f   %0.5f  |%0.5f  |   %0.5f   %0.5f \n' %\
                 (epoch, iter, speed, rate, batch_top_cls_loss, batch_top_reg_loss, batch_top_reg_loss_z , batch_fuse_cls_loss, batch_fuse_reg_loss, batch_fuse_reg_loss_2d, batch_rgb_cls_loss, batch_rgb_reg_loss))
-            # pdb.set_trace()
+            pdb.set_trace()
             if (iter)%10==0:
                 summary = sess.run(merged,fd2)
                 train_writer.add_summary(summary, iter)
