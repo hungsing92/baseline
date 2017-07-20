@@ -286,29 +286,29 @@ def run_train():
         # summary_writer = tf.summary.FileWriter(out_dir+'/tf', sess.graph)
         saver  = tf.train.Saver() 
 
-        # saver.restore(sess, './outputs/check_points/snap_RVD_FreezeBN_NGT_s_120000.ckpt') 
+        saver.restore(sess, './outputs/check_points/snap_R2R_3drpn_rgbloss_035000.ckpt') 
 
 
-        var_lt_res=[v for v in tf.trainable_variables() if v.name.startswith('resnet_v1_50')]#resnet_v1_50
-        var_lt_res.pop(0)
-        saver_0=tf.train.Saver(var_lt_res)        
-        saver_0.restore(sess, './outputs/check_points/resnet_v1_50.ckpt')
+        # var_lt_res=[v for v in tf.trainable_variables() if v.name.startswith('resnet_v1_50')]#resnet_v1_50
+        # var_lt_res.pop(0)
+        # saver_0=tf.train.Saver(var_lt_res)        
+        # saver_0.restore(sess, './outputs/check_points/resnet_v1_50.ckpt')
         
-        # var_lt_vgg=[v for v in tf.trainable_variables() if v.name.startswith('vgg')]
-        # var_lt_vgg.pop(0)
-        # saver_1=tf.train.Saver(var_lt_vgg)
-        # saver_1.restore(sess, './outputs/check_points/vgg_16.ckpt')
+        # # var_lt_vgg=[v for v in tf.trainable_variables() if v.name.startswith('vgg')]
+        # # var_lt_vgg.pop(0)
+        # # saver_1=tf.train.Saver(var_lt_vgg)
+        # # saver_1.restore(sess, './outputs/check_points/vgg_16.ckpt')
 
-        # pdb.set_trace()
-        top_lt=[v for v in tf.trainable_variables() if v.name.startswith('top_base')]
-        top_lt.pop(0)
+        # # pdb.set_trace()
+        # top_lt=[v for v in tf.trainable_variables() if v.name.startswith('top_base')]
         # top_lt.pop(0)
-        for v in top_lt:
-            # pdb.set_trace()
-            for v_rgb in var_lt_res:
-                if v.name[9:]==v_rgb.name:
-                    print ("assign weights:%s"%v.name)
-                    v.assign(v_rgb)
+        # # top_lt.pop(0)
+        # for v in top_lt:
+        #     # pdb.set_trace()
+        #     for v_rgb in var_lt_res:
+        #         if v.name[9:]==v_rgb.name:
+        #             print ("assign weights:%s"%v.name)
+        #             v.assign(v_rgb)
 
         # var_lt_vgg=[v for v in tf.trainable_variables() if v.name.startswith('vgg')]
         # var_lt_vgg.pop(0)
@@ -332,7 +332,7 @@ def run_train():
         frame_range = np.arange(num_frames)
         idx=0
         frame=0
-        rate=0.00001
+        rate=0.00005
         for iter in range(max_iter):
             epoch=iter//num_frames+1
             # rate=0.001
@@ -348,7 +348,7 @@ def run_train():
                 frame_range=frame_range1
 
             #load freq samples every 2*freq iterations
-            freq=int(1)
+            freq=int(10)
             if idx%freq==0 :
                 count+=idx
                 if count%(2*freq)==0:
@@ -364,8 +364,8 @@ def run_train():
                 idx=0
             print('processing image : %s'%image_index[idx])
 
-            # if (iter+1)%(20000)==0:
-            #     rate=0.8*rate
+            if (iter+1)%(10000)==0:
+                rate=0.8*rate
 
             rgb_shape   = rgbs[idx].shape
             batch_top_images    = tops[idx].reshape(1,*top_shape)
