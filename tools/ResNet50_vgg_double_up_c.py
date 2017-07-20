@@ -29,7 +29,7 @@ def top_feature_net(input, anchors, inds_inside, num_bases):
   with tf.variable_scope("top_base") as sc:
     arg_scope = resnet_v1.resnet_arg_scope(is_training=True)
     with slim.arg_scope(arg_scope):
-      net, end_points = resnet_v1.resnet_v1_50(input, None, global_pool=False, output_stride=8)
+      net, end_points = resnet_v1.resnet_v1_50(input, None, global_pool=False)
     with tf.variable_scope("top_rgb_up") as sc:
         pyramid=build_pyramid('Top_resnet50', end_points, bilinear=True)
         block=pyramid['P2']  
