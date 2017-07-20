@@ -124,7 +124,7 @@ def rgb_feature_net(input, num_bases):
       tf.summary.histogram('rgb_block4', block4)
       tf.summary.histogram('rgb_block3', block3)
       tf.summary.histogram('rgb_block2', block2)
-      with tf.variable_scope("res_rgb_up") as sc:
+      # with tf.variable_scope("res_rgb_up") as sc:
         # block4_   = conv2d_relu(block4, num_kernels=256, kernel_size=(1,1), stride=[1,1,1,1], padding='SAME', name='4')
         # up4     = upsample2d(block4_, factor = 2, has_bias=True, trainable=True, name='up4')
         # block3_   = conv2d_relu(block3, num_kernels=256, kernel_size=(1,1), stride=[1,1,1,1], padding='SAME', name='3')
