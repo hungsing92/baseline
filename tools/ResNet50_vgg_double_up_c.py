@@ -12,7 +12,7 @@ from net.roipooling_op import roi_pool as tf_roipooling
 import pdb
 from tensorflow.contrib.slim.python.slim.nets import resnet_v1
 import vgg
-from .fpn import build_pyramid
+from fpn import build_pyramid
 
 keep_prob=0.5
 nms_pre_topn_=5000
