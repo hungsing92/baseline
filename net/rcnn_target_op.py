@@ -204,7 +204,7 @@ def rcnn_target_2d_z(rois, gt_labels, gt_boxes, gt_boxes3d, gt_boxes2d, width, h
         targets_2d = box_transform_2d(et_boxes2d, gt_boxes2d)
         # targets = box3d_transform(et_boxes3d, gt_boxes3d)
         # targets = box3d_transform(et_boxes3d, gt_boxes3d)
-        targets = box3d_transform(rois3D, gt_boxes3d)
+        targets = box3d_transform(et_boxes3d, gt_boxes3d)
         #exit(0)
 
     return rois, labels, targets, targets_2d, rois3D

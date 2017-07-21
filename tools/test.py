@@ -40,7 +40,7 @@ from tensorflow.python import debug as tf_debug
 #<todo>
 
 def generat_test_reslut(probs, boxes3d, rgb_shape, index, boxes2d=None ):
-    result_path='./evaluate_object/val_R/data/'
+    result_path='./evaluate_object/val_R2R_nfpn_rgbloss/data/'
     makedirs(result_path)
     # empty(result_path)
     if len(boxes3d)==0:
@@ -242,7 +242,7 @@ def run_test():
         # sess = tf_debug.LocalCLIDebugWrapperSession(sess)
         summary_writer = tf.summary.FileWriter(out_dir+'/tf', sess.graph)
         saver  = tf.train.Saver()  
-        saver.restore(sess, './outputs/check_points/snap_R2R_contxt_040000.ckpt')
+        saver.restore(sess, './outputs/check_points/snap_R2R_Nfpn_with_rgb070000.ckpt')
 
         batch_top_cls_loss =0
         batch_top_reg_loss =0
