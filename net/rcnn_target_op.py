@@ -168,12 +168,19 @@ def rcnn_target_2d_z(rois, gt_labels, gt_boxes, gt_boxes3d, gt_boxes2d, width, h
     gt_assignment = overlaps.argmax(axis=1)
     labels        = gt_labels[gt_assignment]
 
+    gt_nums = len(gt_boxes3d)
+    gt_max_overlaps = overlaps[:-gt_nums].argmax(axis=0)
+    gt_argmax_overlaps = max_overlaps[gt_max_overlaps]
+    fg_max_inds = gt_max_overlaps[np.where(gt_argmax_overlaps >= CFG.TRAIN.RCNN_FG_THRESH_LO)[0]]
+    # pdb.set_trace()
     # Select foreground RoIs as those with >= FG_THRESH overlap
     fg_inds = np.where(max_overlaps >= CFG.TRAIN.RCNN_FG_THRESH_LO)[0]
-    fg_rois_per_this_image = int(min(fg_rois_per_image, fg_inds.size))
+    fg_inds = np.setdiff1d(fg_inds, fg_max_inds)
+    fg_rois_per_this_image = int(min(fg_rois_per_image-gt_nums, fg_inds.size))
     if fg_inds.size > 0:
         fg_inds = np.random.choice(fg_inds, size=fg_rois_per_this_image, replace=False)
-
+    fg_inds = np.union1d(fg_inds,fg_max_inds)
+    print('nums of pos :%d'%len(fg_inds))
     # Select background RoIs as those within [BG_THRESH_LO, BG_THRESH_HI)
     bg_inds = np.where((max_overlaps < CFG.TRAIN.RCNN_BG_THRESH_HI) &
                        (max_overlaps >= CFG.TRAIN.RCNN_BG_THRESH_LO))[0]
@@ -187,6 +194,89 @@ def rcnn_target_2d_z(rois, gt_labels, gt_boxes, gt_boxes3d, gt_boxes2d, width, h
     keep   = np.append(fg_inds, bg_inds)
     rois   = extended_rois[keep]
     rois3D = extended_rois3D[keep]
+    labels = labels[keep]                # Select sampled values from various arrays:
+    labels[len(fg_inds):] = 0  # Clamp la bels for the background RoIs to 0
+
+
+    gt_boxes3d = gt_boxes3d[gt_assignment[keep]]
+    gt_boxes2d = gt_boxes2d[gt_assignment[keep]]
+    et_boxes=rois[:,1:5]
+    if gt_boxes3d.shape[1:]==gt_boxes.shape[1:]:
+        #normal image faster-rcnn .... for debug
+        targets = box_transform(et_boxes, gt_boxes3d)
+        #targets = targets / np.array(CFG.TRAIN.RCNN_box_NORMALIZE_STDS)  # this is for each box
+    else:
+        et_boxes3d = top_box_to_box3d(et_boxes)
+        et_boxes2d = project_to_rgb_roi(et_boxes3d, width, height)
+        targets_2d = box_transform_2d(et_boxes2d, gt_boxes2d)
+        # targets = box3d_transform(et_boxes3d, gt_boxes3d)
+        # targets = box3d_transform(et_boxes3d, gt_boxes3d)
+        targets = box3d_transform(et_boxes3d, gt_boxes3d)
+        #exit(0)
+
+    return rois, labels, targets, targets_2d, rois3D,np.arange(len(fg_inds))
+
+
+def rcnn_target_2d_z_ohem(rois, gt_labels, gt_boxes, gt_boxes3d, gt_boxes2d, width, height, proposals_z,batch_gt_boxesZ):
+
+    # Include "ground-truth" in the set of candidate rois
+    rois = rois.reshape(-1,5)  # Proposal (i, x1, y1, x2, y2) coming from RPN
+    num           = len(gt_boxes)
+    zeros         = np.zeros((num, 1), dtype=np.float32)
+    rois3D = top_z_to_box3d(rois[:,1:5],proposals_z)
+
+    # extended_rois = np.vstack((rois, np.hstack((zeros, gt_boxes))))
+    # extended_rois3D = np.vstack((rois3D, gt_boxes3d))
+    # extended_proposal_z=np.vstack((proposals_z, batch_gt_boxesZ))
+
+    extended_rois = rois
+    extended_rois3D = rois3D
+    extended_proposal_z=proposals_z
+
+    assert np.all(extended_rois[:, 0] == 0), 'Only single image batches are supported'
+
+
+    rois_per_image    = CFG.TRAIN.RCNN_BATCH_SIZE
+    fg_rois_per_image = np.round(CFG.TRAIN.RCNN_FG_FRACTION * rois_per_image)
+
+    # overlaps: (rois x gt_boxes)
+    overlaps = box_overlaps(
+        np.ascontiguousarray(extended_rois[:,1:5], dtype=np.float),
+        np.ascontiguousarray(gt_boxes, dtype=np.float)
+    )
+    max_overlaps  = overlaps.max(axis=1)
+    gt_assignment = overlaps.argmax(axis=1)
+    labels        = gt_labels[gt_assignment]
+
+    gt_nums = 0#len(gt_boxes3d)
+    # gt_max_overlaps = overlaps[:-gt_nums].argmax(axis=0)
+    # gt_argmax_overlaps = max_overlaps[gt_max_overlaps]
+    # fg_max_inds = gt_max_overlaps[np.where(gt_argmax_overlaps >= CFG.TRAIN.RCNN_FG_THRESH_LO)[0]]
+
+    # pdb.set_trace()
+    # Select foreground RoIs as those with >= FG_THRESH overlap
+    fg_inds = np.where(max_overlaps >= CFG.TRAIN.RCNN_FG_THRESH_LO)[0]
+    # fg_inds = np.setdiff1d(fg_inds, fg_max_inds)
+    fg_rois_per_this_image = int(min(fg_rois_per_image-gt_nums, fg_inds.size))
+    if fg_inds.size > 0:
+        fg_inds = np.random.choice(fg_inds, size=fg_rois_per_this_image, replace=False)
+    # fg_inds = np.union1d(fg_inds,fg_max_inds)
+    print('nums of pos :%d'%len(fg_inds))
+    fg_rois_per_this_image = int(fg_inds.size)
+    # Select background RoIs as those within [BG_THRESH_LO, BG_THRESH_HI)
+    bg_inds = np.where((max_overlaps < CFG.TRAIN.RCNN_BG_THRESH_HI) &
+                       (max_overlaps >= CFG.TRAIN.RCNN_BG_THRESH_LO))[0]
+    # bg_rois_per_this_image = int(min(rois_per_image - fg_rois_per_this_image, 3*fg_rois_per_this_image))
+    # bg_rois_per_this_image = int(min(bg_rois_per_this_image, bg_inds.size))
+    # if bg_inds.size > 0:
+    #     bg_inds = np.random.choice(bg_inds, size=bg_rois_per_this_image, replace=False)
+
+
+    # The indices that we're selecting (both fg and bg)
+    keep   = np.append(fg_inds, bg_inds)
+    rois   = extended_rois[keep]
+    rois3D = extended_rois3D[keep]
+    rois_proposal_z=extended_proposal_z[keep]
     labels = labels[keep]                # Select sampled values from various arrays:
     labels[fg_rois_per_this_image:] = 0  # Clamp la bels for the background RoIs to 0
 
@@ -206,9 +296,7 @@ def rcnn_target_2d_z(rois, gt_labels, gt_boxes, gt_boxes3d, gt_boxes2d, width, h
         # targets = box3d_transform(et_boxes3d, gt_boxes3d)
         targets = box3d_transform(et_boxes3d, gt_boxes3d)
         #exit(0)
-
-    return rois, labels, targets, targets_2d, rois3D
-
+    return rois, labels, targets, targets_2d, rois3D, rois_proposal_z
 
 
 def rcnn_target_ohem_2d(rois, gt_labels, gt_boxes, gt_boxes3d, gt_boxes2d, width, height):
@@ -234,6 +322,7 @@ def rcnn_target_ohem_2d(rois, gt_labels, gt_boxes, gt_boxes3d, gt_boxes2d, width
     labels        = gt_labels[gt_assignment]
 
     fg_inds = np.where(max_overlaps >= CFG.TRAIN.RCNN_FG_THRESH_LO)[0]
+    print('nums of pos :%d'%len(fg_inds))
     fg_rois_per_this_image = int(fg_inds.size)
     bg_inds = np.where((max_overlaps < CFG.TRAIN.RCNN_BG_THRESH_HI) &
                        (max_overlaps >= CFG.TRAIN.RCNN_BG_THRESH_LO))[0]

@@ -10,7 +10,7 @@ from data.data import *      #################
 from net.rpn_loss_op import *
 from net.rcnn_loss_op import *
 from net.rpn_target_op import make_bases, make_anchors, rpn_target, anchor_filter,rpn_target_Z
-from net.rcnn_target_op import rcnn_target, rcnn_target_ohem, rcnn_target_2d, rcnn_target_ohem_2d, rcnn_target_2d_z
+from net.rcnn_target_op import rcnn_target, rcnn_target_ohem, rcnn_target_2d, rcnn_target_ohem_2d, rcnn_target_2d_z,rcnn_target_2d_z_ohem
 
 from net.rpn_nms_op     import draw_rpn_nms, draw_rpn
 from net.rcnn_nms_op    import rcnn_nms, draw_rcnn_nms, draw_rcnn,rcnn_nms_2d
@@ -123,7 +123,7 @@ index = [ int(i.strip()) for i in index_list]
 print ('length of index : %d'%len(index))
 MM_PER_VIEW1 = 180, 70, 30, [1,1,0]
 vis=1
-ohem=False
+ohem=1
 def run_train():
 
     # output dir, etc
@@ -248,7 +248,8 @@ def run_train():
     fuse_targets_ohem=tf.stop_gradient(fuse_targets)
 
     # fuse_cls_loss, fuse_reg_loss = rcnn_loss(fuse_scores, fuse_deltas, fuse_labels, fuse_targets)
-    fuse_cls_loss, fuse_reg_loss, fuse_reg_loss_2d = rcnn_loss_2d(fuse_scores, fuse_deltas, fuse_labels, fuse_targets, fuse_deltas_2d, fuse_targets_2d)
+    rcnn_pos_inds = tf.placeholder(shape=[None   ], dtype=tf.int32,   name='top_pos_ind')
+    fuse_cls_loss, fuse_reg_loss, fuse_reg_loss_2d = rcnn_loss_2d(fuse_scores, fuse_deltas, fuse_labels, fuse_targets, fuse_deltas_2d, fuse_targets_2d,rcnn_pos_inds)
     
     softmax_loss_ohem, rcnn_smooth_l1_ohem = rcnn_loss_ohem(fuse_scores_ohem, fuse_deltas_ohem, fuse_labels_ohem, fuse_targets_ohem)
 
@@ -406,6 +407,7 @@ def run_train():
 
             batch_proposals, batch_proposal_scores, batch_top_features, batch_top_proposals_z= sess.run([proposals, proposal_scores, top_features,proposals_z],fd1)            
            ## generate  train rois  ------------
+            # pdb.set_trace()
             batch_top_inds, batch_top_pos_inds, batch_top_labels, batch_top_targets, batch_top_targetsZ  = \
                 rpn_target_Z ( anchors, inside_inds_filtered, batch_gt_labels,  batch_gt_top_boxes, batch_gt_boxesZ)
             
@@ -414,9 +416,9 @@ def run_train():
 
             # batch_top_rois, batch_fuse_labels, batch_fuse_targets  = \
             #      rcnn_target(  batch_proposals, batch_gt_labels, batch_gt_top_boxes, batch_gt_boxes3d )
-            if ohem==True:
-                batch_top_rois, batch_fuse_labels, batch_fuse_targets, batch_fuse_targets_2d  = \
-                 rcnn_target_ohem_2d(  batch_proposals, batch_gt_labels, batch_gt_top_boxes, batch_gt_boxes3d, batch_gt_boxes2d, rgb_shape[1], rgb_shape[0])             
+            if ohem==1:
+                batch_top_rois, batch_fuse_labels, batch_fuse_targets, batch_fuse_targets_2d, batch_rois3d ,rois_proposal_z= \
+                    rcnn_target_2d_z_ohem(  batch_proposals, batch_gt_labels, batch_gt_top_boxes, batch_gt_boxes3d, batch_gt_boxes2d, rgb_shape[1], rgb_shape[0],batch_top_proposals_z,batch_gt_boxesZ)             
                 batch_rois3d     = project_to_roi3d    (batch_top_rois)
                 batch_front_rois = project_to_front_roi(batch_rois3d  )
                 batch_rgb_rois   = project_to_rgb_roi  (batch_rois3d, rgb_shape[1], rgb_shape[0])
@@ -455,19 +457,26 @@ def run_train():
                 rois_per_image    = CFG.TRAIN.RCNN_BATCH_SIZE
                 fg_rois_per_image = int(np.round(CFG.TRAIN.RCNN_FG_FRACTION * rois_per_image))
                 fg_inds=np.arange(len(rcnn_smooth_l1_ohem_))
-                if len(rcnn_smooth_l1_ohem_)>fg_rois_per_image:
-                    fg_inds = np.argsort(-loss_ohem_[:len(rcnn_smooth_l1_ohem_)])[:fg_rois_per_image]
+                # if len(rcnn_smooth_l1_ohem_)>fg_rois_per_image:
+                #     fg_inds = np.argsort(-loss_ohem_[:len(rcnn_smooth_l1_ohem_)])[:fg_rois_per_image]
                 # pdb.set_trace()
-                ohem_ind = np.argsort(-loss_ohem_[len(rcnn_smooth_l1_ohem_):])[:min(rois_per_image-len(fg_inds),3*len(fg_inds))]
+                ohem_ind = (np.argsort(-loss_ohem_[len(rcnn_smooth_l1_ohem_):])+len(rcnn_smooth_l1_ohem_))[:2*(rois_per_image)]
+                # ohem_ind = (np.argsort(-loss_ohem_[len(rcnn_smooth_l1_ohem_):])+len(rcnn_smooth_l1_ohem_))[:min(rois_per_image-len(fg_inds),3*len(fg_inds))]
                 ohem_ind = np.hstack([fg_inds, ohem_ind])
-                
+
+                batch_rois3d = batch_rois3d[ohem_ind]
                 batch_top_rois=batch_top_rois[ohem_ind]
                 batch_fuse_labels=batch_fuse_labels[ohem_ind]
                 batch_fuse_targets=batch_fuse_targets[ohem_ind]
                 batch_fuse_targets_2d = batch_fuse_targets_2d[ohem_ind]
 
+                p_inds=fg_inds
+                batch_top_proposals_z = rois_proposal_z[ohem_ind]
+                batch_proposals = batch_top_rois
+                # pdb.set_trace()
             else:
-               batch_top_rois, batch_fuse_labels, batch_fuse_targets, batch_fuse_targets_2d, batch_rois3d  = \
+                pass
+            batch_top_rois, batch_fuse_labels, batch_fuse_targets, batch_fuse_targets_2d, batch_rois3d,p_inds  = \
                     rcnn_target_2d_z(  batch_proposals, batch_gt_labels, batch_gt_top_boxes, batch_gt_boxes3d, batch_gt_boxes2d, rgb_shape[1], rgb_shape[0],batch_top_proposals_z)             
             # pdb.set_trace()
             batch_rois3d_old     = project_to_roi3d    (batch_top_rois)
@@ -531,6 +540,8 @@ def run_train():
                 fuse_labels:  batch_fuse_labels,
                 fuse_targets: batch_fuse_targets,
 
+                rcnn_pos_inds: p_inds,
+
                 fuse_targets_2d: batch_fuse_targets_2d
             }
             _, rcnn_probs, batch_top_cls_loss, batch_top_reg_loss, batch_fuse_cls_loss, batch_fuse_reg_loss, batch_fuse_reg_loss_2d, batch_rgb_cls_loss, batch_rgb_reg_loss,batch_top_reg_loss_z = \
@@ -557,10 +568,10 @@ def run_train():
 
                 ## show rpn(top) nms
                 img_rpn     = draw_rpn    (top_image, batch_top_probs, batch_top_deltas, anchors, inside_inds)
-                img_rpn_nms = draw_rpn_nms(top_image, batch_proposals, batch_proposal_scores)
+                # img_rpn_nms = draw_rpn_nms(top_image, batch_proposals, batch_proposal_scores)
                 #imshow('img_rpn',img_rpn)
                 if vis :
-                    imshow('img_rpn_nms',img_rpn_nms)
+                    # imshow('img_rpn_nms',img_rpn_nms)
                     cv2.waitKey(1)
 
                 ## show rcnn(fuse) nms

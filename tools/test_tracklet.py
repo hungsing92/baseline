@@ -316,24 +316,24 @@ def run_test():
                 top_images:      batch_top_images,
                 top_anchors:     anchors,
                 top_inside_inds: inside_inds_filtered,
+
+                rgb_images:      batch_rgb_images,
+                rgb_anchors:     anchors_rgb,
+                rgb_inside_inds: inside_inds_filtered_rgb,
+
                 IS_TRAIN_PHASE:  False
             }
-            batch_proposals, batch_proposal_scores, batch_top_features = sess.run([proposals, proposal_scores, top_features],fd1)
+            batch_proposals, batch_proposal_scores, batch_top_features, batch_top_proposals_z = sess.run([proposals, proposal_scores, top_features,proposals_z],fd1)
             print(batch_proposal_scores[:10])
             ## generate  train rois  ------------
             batch_top_rois = batch_proposals
+            batch_rois3d = top_z_to_box3d(batch_top_rois[:,1:5],proposals_z)
             # pdb.set_trace()
-            batch_rois3d        = project_to_roi3d(batch_top_rois)
+            batch_rois3d_old        = project_to_roi3d(batch_top_rois)
             batch_front_rois = project_to_front_roi(batch_rois3d )
             batch_rgb_rois      = project_to_rgb_roi     (batch_rois3d, rgb_shape[1], rgb_shape[0])
 
             ## run classification and regression  -----------
-            fd1={
-                top_images:      batch_top_images,
-                top_anchors:     anchors,
-                top_inside_inds: inside_inds_filtered,
-                IS_TRAIN_PHASE:  False
-            }
 
             fd2={
                 **fd1,

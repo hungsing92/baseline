@@ -123,6 +123,7 @@ def top_z_to_box3d(boxes,proposals_z):
     for n in range(num):
         x1,y1,x2,y2 = boxes[n]
         z0,zn = proposals_z[n]
+
         points = [ (x1,y2), (x2,y2), (x2,y1), (x1,y1) ]
         for k in range(4):
             xx,yy = points[k]

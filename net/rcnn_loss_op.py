@@ -42,7 +42,7 @@ def rcnn_loss(scores, deltas, rcnn_labels, rcnn_targets):
 
     return rcnn_cls_loss, rcnn_reg_loss
 
-def rcnn_loss_2d(scores, deltas, rcnn_labels, rcnn_targets, deltas_2d, rcnn_targets_2d):
+def rcnn_loss_2d(scores, deltas, rcnn_labels, rcnn_targets, deltas_2d, rcnn_targets_2d,rcnn_pos_inds):
 
     def modified_smooth_l1( deltas, targets, sigma=3.0):
         '''
@@ -76,9 +76,13 @@ def rcnn_loss_2d(scores, deltas, rcnn_labels, rcnn_targets, deltas_2d, rcnn_targ
 
     # index_True=tf.equal(rcnn_labels, tf.ones_like(rcnn_labels))
     # rcnn_deltas_=tf.boolean_mask(rcnn_deltas,  index_True)
-    # rcnn_targets_=tf.boolean_mask(rcnn_targets,  index_True)   
+    # rcnn_targets_=tf.boolean_mask(rcnn_targets,  index_True)  
 
-    rcnn_smooth_l1 = modified_smooth_l1(rcnn_deltas, rcnn_targets, sigma=3.0)
+    # index_True=tf.equal(rcnn_labels, 1)
+    rcnn_deltas_=tf.gather(rcnn_deltas,  rcnn_pos_inds)
+    rcnn_targets_=tf.gather(rcnn_targets,  rcnn_pos_inds)  
+
+    rcnn_smooth_l1 = modified_smooth_l1(rcnn_deltas_, rcnn_targets_, sigma=3.0)
     rcnn_reg_loss  = tf.reduce_mean(tf.reduce_sum(rcnn_smooth_l1, axis=1))
 
 
@@ -89,10 +93,10 @@ def rcnn_loss_2d(scores, deltas, rcnn_labels, rcnn_targets, deltas_2d, rcnn_targ
     tf.summary.histogram('rcnn_deltas_2d', rcnn_deltas_2d)
     rcnn_targets_2d =  tf.reshape(rcnn_targets_2d,[-1, dim])
 
-    # rcnn_deltas_2d_=tf.boolean_mask(rcnn_deltas_2d,  index_True)
-    # rcnn_targets_2d_=tf.boolean_mask(rcnn_targets_2d,  index_True) 
+    rcnn_deltas_2d_=tf.gather(rcnn_deltas_2d,  rcnn_pos_inds)
+    rcnn_targets_2d_=tf.gather(rcnn_targets_2d,  rcnn_pos_inds) 
 
-    rcnn_smooth_l1_2d = modified_smooth_l1(rcnn_deltas_2d, rcnn_targets_2d, sigma=3.0)
+    rcnn_smooth_l1_2d = modified_smooth_l1(rcnn_deltas_2d_, rcnn_targets_2d_, sigma=3.0)
     rcnn_reg_loss_2d  = tf.reduce_mean(tf.reduce_sum(rcnn_smooth_l1_2d, axis=1))
 
 

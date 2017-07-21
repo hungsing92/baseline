@@ -10,7 +10,7 @@ from net.utility.draw import *
 from net.rpn_loss_op import *
 from net.rcnn_loss_op import *
 from net.rpn_target_op import make_bases, make_anchors, rpn_target, anchor_filter,rpn_target_Z
-from net.rcnn_target_op import rcnn_target, rcnn_target_ohem, rcnn_target_ohem_2d, rcnn_target_2d, rcnn_target_2d_z
+from net.rcnn_target_op import rcnn_target, rcnn_target_ohem, rcnn_target_ohem_2d, rcnn_target_2d, rcnn_target_2d_z,rcnn_target_2d_z_ohem
 
 from net.rpn_nms_op     import draw_rpn_nms, draw_rpn
 from net.rcnn_nms_op    import rcnn_nms, draw_rcnn_nms, draw_rcnn
@@ -87,10 +87,10 @@ def load_dummy_datas(index):
     return  rgbs, tops, fronts, gt_labels, gt_boxes3d, gt_boxes2d, top_images, front_images, rgbs_norm, index#, lidars
 
 
-train_data_root='/home/users/hhs/4T/datasets/dummy_datas/seg'
-kitti_dir='/mnt/disk_4T/KITTI/training'
+# train_data_root='/home/users/hhs/4T/datasets/dummy_datas/seg'
+# kitti_dir='/mnt/disk_4T/KITTI/training'
 vis=0
-ohem=False
+ohem=0
 def run_train():
 
     # output dir, etc
@@ -206,7 +206,8 @@ def run_train():
     fuse_targets_ohem=tf.stop_gradient(fuse_targets)
     softmax_loss_ohem, rcnn_smooth_l1_ohem = rcnn_loss_ohem(fuse_scores_ohem, fuse_deltas_ohem, fuse_labels_ohem, fuse_targets_ohem)
 
-    fuse_cls_loss, fuse_reg_loss, fuse_reg_loss_2d = rcnn_loss_2d(fuse_scores, fuse_deltas, fuse_labels, fuse_targets, fuse_deltas_2d, fuse_targets_2d)
+    rcnn_pos_inds = tf.placeholder(shape=[None   ], dtype=tf.int32,   name='top_pos_ind')
+    fuse_cls_loss, fuse_reg_loss, fuse_reg_loss_2d = rcnn_loss_2d(fuse_scores, fuse_deltas, fuse_labels, fuse_targets, fuse_deltas_2d, fuse_targets_2d,rcnn_pos_inds)
     tf.summary.scalar('rpn_cls_loss', top_cls_loss)
     tf.summary.scalar('rpn_reg_loss', top_reg_loss)
     tf.summary.scalar('rpn_reg_loss_z', top_reg_loss_z)
@@ -240,7 +241,7 @@ def run_train():
         # sess = tf_debug.LocalCLIDebugWrapperSession(sess)
         # summary_writer = tf.summary.FileWriter(out_dir+'/tf', sess.graph)
         saver  = tf.train.Saver() 
-        saver.restore(sess, './outputs/check_points/snap_R2R_Nfpn_with_rgb070000.ckpt') 
+        saver.restore(sess, './outputs/check_points/snap_R2R_Nfpn_with_rgb035000.ckpt') 
 
         # var_lt_res=[v for v in tf.trainable_variables() if v.name.startswith('resnet_v1')]#resnet_v1_50
         # saver_0=tf.train.Saver(var_lt_res)        
@@ -358,11 +359,11 @@ def run_train():
             batch_rgb_inds, batch_rgb_pos_inds, batch_rgb_labels, batch_rgb_targets  = \
                 rpn_target ( anchors_rgb, inside_inds_filtered_rgb, batch_gt_labels,  batch_gt_boxes2d)
             # pdb.set_trace()
-            if ohem==True:
-                batch_top_rois, batch_fuse_labels, batch_fuse_targets, batch_fuse_targets_2d  = \
-                 rcnn_target_ohem_2d(  batch_proposals, batch_gt_labels, batch_gt_top_boxes, batch_gt_boxes3d, batch_gt_boxes2d, rgb_shape[1], rgb_shape[0])             
+            if ohem==1:
+                batch_top_rois, batch_fuse_labels, batch_fuse_targets, batch_fuse_targets_2d, batch_rois3d ,rois_proposal_z= \
+                    rcnn_target_2d_z_ohem(  batch_proposals, batch_gt_labels, batch_gt_top_boxes, batch_gt_boxes3d, batch_gt_boxes2d, rgb_shape[1], rgb_shape[0],batch_top_proposals_z,batch_gt_boxesZ)             
                 
-                batch_rois3d	 = project_to_roi3d    (batch_top_rois)
+                batch_rois3d_old = project_to_roi3d    (batch_top_rois)
                 batch_front_rois = project_to_front_roi(batch_rois3d  ) 
                 batch_rgb_rois   = project_to_rgb_roi  (batch_rois3d, rgb_shape[1], rgb_shape[0])
 
@@ -399,18 +400,28 @@ def run_train():
                 fg_rois_per_image = int(np.round(CFG.TRAIN.RCNN_FG_FRACTION * rois_per_image))
                 loss_ohem_, rcnn_smooth_l1_ohem_= sess.run([softmax_loss_ohem, rcnn_smooth_l1_ohem],fd2)
                 # loss_ohem_[:len(rcnn_smooth_l1_ohem_)] += rcnn_smooth_l1_ohem_
-                fg_inds=np.arange(len(rcnn_smooth_l1_ohem_))
-                if len(rcnn_smooth_l1_ohem_)>fg_rois_per_image:
-                    fg_inds = np.argsort(-loss_ohem_[:len(rcnn_smooth_l1_ohem_)])[:fg_rois_per_image]
                 # pdb.set_trace()
-                ohem_ind = (np.argsort(-loss_ohem_[len(rcnn_smooth_l1_ohem_):])+len(rcnn_smooth_l1_ohem_))[:min(rois_per_image-len(fg_inds),3*len(fg_inds))]
+                fg_inds=np.arange(len(rcnn_smooth_l1_ohem_))
+                # if len(rcnn_smooth_l1_ohem_)>fg_rois_per_image:
+                #     fg_inds = np.argsort(-loss_ohem_[:len(rcnn_smooth_l1_ohem_)])[:fg_rois_per_image]
+                # # pdb.set_trace()
+                ohem_ind = (np.argsort(-loss_ohem_[len(rcnn_smooth_l1_ohem_):])+len(rcnn_smooth_l1_ohem_))[:2*(rois_per_image)]
+                
+                # ohem_ind = (np.argsort(-loss_ohem_[len(rcnn_smooth_l1_ohem_):])+len(rcnn_smooth_l1_ohem_))[:min(rois_per_image-len(fg_inds),3*len(fg_inds))]
                 ohem_ind = np.hstack([fg_inds, ohem_ind])
+                # pdb.set_trace()
+                batch_rois3d = batch_rois3d[ohem_ind]
                 batch_top_rois=batch_top_rois[ohem_ind]
                 batch_fuse_labels=batch_fuse_labels[ohem_ind]
                 batch_fuse_targets=batch_fuse_targets[ohem_ind]
                 batch_fuse_targets_2d = batch_fuse_targets_2d[ohem_ind]
+
+                p_inds=fg_inds
+                batch_top_proposals_z = rois_proposal_z[ohem_ind]
+                batch_proposals = batch_top_rois
             else:
-                batch_top_rois, batch_fuse_labels, batch_fuse_targets, batch_fuse_targets_2d, batch_rois3d  = \
+                pass
+            batch_top_rois, batch_fuse_labels, batch_fuse_targets, batch_fuse_targets_2d, batch_rois3d,p_inds  = \
                     rcnn_target_2d_z(  batch_proposals, batch_gt_labels, batch_gt_top_boxes, batch_gt_boxes3d, batch_gt_boxes2d, rgb_shape[1], rgb_shape[0],batch_top_proposals_z)             
             # pdb.set_trace()
             # batch_rois3d     = project_to_roi3d    (batch_top_rois)
@@ -441,11 +452,14 @@ def run_train():
 
                 fuse_labels:  batch_fuse_labels,
                 fuse_targets: batch_fuse_targets,
+
+                rcnn_pos_inds: p_inds,
+
                 fuse_targets_2d: batch_fuse_targets_2d
             }
 
-            _, rcnn_probs, batch_top_cls_loss, batch_top_reg_loss, batch_fuse_cls_loss, batch_fuse_reg_loss, batch_fuse_reg_loss_2d, batch_rgb_cls_loss, batch_rgb_reg_loss,batch_top_reg_loss_z,rgb_features_ = \
-               sess.run([solver_step, fuse_probs, top_cls_loss, top_reg_loss, fuse_cls_loss, fuse_reg_loss, fuse_reg_loss_2d, rgb_cls_loss, rgb_reg_loss,top_reg_loss_z,rgb_features],fd2)
+            _, rcnn_probs, batch_top_cls_loss, batch_top_reg_loss, batch_fuse_cls_loss, batch_fuse_reg_loss, batch_fuse_reg_loss_2d, batch_rgb_cls_loss, batch_rgb_reg_loss,batch_top_reg_loss_z = \
+               sess.run([solver_step, fuse_probs, top_cls_loss, top_reg_loss, fuse_cls_loss, fuse_reg_loss, fuse_reg_loss_2d, rgb_cls_loss, rgb_reg_loss,top_reg_loss_z],fd2)
 
             speed=time.time()-start_time
             log.write('%5.1f   %5d    %0.4fs   %0.6f   |   %0.5f   %0.5f   %0.5f   |   %0.5f   %0.5f  |%0.5f  |   %0.5f   %0.5f \n' %\
