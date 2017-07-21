@@ -90,7 +90,7 @@ def load_dummy_datas(index):
 train_data_root='/home/users/hhs/4T/datasets/dummy_datas/seg'
 kitti_dir='/mnt/disk_4T/KITTI/training'
 vis=0
-ohem=0
+ohem=1
 def run_train():
 
     # output dir, etc
@@ -470,7 +470,7 @@ def run_train():
                 train_writer.add_summary(summary, iter)
             # save: ------------------------------------
             if (iter)%5000==0 and (iter!=0):
-                saver.save(sess, out_dir + '/check_points/snap_R2R_Nfpn_with_rgb%06d.ckpt'%iter)  #iter
+                saver.save(sess, out_dir + '/check_points/snap_R2R_Nfpn_with_rgb_ohem_%06d.ckpt'%iter)  #iter
                 # saver_rgb.save(sess, out_dir + '/check_points/pretrained_Res_rgb_model_Nfpn%06d.ckpt'%iter)
                 # saver_top.save(sess, out_dir + '/check_points/pretrained_Res_top_model_Nfpn%06d.ckpt'%iter)
                 pass
