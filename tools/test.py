@@ -166,13 +166,13 @@ def run_test():
     num_frames=len(index)
     #lidar data -----------------
     if 1:
-        # ratios=np.array([0.5,1,2], dtype=np.float32)
-        # scales=np.array([1,2,3,4,5,6],   dtype=np.float32)
-        # bases = make_bases(
-        #     base_size = 16,
-        #     ratios=ratios,
-        #     scales=scales
-        # )
+        ratios_rgb=np.array([0.3,0.6,.75,1], dtype=np.float32)
+        scales_rgb=np.array([0.5,1,2,4],   dtype=np.float32)
+        bases_rgb = make_bases(
+            base_size = 48,
+            ratios=ratios_rgb,
+            scales=scales_rgb
+        )
         ratios=np.array([1.7,2.4])
         scales=np.array([1.7,2.4])
         bases=np.array([[-19.5, -8, 19.5, 8],
@@ -183,6 +183,7 @@ def run_test():
                         [-3, -5, 3, 5]
                         ])
         num_bases = len(bases)
+        num_bases_rgb = len(bases_rgb)
         stride = 4
 
         rgbs, tops, fronts, gt_labels, gt_boxes3d, top_imgs, front_imgs, lidars,rgbs_norm0 = load_dummy_datas(index[0])
@@ -192,11 +193,13 @@ def run_test():
         front_shape = fronts[0].shape
         rgb_shape   = rgbs[0].shape
         top_feature_shape = ((top_shape[0]-1)//stride+1, (top_shape[1]-1)//stride+1)
+        rgb_feature_shape = ((rgb_shape[0]-1)//stride+1, (rgb_shape[1]-1)//stride+1)
         out_shape=(8,3)
 
     # set anchor boxes
     num_class = 2 #incude background
     anchors, inside_inds =  make_anchors(bases, stride, top_shape[0:2], top_feature_shape[0:2])
+    anchors_rgb, inside_inds_rgb =  make_anchors(bases_rgb, stride, rgb_shape[0:2], rgb_feature_shape[0:2])
     print ('out_shape=%s'%str(out_shape))
     print ('num_frames=%d'%num_frames)
 
@@ -204,6 +207,8 @@ def run_test():
     #load model ####################################################################################################
     top_anchors     = tf.placeholder(shape=[None, 4], dtype=tf.int32,   name ='anchors'    )
     top_inside_inds = tf.placeholder(shape=[None   ], dtype=tf.int32,   name ='inside_inds')
+    rgb_anchors     = tf.placeholder(shape=[None, 4], dtype=tf.int32,   name ='anchors_rgb'    )
+    rgb_inside_inds = tf.placeholder(shape=[None   ], dtype=tf.int32,   name ='inside_inds_rgb')
 
     top_images   = tf.placeholder(shape=[None, *top_shape  ], dtype=tf.float32, name='top'  )
     front_images = tf.placeholder(shape=[None, *front_shape], dtype=tf.float32, name='front')
@@ -212,20 +217,20 @@ def run_test():
     front_rois   = tf.placeholder(shape=[None, 5], dtype=tf.float32,   name ='front_rois' )
     rgb_rois     = tf.placeholder(shape=[None, 5], dtype=tf.float32,   name ='rgb_rois'   )
 
-    top_features, top_scores, top_probs, top_deltas, proposals, proposal_scores = \
+    top_features, top_scores, top_probs, top_deltas, proposals, proposal_scores,deltasZ,proposals_z = \
         top_feature_net(top_images, top_anchors, top_inside_inds, num_bases)
-
+    
     front_features = front_feature_net(front_images)
     rgb_features   = rgb_feature_net(rgb_images)
 
     fuse_scores, fuse_probs, fuse_deltas, fuse_deltas_2d = \
         fusion_net(
             ( [top_features,     top_rois,     7,7,1./stride],
-              [front_features,   front_rois,   0,0,1./stride],  #disable by 0,0
-              [rgb_features,     rgb_rois,     7,7,1./(1*stride)],
-              [top_features,     top_rois,     7,7,1./(0.75*stride)],
-              [front_features,   front_rois,   0,0,1./(0.75*stride)],  #disable by 0,0
-              [rgb_features,     rgb_rois,     7,7,1./(0.75*stride)],
+              # [front_features,   front_rois,   0,0,1./stride],  #disable by 0,0
+              # [rgb_features,     rgb_rois,     7,7,1./(1*stride)],
+              # [top_features,     top_rois,     7,7,1./(0.75*stride)],
+              # [front_features,   front_rois,   0,0,1./(0.75*stride)],  #disable by 0,0
+              # [rgb_features,     rgb_rois,     7,7,1./(0.75*stride)],
               ),
             num_class, out_shape) #<todo>  add non max suppression
 
@@ -262,22 +267,29 @@ def run_test():
             batch_gt_boxes3d   = gt_boxes3d[idx]
             batch_gt_top_boxes = box3d_to_top_box(batch_gt_boxes3d)
 
-            inside_inds_filtered=anchor_filter(batch_top_images[0,:,:,-1], anchors, inside_inds)
 
+            inside_inds_filtered=anchor_filter(batch_top_images[0,:,:,-1], anchors, inside_inds)
+            inside_inds_filtered_rgb=inside_inds_rgb
 
             ## run propsal generation ------------
             fd1={
                 top_images:      batch_top_images,
                 top_anchors:     anchors,
                 top_inside_inds: inside_inds_filtered,
+
+                rgb_images:      batch_rgb_images,
+                rgb_anchors:     anchors_rgb,
+                rgb_inside_inds: inside_inds_filtered_rgb,
+
                 IS_TRAIN_PHASE:  False
             }
-            batch_proposals, batch_proposal_scores, batch_top_features = sess.run([proposals, proposal_scores, top_features],fd1)
+            batch_proposals, batch_proposal_scores, batch_top_features, batch_top_proposals_z = sess.run([proposals, proposal_scores, top_features,proposals_z],fd1)
 
             batch_top_rois = batch_proposals
-            batch_rois3d        = project_to_roi3d(batch_top_rois)
+            batch_rois3d = top_z_to_box3d(batch_top_rois[:,1:5],proposals_z)
+            # batch_rois3d        = project_to_roi3d(batch_top_rois)
             batch_front_rois = project_to_front_roi(batch_rois3d )
-            batch_rgb_rois      = project_to_rgb_roi     (batch_rois3d , rgb_shape[1], rgb_shape[0] )
+            batch_rgb_rois      = project_to_rgb_roi(batch_rois3d , rgb_shape[1], rgb_shape[0] )
 
             ## run classification and regression  -----------
 

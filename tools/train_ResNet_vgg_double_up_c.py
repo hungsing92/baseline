@@ -122,7 +122,7 @@ index_list=open(train_data_root+'/train.txt')
 index = [ int(i.strip()) for i in index_list]
 print ('length of index : %d'%len(index))
 MM_PER_VIEW1 = 180, 70, 30, [1,1,0]
-vis=0
+vis=1
 ohem=False
 def run_train():
 
@@ -286,7 +286,7 @@ def run_train():
         # summary_writer = tf.summary.FileWriter(out_dir+'/tf', sess.graph)
         saver  = tf.train.Saver() 
 
-        saver.restore(sess, './outputs/check_points/snap_R2R_3drpn_rgbloss_035000.ckpt') 
+        saver.restore(sess, './outputs/check_points/snap_R2R_Nfpn_with_rgb060000.ckpt') 
 
 
         # var_lt_res=[v for v in tf.trainable_variables() if v.name.startswith('resnet_v1_50')]#resnet_v1_50
@@ -470,7 +470,7 @@ def run_train():
                batch_top_rois, batch_fuse_labels, batch_fuse_targets, batch_fuse_targets_2d, batch_rois3d  = \
                     rcnn_target_2d_z(  batch_proposals, batch_gt_labels, batch_gt_top_boxes, batch_gt_boxes3d, batch_gt_boxes2d, rgb_shape[1], rgb_shape[0],batch_top_proposals_z)             
             # pdb.set_trace()
-            # batch_rois3d     = project_to_roi3d    (batch_top_rois)
+            batch_rois3d_old     = project_to_roi3d    (batch_top_rois)
             batch_front_rois = project_to_front_roi(batch_rois3d  )
             batch_rgb_rois   = project_to_rgb_roi  (batch_rois3d, rgb_shape[1], rgb_shape[0])
             print('nums of rcnn batch: %d'%len(batch_rgb_rois))
@@ -537,7 +537,7 @@ def run_train():
                sess.run([solver_step, fuse_probs, top_cls_loss, top_reg_loss, fuse_cls_loss, fuse_reg_loss, fuse_reg_loss_2d, rgb_cls_loss, rgb_reg_loss,top_reg_loss_z],fd2)
 
             speed=time.time()-start_time
-            log.write('%5.1f   %5d    %0.4fs   %0.4f   |   %0.5f   %0.5f   %0.5f   |   %0.5f   %0.5f  |%0.5f  |   %0.5f   %0.5f \n' %\
+            log.write('%5.1f   %5d    %0.4fs   %0.6f   |   %0.5f   %0.5f   %0.5f   |   %0.5f   %0.5f  |%0.5f  |   %0.5f   %0.5f \n' %\
                 (epoch, iter, speed, rate, batch_top_cls_loss, batch_top_reg_loss, batch_top_reg_loss_z , batch_fuse_cls_loss, batch_fuse_reg_loss, batch_fuse_reg_loss_2d, batch_rgb_cls_loss, batch_rgb_reg_loss))
             
             # debug: ------------------------------------
@@ -553,7 +553,7 @@ def run_train():
                     sess.run([ fuse_probs, fuse_deltas, fuse_deltas_2d ],fd2)
                 # pdb.set_trace()
                 #batch_fuse_deltas=0*batch_fuse_deltas #disable 3d box prediction
-                probs, boxes3d, boxes2d = rcnn_nms_2d(batch_fuse_probs, batch_fuse_deltas, batch_rois3d, batch_fuse_deltas_2d, batch_rgb_rois[:,1:],rgb_shape, threshold=0.05)
+                probs, boxes3d, boxes2d = rcnn_nms_2d(batch_fuse_probs, batch_fuse_deltas, batch_rois3d_old, batch_fuse_deltas_2d, batch_rgb_rois[:,1:],rgb_shape, threshold=0.05)
 
                 ## show rpn(top) nms
                 img_rpn     = draw_rpn    (top_image, batch_top_probs, batch_top_deltas, anchors, inside_inds)

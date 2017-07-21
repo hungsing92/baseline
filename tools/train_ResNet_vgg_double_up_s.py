@@ -221,7 +221,7 @@ def run_train():
     tf.summary.scalar('l2', l2)
     learning_rate = tf.placeholder(tf.float32, shape=[])
     solver = tf.train.AdamOptimizer(learning_rate)
-    solver_step = solver.minimize(1*top_cls_loss+1*top_reg_loss+1.5*fuse_cls_loss+2*fuse_reg_loss+2*fuse_reg_loss_2d+rgb_cls_loss+rgb_reg_loss+top_reg_loss_z+l2)
+    solver_step = solver.minimize(1*top_cls_loss+1*top_reg_loss+1.5*fuse_cls_loss+2*fuse_reg_loss+2*fuse_reg_loss_2d+0.3*rgb_cls_loss+0.3*rgb_reg_loss+top_reg_loss_z+l2)
 
     max_iter = 200000
     iter_debug=1
@@ -240,41 +240,41 @@ def run_train():
         # sess = tf_debug.LocalCLIDebugWrapperSession(sess)
         # summary_writer = tf.summary.FileWriter(out_dir+'/tf', sess.graph)
         saver  = tf.train.Saver() 
-        # saver.restore(sess, './outputs/check_points/snap_context_ohem_005000.ckpt') 
+        saver.restore(sess, './outputs/check_points/snap_R2R_Nfpn_with_rgb070000.ckpt') 
 
-        var_lt_res=[v for v in tf.trainable_variables() if v.name.startswith('resnet_v1')]#resnet_v1_50
-        saver_0=tf.train.Saver(var_lt_res)        
-        saver_0.restore(sess, './outputs/check_points/resnet_v1_50.ckpt')
-        # # pdb.set_trace()
-        top_lt=[v for v in tf.trainable_variables() if v.name.startswith('top_base')]
-        top_lt.pop(0)
-        # # top_lt.pop(0)
-        for v in top_lt:
-            # pdb.set_trace()
-            for v_rgb in var_lt_res:
-                if v.name[9:]==v_rgb.name:
-                    print ("assign weights:%s"%v.name)
-                    v.assign(v_rgb)
-
-        # var_lt_vgg=[v for v in tf.trainable_variables() if v.name.startswith('vgg')]
-        # var_lt_vgg.pop(0)
-        # saver_1=tf.train.Saver(var_lt_vgg)
-        
+        # var_lt_res=[v for v in tf.trainable_variables() if v.name.startswith('resnet_v1')]#resnet_v1_50
+        # saver_0=tf.train.Saver(var_lt_res)        
+        # saver_0.restore(sess, './outputs/check_points/resnet_v1_50.ckpt')
         # # # pdb.set_trace()
-        # saver_1.restore(sess, './outputs/check_points/vgg_16.ckpt')
+        # top_lt=[v for v in tf.trainable_variables() if v.name.startswith('top_base')]
+        # top_lt.pop(0)
+        # # # top_lt.pop(0)
+        # for v in top_lt:
+        #     # pdb.set_trace()
+        #     for v_rgb in var_lt_res:
+        #         if v.name[9:]==v_rgb.name:
+        #             print ("assign weights:%s"%v.name)
+        #             v.assign(v_rgb)
 
-        var_lt_rgb=[v for v in tf.trainable_variables() if v.name.startswith('res')]
-        var_lt_top=[v for v in tf.trainable_variables() if v.name.startswith('top')]
-        saver_rgb=tf.train.Saver(var_lt_rgb)
-        saver_top=tf.train.Saver(var_lt_top)
-        # saver_rgb.restore(sess, './outputs/check_points/pretrained_Res_rgb_model%06d.ckpt')
-        # saver_top.restore(sess, './outputs/check_points/pretrained_Res_top_model%06d.ckpt')
+        # # var_lt_vgg=[v for v in tf.trainable_variables() if v.name.startswith('vgg')]
+        # # var_lt_vgg.pop(0)
+        # # saver_1=tf.train.Saver(var_lt_vgg)
+        
+        # # # # pdb.set_trace()
+        # # saver_1.restore(sess, './outputs/check_points/vgg_16.ckpt')
+
+        # var_lt_rgb=[v for v in tf.trainable_variables() if v.name.startswith('res')]
+        # var_lt_top=[v for v in tf.trainable_variables() if v.name.startswith('top')]
+        # saver_rgb=tf.train.Saver(var_lt_rgb)
+        # saver_top=tf.train.Saver(var_lt_top)
+        # # saver_rgb.restore(sess, './outputs/check_points/pretrained_Res_rgb_model%06d.ckpt')
+        # # saver_top.restore(sess, './outputs/check_points/pretrained_Res_top_model%06d.ckpt')
 
         batch_top_cls_loss =0
         batch_top_reg_loss =0
         batch_fuse_cls_loss=0
         batch_fuse_reg_loss=0
-        rate=0.0005
+        rate=0.00005
         frame_range = np.arange(num_frames)
         idx=0
         frame=0
@@ -310,7 +310,7 @@ def run_train():
             print('processing image : %s'%image_index[idx])
 
             if (iter+1)%(10000)==0:
-                rate=0.6*rate
+                rate=0.9*rate
 
             rgb_shape   = rgbs[idx].shape
             batch_top_images    = tops[idx].reshape(1,*top_shape)
@@ -448,7 +448,7 @@ def run_train():
                sess.run([solver_step, fuse_probs, top_cls_loss, top_reg_loss, fuse_cls_loss, fuse_reg_loss, fuse_reg_loss_2d, rgb_cls_loss, rgb_reg_loss,top_reg_loss_z,rgb_features],fd2)
 
             speed=time.time()-start_time
-            log.write('%5.1f   %5d    %0.4fs   %0.4f   |   %0.5f   %0.5f   %0.5f   |   %0.5f   %0.5f  |%0.5f  |   %0.5f   %0.5f \n' %\
+            log.write('%5.1f   %5d    %0.4fs   %0.6f   |   %0.5f   %0.5f   %0.5f   |   %0.5f   %0.5f  |%0.5f  |   %0.5f   %0.5f \n' %\
                 (epoch, iter, speed, rate, batch_top_cls_loss, batch_top_reg_loss, batch_top_reg_loss_z , batch_fuse_cls_loss, batch_fuse_reg_loss, batch_fuse_reg_loss_2d, batch_rgb_cls_loss, batch_rgb_reg_loss))
             # pdb.set_trace()
             if (iter)%10==0:
