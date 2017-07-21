@@ -87,8 +87,8 @@ def load_dummy_datas(index):
     return  rgbs, tops, fronts, gt_labels, gt_boxes3d, gt_boxes2d, top_images, front_images, rgbs_norm, index#, lidars
 
 
-# train_data_root='/home/users/hhs/4T/datasets/dummy_datas/seg'
-# kitti_dir='/mnt/disk_4T/KITTI/training'
+train_data_root='/home/users/hhs/4T/datasets/dummy_datas/seg'
+kitti_dir='/mnt/disk_4T/KITTI/training'
 vis=0
 ohem=0
 def run_train():
@@ -311,7 +311,7 @@ def run_train():
             print('processing image : %s'%image_index[idx])
 
             if (iter+1)%(10000)==0:
-                rate=0.9*rate
+                rate=0.8*rate
 
             rgb_shape   = rgbs[idx].shape
             batch_top_images    = tops[idx].reshape(1,*top_shape)
