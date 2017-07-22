@@ -14,13 +14,13 @@ from tensorflow.contrib.slim.python.slim.nets import resnet_v1
 import vgg
 from fpn import build_pyramid
 
-# keep_prob=0.75
-# nms_pre_topn_=5000
-# nms_post_topn_=2000
+keep_prob=0.75
+nms_pre_topn_=5000
+nms_post_topn_=2000
 
-keep_prob=1
-nms_pre_topn_=500
-nms_post_topn_=300
+# keep_prob=1
+# nms_pre_topn_=500
+# nms_post_topn_=300
 
 is_training=True
 
@@ -29,10 +29,23 @@ def top_feature_net(input, anchors, inds_inside, num_bases):
   with tf.variable_scope("top_base") as sc:
     arg_scope = resnet_v1.resnet_arg_scope(is_training=True)
     with slim.arg_scope(arg_scope):
-      net, end_points = resnet_v1.resnet_v1_50(input, None, global_pool=False)
-    with tf.variable_scope("top_rgb_up") as sc:
-        pyramid=build_pyramid('Top_resnet50', end_points, bilinear=True)
-        block=pyramid['P2']  
+      net, end_points = resnet_v1.resnet_v1_50(input, None, global_pool=False, output_stride=8)
+      block4=end_points['top_base/resnet_v1_50/block4']
+      block3=end_points['top_base/resnet_v1_50/block3']
+      block2=end_points['top_base/resnet_v1_50/block2']
+      tf.summary.histogram('top_block4', block4)
+      tf.summary.histogram('top_block3', block3)
+      tf.summary.histogram('top_block2', block2)
+  with tf.variable_scope("top_up") as sc:
+    block4_   = conv2d_relu(block4, num_kernels=256, kernel_size=(1,1), stride=[1,1,1,1], padding='SAME', name='4')
+    up4     = upsample2d(block4_, factor = 2, has_bias=True, trainable=True, name='up4')
+    block3_   = conv2d_relu(block3, num_kernels=256, kernel_size=(1,1), stride=[1,1,1,1], padding='SAME', name='3')
+    up3     = upsample2d(block3_, factor = 2, has_bias=True, trainable=True, name='up3')
+    block2_   = conv2d_relu(block2, num_kernels=256, kernel_size=(1,1), stride=[1,1,1,1], padding='SAME', name='2')
+    up2     = upsample2d(block2_, factor = 2, has_bias=True, trainable=True, name='up2')
+    up_34      =tf.add(up4, up3, name="up_add_3_4")
+    up      =tf.add(up_34, up2, name="up_add_3_4_2")
+    block    = conv2d_relu(up, num_kernels=256, kernel_size=(3,3), stride=[1,1,1,1], padding='SAME', name='rgb_ft')
   with tf.variable_scope('rpn_top') as scope:
     up      = conv2d_relu(block, num_kernels=256, kernel_size=(3,3), stride=[1,1,1,1], padding='SAME', name='2')
     scores  = conv2d(up, num_kernels=2*num_bases, kernel_size=(1,1), stride=[1,1,1,1], padding='SAME', name='score')
@@ -49,12 +62,37 @@ def top_feature_net(input, anchors, inds_inside, num_bases):
                                      stride, img_width, img_height, img_scale, deltasZ,
                                      nms_thresh=0.7, min_size=stride, nms_pre_topn=nms_pre_topn_, nms_post_topn=nms_post_topn_,
                                      name ='nms')
-
-  #<todo> feature = upsample2d(block, factor = 4,  ...)
   feature = block
-    
-      # print ('top: scale=%f, stride=%d'%(1./stride, stride))
   return feature, scores, probs, deltas, rois, roi_scores,deltasZ, proposals_z
+
+
+# def top_feature_net(input, anchors, inds_inside, num_bases):
+#   stride=4
+#   with tf.variable_scope("top_base") as sc:
+#     arg_scope = resnet_v1.resnet_arg_scope(is_training=True)
+#     with slim.arg_scope(arg_scope):
+#       net, end_points = resnet_v1.resnet_v1_50(input, None, global_pool=False)
+#     with tf.variable_scope("top_rgb_up") as sc:
+#         pyramid=build_pyramid('Top_resnet50', end_points, bilinear=True)
+#         block=pyramid['P2']  
+#   with tf.variable_scope('rpn_top') as scope:
+#     up      = conv2d_relu(block, num_kernels=256, kernel_size=(3,3), stride=[1,1,1,1], padding='SAME', name='2')
+#     scores  = conv2d(up, num_kernels=2*num_bases, kernel_size=(1,1), stride=[1,1,1,1], padding='SAME', name='score')
+#     probs   = tf.nn.softmax( tf.reshape(scores,[-1,2]), name='prob')
+#     deltas  = conv2d(up, num_kernels=4*num_bases, kernel_size=(1,1), stride=[1,1,1,1], padding='SAME', name='delta')
+#     deltasZ  = conv2d(up, num_kernels=2*num_bases, kernel_size=(1,1), stride=[1,1,1,1], padding='SAME', name='deltaZ')
+
+#   #<todo> flip to train and test mode nms (e.g. different nms_pre_topn values): use tf.cond
+#   with tf.variable_scope('nms_top') as scope:    #non-max
+#     batch_size, img_height, img_width, img_channel = input.get_shape().as_list()
+#     img_scale = 1
+#     # pdb.set_trace()
+#     rois, roi_scores,proposals_z = tf_rpn_nms( probs, deltas, anchors, inds_inside,
+#                                      stride, img_width, img_height, img_scale, deltasZ,
+#                                      nms_thresh=0.7, min_size=stride, nms_pre_topn=nms_pre_topn_, nms_post_topn=nms_post_topn_,
+#                                      name ='nms')
+#   feature = block
+#   return feature, scores, probs, deltas, rois, roi_scores,deltasZ, proposals_z
 
 
 # def top_feature_net(input, anchors, inds_inside, num_bases):
@@ -96,15 +134,29 @@ def top_feature_net(input, anchors, inds_inside, num_bases):
     
 #       # print ('top: scale=%f, stride=%d'%(1./stride, stride))
 #   return feature, scores, probs, deltas, rois, roi_scores
-    
+
 def rgb_feature_net(input, num_bases):
 
     arg_scope = resnet_v1.resnet_arg_scope(is_training=False)
     with slim.arg_scope(arg_scope):
-      net, end_points = resnet_v1.resnet_v1_50(input, None, global_pool=False)#, output_stride=8)
-      with tf.variable_scope("res_rgb_up") as sc:
-        pyramid=build_pyramid('resnet50', end_points, bilinear=True)
-        block=pyramid['P2']
+      net, end_points = resnet_v1.resnet_v1_50(input, None, global_pool=False, output_stride=8)
+      # pdb.set_trace()
+      block4=end_points['resnet_v1_50/block4']
+      block3=end_points['resnet_v1_50/block3']
+      block2=end_points['resnet_v1_50/block2']
+      tf.summary.histogram('rgb_block4', block4)
+      tf.summary.histogram('rgb_block3', block3)
+      tf.summary.histogram('rgb_block2', block2)
+      with tf.variable_scope("rgb_up") as sc:
+        block4_   = conv2d_relu(block4, num_kernels=256, kernel_size=(1,1), stride=[1,1,1,1], padding='SAME', name='4')
+        up4     = upsample2d(block4_, factor = 2, has_bias=True, trainable=True, name='up4')
+        block3_   = conv2d_relu(block3, num_kernels=256, kernel_size=(1,1), stride=[1,1,1,1], padding='SAME', name='3')
+        up3     = upsample2d(block3_, factor = 2, has_bias=True, trainable=True, name='up3')
+        block2_   = conv2d_relu(block2, num_kernels=256, kernel_size=(1,1), stride=[1,1,1,1], padding='SAME', name='2')
+        up2     = upsample2d(block2_, factor = 2, has_bias=True, trainable=True, name='up2')
+        up_34      =tf.add(up4, up3, name="up_add_3_4")
+        up      =tf.add(up_34, up2, name="up_add_3_4_2")
+        block    = conv2d_relu(up, num_kernels=256, kernel_size=(3,3), stride=[1,1,1,1], padding='SAME', name='rgb_ft')
       with tf.variable_scope('rgb_rpn') as scope:
         up      = conv2d_relu(block, num_kernels=256, kernel_size=(3,3), stride=[1,1,1,1], padding='SAME', name='2')
         scores  = conv2d(up, num_kernels=2*num_bases, kernel_size=(1,1), stride=[1,1,1,1], padding='SAME', name='score')
@@ -114,6 +166,24 @@ def rgb_feature_net(input, num_bases):
       tf.summary.histogram('rgb_top_block', block)
     feature = block
     return feature, scores, probs, deltas
+    
+# def rgb_feature_net(input, num_bases):
+
+#     arg_scope = resnet_v1.resnet_arg_scope(is_training=False)
+#     with slim.arg_scope(arg_scope):
+#       net, end_points = resnet_v1.resnet_v1_50(input, None, global_pool=False)#, output_stride=8)
+#       with tf.variable_scope("res_rgb_up") as sc:
+#         pyramid=build_pyramid('resnet50', end_points, bilinear=True)
+#         block=pyramid['P2']
+#       with tf.variable_scope('rgb_rpn') as scope:
+#         up      = conv2d_relu(block, num_kernels=256, kernel_size=(3,3), stride=[1,1,1,1], padding='SAME', name='2')
+#         scores  = conv2d(up, num_kernels=2*num_bases, kernel_size=(1,1), stride=[1,1,1,1], padding='SAME', name='score')
+#         probs   = tf.nn.softmax( tf.reshape(scores,[-1,2]), name='prob')
+#         deltas  = conv2d(up, num_kernels=4*num_bases, kernel_size=(1,1), stride=[1,1,1,1], padding='SAME', name='delta')
+      
+#       tf.summary.histogram('rgb_top_block', block)
+#     feature = block
+#     return feature, scores, probs, deltas
 
 #------------------------------------------------------------------------------
 def front_feature_net(input):
@@ -141,9 +211,9 @@ def fusion_net(feature_list, num_class, out_shape=(8,3)):
         roi_features=flatten(roi_features)
         with tf.variable_scope('fuse-block-1-%d'%n):
           tf.summary.histogram('fuse-block_input_%d'%n, roi_features)
-          block = linear_bn_relu(roi_features, num_hiddens=1024, name='1')#512, so small?
+          block = linear_bn_relu(roi_features, num_hiddens=2048, name='1')#512, so small?
           tf.summary.histogram('fuse-block1_%d'%n, block)
-          # block = tf.nn.dropout(block, keep_prob, name='drop1')
+          block = tf.nn.dropout(block, keep_prob, name='drop1')
   
         if input is None:
             input = block
@@ -153,7 +223,7 @@ def fusion_net(feature_list, num_class, out_shape=(8,3)):
   #include background class
   with tf.variable_scope('fuse') as scope:
     block = linear_bn_relu(input, num_hiddens=512, name='4')#512, so small?
-    block = tf.nn.dropout(block, keep_prob, name='drop4')
+    # block = tf.nn.dropout(block, keep_prob, name='drop4')
     with tf.variable_scope('3D') as sc:
       dim = np.product([*out_shape])
       scores_3d  = linear(block, num_hiddens=num_class,     name='score')
