@@ -57,7 +57,7 @@ def load_dummy_datas(index):
         rgbs_norm0=(rgb-PIXEL_MEANS)/255
         # rgbs_norm0   = np.load(train_data_root+'/image_stack_lidar/image_stack_lidar%05d .npy'%int(index[n]))
         # lidar = np.load(train_data_root+'/lidar/lidar_%05d.npy'%index[n]
-        top   = np.load(train_data_root+'/top_70_0.1/top_70%05d.npy'%int(index[n]))
+        top   = np.load(train_data_root+'/top_70/top_70%05d.npy'%int(index[n]))
         front = np.zeros((1,1),dtype=np.float32)
         gt_label  = np.load(train_data_root+'/gt_labels/gt_labels_%05d.npy'%int(index[n]))
         gt_box3d = np.load(train_data_root+'/gt_boxes3d/gt_boxes3d_%05d.npy'%int(index[n]))
@@ -69,7 +69,7 @@ def load_dummy_datas(index):
         # gt_label=gt_label[keep]
         # gt_box3d=gt_box3d[keep]
 
-        top_image   = cv2.imread(train_data_root+'/density_image_70_0.1/density_image_70%05d.png'%int(index[n]))
+        top_image   = cv2.imread(train_data_root+'/density_image_70/density_image_70%05d.png'%int(index[n]))
         front_image = np.zeros((1,1,3),dtype=np.float32)
 
         rgbs.append(rgb)
