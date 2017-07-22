@@ -43,6 +43,7 @@ def generat_test_reslut(probs, boxes3d, rgb_shape, index, boxes2d=[] ):
     result_path2d='./evaluate_object/val_R2R_nfpn_rgbloss/2d/data/'
     result_path3d='./evaluate_object/val_R2R_nfpn_rgbloss/3d/data/'
     makedirs(result_path3d)
+    makedirs('./evaluate_object/val_R2R_nfpn_rgbloss/3d/plot')
     # empty(result_path)
     if len(boxes3d)==0:
         return 1
@@ -53,6 +54,7 @@ def generat_test_reslut(probs, boxes3d, rgb_shape, index, boxes2d=[] ):
     if boxes2d!=[]:
         rgb_boxes2d=boxes2d
         makedirs(result_path2d)
+            makedirs('./evaluate_object/val_R2R_nfpn_rgbloss/2d/plot')
         file2d=open(result_path2d+'%06d'%index+'.txt', 'w')
     # pdb.set_trace()
     for num in np.arange(len(probs)):
@@ -247,7 +249,7 @@ def run_test():
         # sess = tf_debug.LocalCLIDebugWrapperSession(sess)
         summary_writer = tf.summary.FileWriter(out_dir+'/tf', sess.graph)
         saver  = tf.train.Saver()  
-        saver.restore(sess, './outputs/check_points/snap_R2R_Nfpn_with_rgb045000.ckpt')
+        saver.restore(sess, './outputs/check_points/snap_R2R_Nfpn_with_rgb040000.ckpt')
 
         batch_top_cls_loss =0
         batch_top_reg_loss =0
@@ -316,7 +318,7 @@ def run_test():
             # print('nums of boxes3d : %d'%len(boxes3d))
             generat_test_reslut(probs, boxes3d, rgb_shape, int(index[iter]), boxes2d)
             speed=time.time()-start_time
-            print('speed of iter : %.4f'%speed)
+            print('speed of iter : %.4fs'%speed)
 
 ## main function ##########################################################################
 
