@@ -147,7 +147,7 @@ def rgb_feature_net(input, num_bases):
       tf.summary.histogram('rgb_block4', block4)
       tf.summary.histogram('rgb_block3', block3)
       tf.summary.histogram('rgb_block2', block2)
-      with tf.variable_scope("rgb_up") as sc:
+      with tf.variable_scope("res_rgb_up") as sc:
         block4_   = conv2d_relu(block4, num_kernels=256, kernel_size=(1,1), stride=[1,1,1,1], padding='SAME', name='4')
         up4     = upsample2d(block4_, factor = 2, has_bias=True, trainable=True, name='up4')
         block3_   = conv2d_relu(block3, num_kernels=256, kernel_size=(1,1), stride=[1,1,1,1], padding='SAME', name='3')
@@ -211,7 +211,7 @@ def fusion_net(feature_list, num_class, out_shape=(8,3)):
         roi_features=flatten(roi_features)
         with tf.variable_scope('fuse-block-1-%d'%n):
           tf.summary.histogram('fuse-block_input_%d'%n, roi_features)
-          block = linear_bn_relu(roi_features, num_hiddens=1024, name='1')#512, so small?
+          block = linear_bn_relu(roi_features, num_hiddens=2048, name='1')#512, so small?
           tf.summary.histogram('fuse-block1_%d'%n, block)
           block = tf.nn.dropout(block, keep_prob, name='drop1')
   

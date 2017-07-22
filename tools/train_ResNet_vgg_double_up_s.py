@@ -169,9 +169,9 @@ def run_train():
 
     fuse_scores, fuse_probs, fuse_deltas, fuse_deltas_2d = \
         fusion_net(
-			( [top_features,     top_rois,     7,7,1./stride],
-			  [front_features,   front_rois,   0,0,1./stride],  #disable by 0,0
-			  [rgb_features,     rgb_rois,     7,7,1./(1*stride)],
+            ( [top_features,     top_rois,     7,7,1./stride],
+              [front_features,   front_rois,   0,0,1./stride],  #disable by 0,0
+              [rgb_features,     rgb_rois,     7,7,1./(1*stride)],
               # [top_features,     top_rois,     7,7,1./(0.75*stride)],
               # [front_features,   front_rois,   0,0,1./(0.75*stride)],  #disable by 0,0
               # [rgb_features,     rgb_rois,     7,7,1./(0.75*stride)],
@@ -243,19 +243,19 @@ def run_train():
         saver  = tf.train.Saver() 
         # saver.restore(sess, './outputs/check_points/snap_R2R_Nfpn_with_rgb050000.ckpt') 
 
-        # var_lt_res=[v for v in tf.trainable_variables() if v.name.startswith('resnet_v1')]#resnet_v1_50
-        # saver_0=tf.train.Saver(var_lt_res)        
-        # saver_0.restore(sess, './outputs/check_points/resnet_v1_50.ckpt')
-        # # # pdb.set_trace()
-        # top_lt=[v for v in tf.trainable_variables() if v.name.startswith('top_base')]
-        # top_lt.pop(0)
-        # # # top_lt.pop(0)
-        # for v in top_lt:
-        #     # pdb.set_trace()
-        #     for v_rgb in var_lt_res:
-        #         if v.name[9:]==v_rgb.name:
-        #             print ("assign weights:%s"%v.name)
-        #             v.assign(v_rgb)
+        var_lt_res=[v for v in tf.trainable_variables() if v.name.startswith('resnet_v1')]#resnet_v1_50
+        saver_0=tf.train.Saver(var_lt_res)        
+        saver_0.restore(sess, './outputs/check_points/resnet_v1_50.ckpt')
+        # # pdb.set_trace()
+        top_lt=[v for v in tf.trainable_variables() if v.name.startswith('top_base')]
+        top_lt.pop(0)
+        # # top_lt.pop(0)
+        for v in top_lt:
+            # pdb.set_trace()
+            for v_rgb in var_lt_res:
+                if v.name[9:]==v_rgb.name:
+                    print ("assign weights:%s"%v.name)
+                    v.assign(v_rgb)
 
         # # var_lt_vgg=[v for v in tf.trainable_variables() if v.name.startswith('vgg')]
         # # var_lt_vgg.pop(0)
@@ -270,8 +270,8 @@ def run_train():
         var_lt_top=[v for v in tf.trainable_variables() if v.name.startswith('top')]
         saver_rgb=tf.train.Saver(var_lt_rgb)
         saver_top=tf.train.Saver(var_lt_top)
-        saver_rgb.restore(sess, './outputs/check_points/pretrained_Res_rgb_model090000.ckpt')
-        saver_top.restore(sess, './outputs/check_points/pretrained_Res_top_model090000.ckpt')
+        # saver_rgb.restore(sess, './outputs/check_points/pretrained_Res_rgb_model090000.ckpt')
+        # saver_top.restore(sess, './outputs/check_points/pretrained_Res_top_model090000.ckpt')
 
         batch_top_cls_loss =0
         batch_top_reg_loss =0
@@ -339,7 +339,7 @@ def run_train():
             batch_gt_top_boxes = box3d_to_top_box(batch_gt_boxes3d)
             batch_gt_boxesZ=get_boxes3d_z(batch_gt_boxes3d)
             
-			## run propsal generation ------------
+            ## run propsal generation ------------
             fd1={
                 top_images:      batch_top_images,
                 top_anchors:     anchors,
@@ -371,13 +371,13 @@ def run_train():
 
                 ## run classification and regression loss -----------
                 fd2={
-			 	    **fd1,
+                    **fd1,
     
                     top_images: batch_top_images,
                     front_images: batch_front_images,
                     rgb_images: batch_rgb_images,
     
-			 	    top_rois:   batch_top_rois,
+                    top_rois:   batch_top_rois,
                     front_rois: batch_front_rois,
                     rgb_rois:   batch_rgb_rois,
     
@@ -472,7 +472,7 @@ def run_train():
                 train_writer.add_summary(summary, iter)
             # save: ------------------------------------
             if (iter)%5000==0 and (iter!=0):
-                saver.save(sess, out_dir + '/check_points/snap_R2R_Nfpn_with_rgb_ohem_%06d.ckpt'%iter)  #iter
+                saver.save(sess, out_dir + '/check_points/snap_R2R_%06d.ckpt'%iter)  #iter
                 # saver_rgb.save(sess, out_dir + '/check_points/pretrained_Res_rgb_model_Nfpn%06d.ckpt'%iter)
                 # saver_top.save(sess, out_dir + '/check_points/pretrained_Res_top_model_Nfpn%06d.ckpt'%iter)
                 pass
