@@ -77,10 +77,10 @@ files_list=glob.glob(velodyne+'/*.bin')
 # files_list=glob.glob(tracklet_dir+'/*.bin')
 
 lidar_dir = train_data_root+'/lidar'
-top_dir = train_data_root+'/top_70'
-density_image_dir = train_data_root+'/density_image_70'
+top_dir = train_data_root+'/top_70_0.1'
+density_image_dir = train_data_root+'/density_image_70_0.1'
 
-empty(lidar_dir)
+# empty(lidar_dir)
 empty(top_dir)
 empty(density_image_dir)
 
@@ -102,7 +102,7 @@ for i in range(num):
     speed=time.time()-start_time
     print('speed: %0.4fs'%speed)
 
-    np.save(lidar_dir+'/lidar_%05d.npy'%i,lidar)
+    # np.save(lidar_dir+'/lidar_%05d.npy'%i,lidar)
     np.save(top_dir+'/top_70%05d.npy'%ind[i],top_new)
     cv2.imwrite(density_image_dir+'/density_image_70%05d.png'%ind[i],density_image)
    
