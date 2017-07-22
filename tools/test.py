@@ -39,22 +39,25 @@ from tensorflow.python import debug as tf_debug
 # "Multi-View 3D Object Detection Network for Autonomous Driving" - Xiaozhi Chen, CVPR 2017
 #<todo>
 
-def generat_test_reslut(probs, boxes3d, rgb_shape, index, boxes2d=None ):
-    result_path='./evaluate_object/val_R2R_nfpn_rgbloss/data/'
-    makedirs(result_path)
+def generat_test_reslut(probs, boxes3d, rgb_shape, index, boxes2d=[] ):
+    result_path2d='./evaluate_object/val_R2R_nfpn_rgbloss/2d/data/'
+    result_path3d='./evaluate_object/val_R2R_nfpn_rgbloss/3d/data/'
+    makedirs(result_path3d)
     # empty(result_path)
     if len(boxes3d)==0:
         return 1
-    file=open(result_path+'%06d'%index+'.txt', 'w')
-    if boxes2d==None:
-        rgb_boxes=project_to_rgb_roi(boxes3d, rgb_shape[1], rgb_shape[0] )
-        rgb_boxes=rgb_boxes[:,1:5]
-    else:
-        rgb_boxes=boxes2d
-    reuslts=[]
+
+    file3d=open(result_path3d+'%06d'%index+'.txt', 'w') 
+    rgb_boxes3dto2d=project_to_rgb_roi(boxes3d, rgb_shape[1], rgb_shape[0] )
+    rgb_boxes3dto2d=rgb_boxes3dto2d[:,1:5]  
+    if boxes2d!=[]:
+        rgb_boxes2d=boxes2d
+        makedirs(result_path2d)
+        file2d=open(result_path2d+'%06d'%index+'.txt', 'w')
     # pdb.set_trace()
     for num in np.arange(len(probs)):
-        box= rgb_boxes[num]
+        box_2d= rgb_boxes2d[num]
+        box_3dto2d=rgb_boxes3dto2d[num]
         box3d = boxes3d[num]
         center = np.sum(box3d,axis=0, keepdims=True)/8
         # pdb.set_trace()
@@ -95,14 +98,16 @@ def generat_test_reslut(probs, boxes3d, rgb_shape, index, boxes2d=None ):
             if ry>0:
                 ry = ry - np.pi
         # pdb.set_trace()
-        if probs == [] :
-            line='Car -1 -1 -10 %.2f %.2f %.2f %.2f %.2f %.2f %.2f %.2f %.2f %.2f %.2f %.2f\n'%(box[0], box[1], box[2], box[3],h,w,l,tx,ty,tz,ry,1-(i+1)*0.06)
-            file.write(line)
-        else:
-            line='Car -1 -1 -10 %.2f %.2f %.2f %.2f %.2f %.2f %.2f %.2f %.2f %.2f %.2f %.2f\n'%(box[0], box[1], box[2], box[3],h,w,l,tx,ty,tz,ry,probs[num])
-            file.write(line)
+        line='Car -1 -1 -10 %.2f %.2f %.2f %.2f %.2f %.2f %.2f %.2f %.2f %.2f %.2f %.2f\n'%(box_3dto2d[0], box_3dto2d[1], box_3dto2d[2], box_3dto2d[3],h,w,l,tx,ty,tz,ry,probs[num])
+        file3d.write(line)
+        if boxes2d!=[]:
+            line='Car -1 -1 -10 %.2f %.2f %.2f %.2f %.2f %.2f %.2f %.2f %.2f %.2f %.2f %.2f\n'%(box_2d[0], box_2d[1], box_2d[2], box_2d[3],h,w,l,tx,ty,tz,ry,probs[num])
+            file2d.write(line)
 
-    file.close()
+    file3d.close()
+    if boxes2d!=[]:
+        file3d.close()
+
     return 1
 
 def load_dummy_datas(index):
@@ -221,13 +226,13 @@ def run_test():
         top_feature_net(top_images, top_anchors, top_inside_inds, num_bases)
     
     front_features = front_feature_net(front_images)
-    rgb_features   = rgb_feature_net(rgb_images)
+    rgb_features, rgb_scores, rgb_probs, rgb_deltas  = rgb_feature_net(rgb_images, num_bases_rgb)
 
     fuse_scores, fuse_probs, fuse_deltas, fuse_deltas_2d = \
         fusion_net(
             ( [top_features,     top_rois,     7,7,1./stride],
-              # [front_features,   front_rois,   0,0,1./stride],  #disable by 0,0
-              # [rgb_features,     rgb_rois,     7,7,1./(1*stride)],
+              [front_features,   front_rois,   0,0,1./stride],  #disable by 0,0
+              [rgb_features,     rgb_rois,     7,7,1./(1*stride)],
               # [top_features,     top_rois,     7,7,1./(0.75*stride)],
               # [front_features,   front_rois,   0,0,1./(0.75*stride)],  #disable by 0,0
               # [rgb_features,     rgb_rois,     7,7,1./(0.75*stride)],
@@ -242,7 +247,7 @@ def run_test():
         # sess = tf_debug.LocalCLIDebugWrapperSession(sess)
         summary_writer = tf.summary.FileWriter(out_dir+'/tf', sess.graph)
         saver  = tf.train.Saver()  
-        saver.restore(sess, './outputs/check_points/snap_R2R_Nfpn_with_rgb070000.ckpt')
+        saver.restore(sess, './outputs/check_points/snap_R2R_Nfpn_with_rgb045000.ckpt')
 
         batch_top_cls_loss =0
         batch_top_reg_loss =0
@@ -286,7 +291,7 @@ def run_test():
             batch_proposals, batch_proposal_scores, batch_top_features, batch_top_proposals_z = sess.run([proposals, proposal_scores, top_features,proposals_z],fd1)
 
             batch_top_rois = batch_proposals
-            batch_rois3d = top_z_to_box3d(batch_top_rois[:,1:5],proposals_z)
+            batch_rois3d = top_z_to_box3d(batch_top_rois[:,1:5],batch_top_proposals_z)
             # batch_rois3d        = project_to_roi3d(batch_top_rois)
             batch_front_rois = project_to_front_roi(batch_rois3d )
             batch_rgb_rois      = project_to_rgb_roi(batch_rois3d , rgb_shape[1], rgb_shape[0] )
@@ -305,7 +310,7 @@ def run_test():
                 rgb_rois:        batch_rgb_rois,
 
             }
-            batch_top_probs,  batch_top_deltas  =  sess.run([ top_probs,  top_deltas  ],fd2)
+            # batch_top_probs,  batch_top_deltas  =  sess.run([ top_probs,  top_deltas  ],fd2)
             batch_fuse_probs, batch_fuse_deltas, batch_fuse_deltas_2d =  sess.run([ fuse_probs, fuse_deltas, fuse_deltas_2d ],fd2)
             probs, boxes3d, boxes2d = rcnn_nms_2d(batch_fuse_probs, batch_fuse_deltas, batch_rois3d, batch_fuse_deltas_2d, batch_rgb_rois[:,1:], rgb_shape, threshold=0.05)
             # print('nums of boxes3d : %d'%len(boxes3d))
