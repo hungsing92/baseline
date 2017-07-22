@@ -154,7 +154,7 @@ def rcnn_nms_2d( probs,  deltas,  rois3d, deltas2d, rois2d, rgb_shape, threshold
 
     cls=1  # do for class-one only
     probs = probs[:,cls] #see only class-1
-    idx = np.where(probs>0.5)[0]
+    idx = np.where(probs>0.8)[0]
 
     #post processing
     rois3d = rois3d[idx]

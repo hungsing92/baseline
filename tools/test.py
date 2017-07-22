@@ -164,7 +164,7 @@ def run_test():
     log = Logger(out_dir+'/log_%s.txt'%(time.strftime('%Y-%m-%d %H:%M:%S')),mode='a')
 
     # index=np.load(train_data_root+'/val_list.npy')
-    index_file=open(train_data_root+'/val.txt')
+    index_file=open(train_data_root+'/train.txt')
     index = [ int(i.strip()) for i in index_file]
     index_file.close()
     
@@ -249,7 +249,7 @@ def run_test():
         # sess = tf_debug.LocalCLIDebugWrapperSession(sess)
         summary_writer = tf.summary.FileWriter(out_dir+'/tf', sess.graph)
         saver  = tf.train.Saver()  
-        saver.restore(sess, './outputs/check_points/snap_R2R_Nfpn_with_rgb040000.ckpt')
+        saver.restore(sess, './outputs/check_points/snap_R2R_Nfpn_with_rgb050000.ckpt')
 
         batch_top_cls_loss =0
         batch_top_reg_loss =0
@@ -297,7 +297,7 @@ def run_test():
             batch_rois3d_old        = project_to_roi3d(batch_top_rois)
             batch_front_rois = project_to_front_roi(batch_rois3d )
             batch_rgb_rois      = project_to_rgb_roi(batch_rois3d , rgb_shape[1], rgb_shape[0] )
-
+            batch_rgb_rois_old      = project_to_rgb_roi     (batch_rois3d_old , rgb_shape[1], rgb_shape[0] )
             ## run classification and regression  -----------
 
             fd2={
@@ -314,7 +314,7 @@ def run_test():
             }
             # batch_top_probs,  batch_top_deltas  =  sess.run([ top_probs,  top_deltas  ],fd2)
             batch_fuse_probs, batch_fuse_deltas, batch_fuse_deltas_2d =  sess.run([ fuse_probs, fuse_deltas, fuse_deltas_2d ],fd2)
-            probs, boxes3d, boxes2d = rcnn_nms_2d(batch_fuse_probs, batch_fuse_deltas, batch_rois3d_old, batch_fuse_deltas_2d, batch_rgb_rois[:,1:], rgb_shape, threshold=0.05)
+            probs, boxes3d, boxes2d = rcnn_nms_2d(batch_fuse_probs, batch_fuse_deltas, batch_rois3d_old, batch_fuse_deltas_2d, batch_rgb_rois_old[:,1:], rgb_shape, threshold=0.05)
             # print('nums of boxes3d : %d'%len(boxes3d))
             generat_test_reslut(probs, boxes3d, rgb_shape, int(index[iter]), boxes2d)
             speed=time.time()-start_time

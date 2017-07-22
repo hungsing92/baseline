@@ -167,7 +167,7 @@ def load_dummy_datas(index):
     return  rgbs, tops, fronts, gt_labels, gt_boxes3d, top_images, front_images, lidars, rgbs_norm
 
 
-is_show=0
+is_show=1
 # MM_PER_VIEW1 = 120, 30, 70, [1,1,0]
 MM_PER_VIEW1 = 180, 70, 60, [1,1,0]#[ 12.0909996 , -1.04700089, -2.03249991]
 def run_test():
@@ -251,9 +251,9 @@ def run_test():
     front_rois   = tf.placeholder(shape=[None, 5], dtype=tf.float32,   name ='front_rois' )
     rgb_rois     = tf.placeholder(shape=[None, 5], dtype=tf.float32,   name ='rgb_rois'   )
 
-    top_features, top_scores, top_probs, top_deltas, proposals, proposal_scores = \
+    top_features, top_scores, top_probs, top_deltas, proposals, proposal_scores,deltasZ,proposals_z = \
         top_feature_net(top_images, top_anchors, top_inside_inds, num_bases)
-
+   
     front_features = front_feature_net(front_images)
     rgb_features, rgb_scores, rgb_probs, rgb_deltas  = rgb_feature_net(rgb_images, num_bases_rgb)
 
@@ -325,6 +325,7 @@ def run_test():
             batch_rois3d_old  = project_to_roi3d(batch_top_rois)
             batch_front_rois = project_to_front_roi(batch_rois3d )
             batch_rgb_rois      = project_to_rgb_roi     (batch_rois3d , rgb_shape[1], rgb_shape[0] )
+            batch_rgb_rois_old      = project_to_rgb_roi     (batch_rois3d_old , rgb_shape[1], rgb_shape[0] )
 
             ## run classification and regression  -----------
 
@@ -342,7 +343,7 @@ def run_test():
             }
             # batch_top_probs,  batch_top_deltas  =  sess.run([ top_probs,  top_deltas  ],fd2)
             batch_fuse_probs, batch_fuse_deltas, batch_fuse_deltas_2d =  sess.run([ fuse_probs, fuse_deltas, fuse_deltas_2d ],fd2)
-            probs, boxes3d, boxes2d = rcnn_nms_2d(batch_fuse_probs, batch_fuse_deltas, batch_rois3d_old, batch_fuse_deltas_2d, batch_rgb_rois[:,1:], rgb_shape, threshold=0.05)
+            probs, boxes3d, boxes2d = rcnn_nms_2d(batch_fuse_probs, batch_fuse_deltas, batch_rois3d_old, batch_fuse_deltas_2d, batch_rgb_rois_old[:,1:], rgb_shape, threshold=0.05)
             # print('nums of boxes3d : %d'%len(boxes3d))
             # generat_test_reslut(probs, boxes3d, rgb_shape, int(index[iter]), boxes2d)
             speed=time.time()-start_time
