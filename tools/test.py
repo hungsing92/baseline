@@ -316,7 +316,7 @@ def run_test():
             # print('nums of boxes3d : %d'%len(boxes3d))
             generat_test_reslut(probs, boxes3d, rgb_shape, int(index[iter]), boxes2d)
             speed=time.time()-start_time
-
+            print('speed of iter : %.4f'%speed)
 
 ## main function ##########################################################################
 
