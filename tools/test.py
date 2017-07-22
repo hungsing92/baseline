@@ -54,7 +54,7 @@ def generat_test_reslut(probs, boxes3d, rgb_shape, index, boxes2d=[] ):
     if boxes2d!=[]:
         rgb_boxes2d=boxes2d
         makedirs(result_path2d)
-            makedirs('./evaluate_object/val_R2R_nfpn_rgbloss/2d/plot')
+        makedirs('./evaluate_object/val_R2R_nfpn_rgbloss/2d/plot')
         file2d=open(result_path2d+'%06d'%index+'.txt', 'w')
     # pdb.set_trace()
     for num in np.arange(len(probs)):
