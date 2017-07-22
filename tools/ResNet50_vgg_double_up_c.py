@@ -41,10 +41,10 @@ def top_feature_net(input, anchors, inds_inside, num_bases):
   with tf.variable_scope("top_up") as sc:
     block4_   = conv2d_relu(block4, num_kernels=256, kernel_size=(1,1), stride=[1,1,1,1], padding='SAME', name='4')
     up_shape = tf.shape(block1)
-    up4 = tf.image.resize_bilinear(block4_, [up_shape[1]*2, up_shape[2]*2], name='up4')
+    up4 = tf.image.resize_bilinear(block4_, [up_shape[1], up_shape[2]], name='up4')
     block3_   = conv2d_relu(block3, num_kernels=256, kernel_size=(1,1), stride=[1,1,1,1], padding='SAME', name='3')
     up_shape = tf.shape(block1)
-    up3 = tf.image.resize_bilinear(block3_, [up_shape[1]*2, up_shape[2]*2], name='up3')
+    up3 = tf.image.resize_bilinear(block3_, [up_shape[1], up_shape[2]], name='up3')
     block2_   = conv2d_relu(block2, num_kernels=256, kernel_size=(1,1), stride=[1,1,1,1], padding='SAME', name='2')
     up_shape = tf.shape(block1)
     up2 = tf.image.resize_bilinear(block2_, [up_shape[1], up_shape[2]], name='up2')
