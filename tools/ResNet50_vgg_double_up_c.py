@@ -211,7 +211,7 @@ def fusion_net(feature_list, num_class, out_shape=(8,3)):
         roi_features=flatten(roi_features)
         with tf.variable_scope('fuse-block-1-%d'%n):
           tf.summary.histogram('fuse-block_input_%d'%n, roi_features)
-          block = linear_bn_relu(roi_features, num_hiddens=2048, name='1')#512, so small?
+          block = linear_bn_relu(roi_features, num_hiddens=1024, name='1')#512, so small?
           tf.summary.histogram('fuse-block1_%d'%n, block)
           block = tf.nn.dropout(block, keep_prob, name='drop1')
   
