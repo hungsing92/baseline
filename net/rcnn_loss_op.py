@@ -86,8 +86,6 @@ def rcnn_loss_2d(scores, deltas, rcnn_labels, rcnn_targets, deltas_2d, rcnn_targ
     rcnn_smooth_l1 = modified_smooth_l1(rcnn_deltas_, rcnn_targets_, sigma=3.0)
     rcnn_reg_loss  = tf.reduce_mean(tf.reduce_sum(rcnn_smooth_l1, axis=1))
 
-
-
     dim = np.prod(deltas_2d.get_shape().as_list()[1:])//num_class
     deltas1_2d      = tf.reshape(deltas_2d,[-1, dim])
     rcnn_deltas_2d  = tf.gather(deltas1_2d,  idx)  # remove ignore label
@@ -102,7 +100,7 @@ def rcnn_loss_2d(scores, deltas, rcnn_labels, rcnn_targets, deltas_2d, rcnn_targ
 
 
 
-    return rcnn_cls_loss, rcnn_reg_loss, rcnn_reg_loss_2d,index_True_0,rcnn_deltas,rcnn_deltas_#, rcnn_pos_inds#
+    return rcnn_cls_loss, rcnn_reg_loss, rcnn_reg_loss_2d#, rcnn_pos_inds#
 
 
 # def rcnn_loss_2d(scores, deltas, rcnn_labels, rcnn_targets, deltas_2d, rcnn_targets_2d):
