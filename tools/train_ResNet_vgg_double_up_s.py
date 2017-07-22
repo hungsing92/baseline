@@ -87,8 +87,8 @@ def load_dummy_datas(index):
     return  rgbs, tops, fronts, gt_labels, gt_boxes3d, gt_boxes2d, top_images, front_images, rgbs_norm, index#, lidars
 
 
-train_data_root='/home/users/hhs/4T/datasets/dummy_datas/seg'
-kitti_dir='/mnt/disk_4T/KITTI/training'
+# train_data_root='/home/users/hhs/4T/datasets/dummy_datas/seg'
+# kitti_dir='/mnt/disk_4T/KITTI/training'
 vis=0
 ohem=0
 def run_train():
@@ -169,7 +169,7 @@ def run_train():
 
     fuse_scores, fuse_probs, fuse_deltas, fuse_deltas_2d = \
         fusion_net(
-            ( [top_features,     top_rois,     7,7,1./stride],
+            ( [top_features,     top_rois,     7,7,1./2],
               [front_features,   front_rois,   0,0,1./stride],  #disable by 0,0
               [rgb_features,     rgb_rois,     7,7,1./(1*stride)],
               # [top_features,     top_rois,     7,7,1./(0.75*stride)],

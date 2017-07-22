@@ -30,24 +30,42 @@ def top_feature_net(input, anchors, inds_inside, num_bases):
     arg_scope = resnet_v1.resnet_arg_scope(is_training=True)
     with slim.arg_scope(arg_scope):
       net, end_points = resnet_v1.resnet_v1_50(input, None, global_pool=False, output_stride=8)
-      block4=end_points['top_base/resnet_v1_50/block4']
-      block3=end_points['top_base/resnet_v1_50/block3']
-      block2=end_points['top_base/resnet_v1_50/block2']
+      block4=end_points['top_base/resnet_v1_50/block4/unit_3/bottleneck_v1']
+      block3=end_points['top_base/resnet_v1_50/block3/unit_5/bottleneck_v1']
+      block2=end_points['top_base/resnet_v1_50/block2/unit_3/bottleneck_v1']
+      block1=end_points['top_base/resnet_v1_50/block1/unit_2/bottleneck_v1']
+      block0=end_points['top_base/resnet_v1_50/conv1']
       tf.summary.histogram('top_block4', block4)
       tf.summary.histogram('top_block3', block3)
       tf.summary.histogram('top_block2', block2)
   with tf.variable_scope("top_up") as sc:
     block4_   = conv2d_relu(block4, num_kernels=256, kernel_size=(1,1), stride=[1,1,1,1], padding='SAME', name='4')
-    up4     = upsample2d(block4_, factor = 2, has_bias=True, trainable=True, name='up4')
+    up_shape = tf.shape(block3)
+    up4 = tf.image.resize_bilinear(block4_, [up_shape[1]*2, up_shape[2]*2], name='up4')
     block3_   = conv2d_relu(block3, num_kernels=256, kernel_size=(1,1), stride=[1,1,1,1], padding='SAME', name='3')
-    up3     = upsample2d(block3_, factor = 2, has_bias=True, trainable=True, name='up3')
+    up_shape = tf.shape(block2)
+    up3 = tf.image.resize_bilinear(block3_, [up_shape[1]*2, up_shape[2]*2], name='up3')
     block2_   = conv2d_relu(block2, num_kernels=256, kernel_size=(1,1), stride=[1,1,1,1], padding='SAME', name='2')
-    up2     = upsample2d(block2_, factor = 2, has_bias=True, trainable=True, name='up2')
+    up_shape = tf.shape(block1)
+    up2 = tf.image.resize_bilinear(block2_, [up_shape[1], up_shape[2]], name='up2')
     up_34      =tf.add(up4, up3, name="up_add_3_4")
-    up      =tf.add(up_34, up2, name="up_add_3_4_2")
-    block    = conv2d_relu(up, num_kernels=256, kernel_size=(3,3), stride=[1,1,1,1], padding='SAME', name='rgb_ft')
+    up_34_    = conv2d_relu(up_34, num_kernels=256, kernel_size=(3,3), stride=[1,1,1,1], padding='SAME', name='up_34_conv')
+
+    up_432      =tf.add(up_34_, up2, name="up_add_3_4_2")
+    up_432_    = conv2d_relu(up_432, num_kernels=256, kernel_size=(3,3), stride=[1,1,1,1], padding='SAME', name='up_432_conv')
+
+    block1_   = conv2d_relu(block1, num_kernels=256, kernel_size=(1,1), stride=[1,1,1,1], padding='SAME', name='1')
+    up_4321      =tf.add(up_432_, block1_, name="up_add_3_4_2_1")
+
+    up_4321_    = conv2d_relu(up_4321, num_kernels=256, kernel_size=(3,3), stride=[1,1,1,1], padding='SAME', name='up_4321_conv')
+
+    up_shape = tf.shape(block0)
+    up_43210_ = tf.image.resize_bilinear(up_4321_, [up_shape[1], up_shape[2]], name='up1')
+    block0_   = conv2d_relu(block0, num_kernels=256, kernel_size=(1,1), stride=[1,1,1,1], padding='SAME', name='10')
+    up0      =tf.add(up_43210_, block0_, name="up_add_3_4_2_1")
+
   with tf.variable_scope('rpn_top') as scope:
-    up      = conv2d_relu(block, num_kernels=256, kernel_size=(3,3), stride=[1,1,1,1], padding='SAME', name='2')
+    up      = conv2d_relu(up_4321_, num_kernels=256, kernel_size=(3,3), stride=[1,1,1,1], padding='SAME', name='2')
     scores  = conv2d(up, num_kernels=2*num_bases, kernel_size=(1,1), stride=[1,1,1,1], padding='SAME', name='score')
     probs   = tf.nn.softmax( tf.reshape(scores,[-1,2]), name='prob')
     deltas  = conv2d(up, num_kernels=4*num_bases, kernel_size=(1,1), stride=[1,1,1,1], padding='SAME', name='delta')
@@ -62,7 +80,7 @@ def top_feature_net(input, anchors, inds_inside, num_bases):
                                      stride, img_width, img_height, img_scale, deltasZ,
                                      nms_thresh=0.7, min_size=stride, nms_pre_topn=nms_pre_topn_, nms_post_topn=nms_post_topn_,
                                      name ='nms')
-  feature = block
+  feature = up0
   return feature, scores, probs, deltas, rois, roi_scores,deltasZ, proposals_z
 
 
@@ -141,30 +159,49 @@ def rgb_feature_net(input, num_bases):
     with slim.arg_scope(arg_scope):
       net, end_points = resnet_v1.resnet_v1_50(input, None, global_pool=False, output_stride=8)
       # pdb.set_trace()
-      block4=end_points['resnet_v1_50/block4']
-      block3=end_points['resnet_v1_50/block3']
-      block2=end_points['resnet_v1_50/block2']
+      block4=end_points['resnet_v1_50/block4/unit_3/bottleneck_v1']
+      block3=end_points['resnet_v1_50/block3/unit_5/bottleneck_v1']
+      block2=end_points['resnet_v1_50/block2/unit_3/bottleneck_v1']
+      block1=end_points['resnet_v1_50/block1/unit_2/bottleneck_v1']
+      block0=end_points['resnet_v1_50/conv1']
       tf.summary.histogram('rgb_block4', block4)
       tf.summary.histogram('rgb_block3', block3)
       tf.summary.histogram('rgb_block2', block2)
       with tf.variable_scope("res_rgb_up") as sc:
         block4_   = conv2d_relu(block4, num_kernels=256, kernel_size=(1,1), stride=[1,1,1,1], padding='SAME', name='4')
-        up4     = upsample2d(block4_, factor = 2, has_bias=True, trainable=True, name='up4')
+        up_shape = tf.shape(block3)
+        up4 = tf.image.resize_bilinear(block4_, [up_shape[1]*2, up_shape[2]*2], name='up4')
         block3_   = conv2d_relu(block3, num_kernels=256, kernel_size=(1,1), stride=[1,1,1,1], padding='SAME', name='3')
-        up3     = upsample2d(block3_, factor = 2, has_bias=True, trainable=True, name='up3')
+        up_shape = tf.shape(block2)
+        up3 = tf.image.resize_bilinear(block3_, [up_shape[1]*2, up_shape[2]*2], name='up3')
         block2_   = conv2d_relu(block2, num_kernels=256, kernel_size=(1,1), stride=[1,1,1,1], padding='SAME', name='2')
-        up2     = upsample2d(block2_, factor = 2, has_bias=True, trainable=True, name='up2')
+        up_shape = tf.shape(block1)
+        up2 = tf.image.resize_bilinear(block2_, [up_shape[1], up_shape[2]], name='up2')
         up_34      =tf.add(up4, up3, name="up_add_3_4")
-        up      =tf.add(up_34, up2, name="up_add_3_4_2")
-        block    = conv2d_relu(up, num_kernels=256, kernel_size=(3,3), stride=[1,1,1,1], padding='SAME', name='rgb_ft')
+        up_34_    = conv2d_relu(up_34, num_kernels=256, kernel_size=(3,3), stride=[1,1,1,1], padding='SAME', name='up_34_conv')
+
+        up_432      =tf.add(up_34_, up2, name="up_add_3_4_2")
+        up_432_    = conv2d_relu(up_432, num_kernels=256, kernel_size=(3,3), stride=[1,1,1,1], padding='SAME', name='up_432_conv')
+
+        block1_   = conv2d_relu(block1, num_kernels=256, kernel_size=(1,1), stride=[1,1,1,1], padding='SAME', name='1')
+        up_4321      =tf.add(up_432_, block1_, name="up_add_3_4_2_1")
+
+        up_4321_    = conv2d_relu(up_4321, num_kernels=256, kernel_size=(3,3), stride=[1,1,1,1], padding='SAME', name='up_4321_conv')
+
+        # up_shape = tf.shape(block0)
+        # up_43210_ = tf.image.resize_bilinear(up_4321_, [up_shape[1], up_shape[2]], name='up1')
+        # block0_   = conv2d_relu(block0, num_kernels=256, kernel_size=(1,1), stride=[1,1,1,1], padding='SAME', name='10')
+        # up01      =tf.add(up_43210_, block0_, name="up_add_3_4_2_1")
+
+        # tf.add_to_collection('rgb_block',block)
       with tf.variable_scope('rgb_rpn') as scope:
-        up      = conv2d_relu(block, num_kernels=256, kernel_size=(3,3), stride=[1,1,1,1], padding='SAME', name='2')
+        up      = conv2d_relu(up_4321_, num_kernels=256, kernel_size=(3,3), stride=[1,1,1,1], padding='SAME', name='2')
         scores  = conv2d(up, num_kernels=2*num_bases, kernel_size=(1,1), stride=[1,1,1,1], padding='SAME', name='score')
         probs   = tf.nn.softmax( tf.reshape(scores,[-1,2]), name='prob')
         deltas  = conv2d(up, num_kernels=4*num_bases, kernel_size=(1,1), stride=[1,1,1,1], padding='SAME', name='delta')
       
-      tf.summary.histogram('rgb_top_block', block)
-    feature = block
+      # tf.summary.histogram('rgb_top_block', block)
+    feature = up_4321_
     return feature, scores, probs, deltas
     
 # def rgb_feature_net(input, num_bases):
