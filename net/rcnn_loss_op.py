@@ -74,11 +74,12 @@ def rcnn_loss_2d(scores, deltas, rcnn_labels, rcnn_targets, deltas_2d, rcnn_targ
     tf.summary.histogram('rcnn_deltas', rcnn_deltas)
     rcnn_targets =  tf.reshape(rcnn_targets,[-1, dim])
 
-    # index_True=tf.equal(rcnn_labels, tf.ones_like(rcnn_labels))
+    index_True_0=tf.equal(rcnn_labels, tf.ones_like(rcnn_labels))
     # rcnn_deltas_=tf.boolean_mask(rcnn_deltas,  index_True)
     # rcnn_targets_=tf.boolean_mask(rcnn_targets,  index_True)  
 
-    # index_True=tf.equal(rcnn_labels, 1)
+    index_True=tf.equal(rcnn_labels, 1)
+    rcnn_pos_inds = tf.where(index_True)
     rcnn_deltas_=tf.gather(rcnn_deltas,  rcnn_pos_inds)
     rcnn_targets_=tf.gather(rcnn_targets,  rcnn_pos_inds)  
 
@@ -101,7 +102,7 @@ def rcnn_loss_2d(scores, deltas, rcnn_labels, rcnn_targets, deltas_2d, rcnn_targ
 
 
 
-    return rcnn_cls_loss, rcnn_reg_loss, rcnn_reg_loss_2d
+    return rcnn_cls_loss, rcnn_reg_loss, rcnn_reg_loss_2d,index_True,rcnn_deltas,rcnn_deltas_#, rcnn_pos_inds#
 
 
 # def rcnn_loss_2d(scores, deltas, rcnn_labels, rcnn_targets, deltas_2d, rcnn_targets_2d):

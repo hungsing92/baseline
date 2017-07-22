@@ -207,7 +207,7 @@ def run_train():
     softmax_loss_ohem, rcnn_smooth_l1_ohem = rcnn_loss_ohem(fuse_scores_ohem, fuse_deltas_ohem, fuse_labels_ohem, fuse_targets_ohem)
 
     rcnn_pos_inds = tf.placeholder(shape=[None   ], dtype=tf.int32,   name='top_pos_ind')
-    fuse_cls_loss, fuse_reg_loss, fuse_reg_loss_2d = rcnn_loss_2d(fuse_scores, fuse_deltas, fuse_labels, fuse_targets, fuse_deltas_2d, fuse_targets_2d,rcnn_pos_inds)
+    fuse_cls_loss, fuse_reg_loss, fuse_reg_loss_2d, index_True,rcnn_deltas,rcnn_deltas_ = rcnn_loss_2d(fuse_scores, fuse_deltas, fuse_labels, fuse_targets, fuse_deltas_2d, fuse_targets_2d,rcnn_pos_inds)
     tf.summary.scalar('rpn_cls_loss', top_cls_loss)
     tf.summary.scalar('rpn_reg_loss', top_reg_loss)
     tf.summary.scalar('rpn_reg_loss_z', top_reg_loss_z)
@@ -460,13 +460,13 @@ def run_train():
                 fuse_targets_2d: batch_fuse_targets_2d
             }
 
-            _, rcnn_probs, batch_top_cls_loss, batch_top_reg_loss, batch_fuse_cls_loss, batch_fuse_reg_loss, batch_fuse_reg_loss_2d,batch_top_reg_loss_z = \
-               sess.run([solver_step, fuse_probs, top_cls_loss, top_reg_loss, fuse_cls_loss, fuse_reg_loss, fuse_reg_loss_2d,top_reg_loss_z],fd2)
+            _, rcnn_probs, batch_top_cls_loss, batch_top_reg_loss, batch_fuse_cls_loss, batch_fuse_reg_loss, batch_fuse_reg_loss_2d,batch_top_reg_loss_z,index_True_,rcnn_deltas0,rcnn_deltas0_ = \
+               sess.run([solver_step, fuse_probs, top_cls_loss, top_reg_loss, fuse_cls_loss, fuse_reg_loss, fuse_reg_loss_2d,top_reg_loss_z,index_True,rcnn_deltas,rcnn_deltas_],fd2)
 
             speed=time.time()-start_time
             log.write('%5.1f   %5d    %0.4fs   %0.6f   |   %0.5f   %0.5f   %0.5f   |   %0.5f   %0.5f  |%0.5f   \n' %\
                 (epoch, iter, speed, rate, batch_top_cls_loss, batch_top_reg_loss, batch_top_reg_loss_z , batch_fuse_cls_loss, batch_fuse_reg_loss, batch_fuse_reg_loss_2d))
-            # pdb.set_trace()
+            pdb.set_trace()
             if (iter)%10==0:
                 summary = sess.run(merged,fd2)
                 train_writer.add_summary(summary, iter)
