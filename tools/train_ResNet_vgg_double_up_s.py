@@ -87,8 +87,8 @@ def load_dummy_datas(index):
     return  rgbs, tops, fronts, gt_labels, gt_boxes3d, gt_boxes2d, top_images, front_images, rgbs_norm, index#, lidars
 
 
-train_data_root='/home/users/hhs/4T/datasets/dummy_datas/seg'
-kitti_dir='/mnt/disk_4T/KITTI/training'
+# train_data_root='/home/users/hhs/4T/datasets/dummy_datas/seg'
+# kitti_dir='/mnt/disk_4T/KITTI/training'
 vis=0
 ohem=0
 def run_train():
@@ -241,21 +241,21 @@ def run_train():
         # sess = tf_debug.LocalCLIDebugWrapperSession(sess)
         # summary_writer = tf.summary.FileWriter(out_dir+'/tf', sess.graph)
         saver  = tf.train.Saver() 
-        saver.restore(sess, './outputs/check_points/snap_R2R_015000.ckpt') 
+        # saver.restore(sess, './outputs/check_points/snap_R2R_015000.ckpt') 
 
-        # var_lt_res=[v for v in tf.trainable_variables() if v.name.startswith('resnet_v1')]#resnet_v1_50
-        # saver_0=tf.train.Saver(var_lt_res)        
-        # saver_0.restore(sess, './outputs/check_points/resnet_v1_50.ckpt')
-        # # # pdb.set_trace()
-        # top_lt=[v for v in tf.trainable_variables() if v.name.startswith('top_base')]
-        # top_lt.pop(0)
-        # # # top_lt.pop(0)
-        # for v in top_lt:
-        #     # pdb.set_trace()
-        #     for v_rgb in var_lt_res:
-        #         if v.name[9:]==v_rgb.name:
-        #             print ("assign weights:%s"%v.name)
-        #             v.assign(v_rgb)
+        var_lt_res=[v for v in tf.trainable_variables() if v.name.startswith('resnet_v1')]#resnet_v1_50
+        saver_0=tf.train.Saver(var_lt_res)        
+        saver_0.restore(sess, './outputs/check_points/resnet_v1_50.ckpt')
+        # # pdb.set_trace()
+        top_lt=[v for v in tf.trainable_variables() if v.name.startswith('top_base')]
+        top_lt.pop(0)
+        # # top_lt.pop(0)
+        for v in top_lt:
+            # pdb.set_trace()
+            for v_rgb in var_lt_res:
+                if v.name[9:]==v_rgb.name:
+                    print ("assign weights:%s"%v.name)
+                    v.assign(v_rgb)
 
         # # var_lt_vgg=[v for v in tf.trainable_variables() if v.name.startswith('vgg')]
         # # var_lt_vgg.pop(0)
@@ -296,7 +296,7 @@ def run_train():
                 frame_range=frame_range1
 
             #load 500 samples every 2000 iterations
-            freq=int(200)
+            freq=int(10)
             if idx%freq==0 :
                 count+=idx
                 if count%(2*freq)==0:
@@ -466,7 +466,7 @@ def run_train():
             speed=time.time()-start_time
             log.write('%5.1f   %5d    %0.4fs   %0.6f   |   %0.5f   %0.5f   %0.5f   |   %0.5f   %0.5f  |%0.5f   \n' %\
                 (epoch, iter, speed, rate, batch_top_cls_loss, batch_top_reg_loss, batch_top_reg_loss_z , batch_fuse_cls_loss, batch_fuse_reg_loss, batch_fuse_reg_loss_2d))
-            # pdb.set_trace()
+            pdb.set_trace()
             if (iter)%10==0:
                 summary = sess.run(merged,fd2)
                 train_writer.add_summary(summary, iter)

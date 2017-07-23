@@ -218,11 +218,14 @@ def fusion_net(feature_list, num_class, out_shape=(8,3)):
         if input is None:
             input = block
         else:
-            input = concat([input,block], axis=1, name='%d/cat'%n)
+            # input = concat([input,block], axis=1, name='%d/cat'%n)
+            input = tf.add(input,block, name ='fuse_feature')
 
   #include background class
   with tf.variable_scope('fuse') as scope:
     block = linear_bn_relu(input, num_hiddens=512, name='4')#512, so small?
+    block = tf.nn.dropout(block, keep_prob, name='drop4')
+    block = linear_bn_relu(block, num_hiddens=512, name='5')#512, so small?
     # block = tf.nn.dropout(block, keep_prob, name='drop4')
     with tf.variable_scope('3D') as sc:
       dim = np.product([*out_shape])
