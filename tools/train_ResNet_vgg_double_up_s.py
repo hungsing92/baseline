@@ -119,12 +119,19 @@ def run_train():
         )
         ratios=np.array([1.7,2.4,2.7])
         scales=np.array([1.7,2.4])
-        bases=np.array([[-19.5, -8, 19.5, 8],
-                        [-8, -19.5, 8, 19.5],
-                        [-27.5, -11, 27.5, 11],
-                        [-11, -27.5, 11, 27.5],
-                        [-5, -3, 5, 3],
-                        [-3, -5, 3, 5]
+        bases=np.array([
+            [-12,-6,12,6],
+            [-6,-12,6,12],
+            [-17,-8,17,8],
+            [-8,-17,8,17],
+            [-22,-8,22,8],
+            [-8,-22,8,22],
+            [-17,-9,17,9],
+            [-9,-17,9,17],
+            [-22,-9,22,9],
+            [-9,-22,9,22],
+            [-27,-10,27,10],
+            [-10,-27,10,27],
                         ])
         # pdb.set_trace()
         num_bases = len(bases)
@@ -296,7 +303,7 @@ def run_train():
                 frame_range=frame_range1
 
             #load 500 samples every 2000 iterations
-            freq=int(200)
+            freq=int(10)
             if idx%freq==0 :
                 count+=idx
                 if count%(2*freq)==0:
@@ -355,12 +362,12 @@ def run_train():
                 learning_rate:   rate,
                 IS_TRAIN_PHASE:  True
             }
-            batch_proposals, batch_proposal_scores, batch_top_features, batch_top_proposals_z= sess.run([proposals, proposal_scores, top_features,proposals_z],fd1)            
+            batch_top_probs, batch_proposals, batch_proposal_scores, batch_top_features, batch_top_proposals_z= sess.run([top_probs,proposals, proposal_scores, top_features,proposals_z],fd1)            
             ## generate  train rois  ------------
             # pdb.set_trace()
             batch_top_inds, batch_top_pos_inds, batch_top_labels, batch_top_targets, batch_top_targetsZ  = \
-                rpn_target_Z ( anchors, inside_inds_filtered, batch_gt_labels,  batch_gt_top_boxes, batch_gt_boxesZ)
-            
+                rpn_target_Z ( anchors, inside_inds_filtered,  batch_gt_top_boxes, batch_gt_boxesZ,batch_top_probs)
+            # pdb.set_trace()
             batch_rgb_inds, batch_rgb_pos_inds, batch_rgb_labels, batch_rgb_targets  = \
                 rpn_target ( anchors_rgb, inside_inds_filtered_rgb, batch_gt_labels,  batch_gt_boxes2d)
             # pdb.set_trace()
