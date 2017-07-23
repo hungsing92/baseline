@@ -287,29 +287,29 @@ def run_train():
         # summary_writer = tf.summary.FileWriter(out_dir+'/tf', sess.graph)
         saver  = tf.train.Saver() 
 
-        saver.restore(sess, './outputs/check_points/snap_R2R_Nfpn_with_rgb070000.ckpt') 
+        # saver.restore(sess, './outputs/check_points/snap_R2R_Nfpn_with_rgb070000.ckpt') 
 
 
-        # var_lt_res=[v for v in tf.trainable_variables() if v.name.startswith('resnet_v1_50')]#resnet_v1_50
-        # var_lt_res.pop(0)
-        # saver_0=tf.train.Saver(var_lt_res)        
-        # saver_0.restore(sess, './outputs/check_points/resnet_v1_50.ckpt')
+        var_lt_res=[v for v in tf.trainable_variables() if v.name.startswith('resnet_v1_50')]#resnet_v1_50
+        var_lt_res.pop(0)
+        saver_0=tf.train.Saver(var_lt_res)        
+        saver_0.restore(sess, './outputs/check_points/resnet_v1_50.ckpt')
         
-        # # var_lt_vgg=[v for v in tf.trainable_variables() if v.name.startswith('vgg')]
-        # # var_lt_vgg.pop(0)
-        # # saver_1=tf.train.Saver(var_lt_vgg)
-        # # saver_1.restore(sess, './outputs/check_points/vgg_16.ckpt')
+        # var_lt_vgg=[v for v in tf.trainable_variables() if v.name.startswith('vgg')]
+        # var_lt_vgg.pop(0)
+        # saver_1=tf.train.Saver(var_lt_vgg)
+        # saver_1.restore(sess, './outputs/check_points/vgg_16.ckpt')
 
-        # # pdb.set_trace()
-        # top_lt=[v for v in tf.trainable_variables() if v.name.startswith('top_base')]
+        # pdb.set_trace()
+        top_lt=[v for v in tf.trainable_variables() if v.name.startswith('top_base')]
+        top_lt.pop(0)
         # top_lt.pop(0)
-        # # top_lt.pop(0)
-        # for v in top_lt:
-        #     # pdb.set_trace()
-        #     for v_rgb in var_lt_res:
-        #         if v.name[9:]==v_rgb.name:
-        #             print ("assign weights:%s"%v.name)
-        #             v.assign(v_rgb)
+        for v in top_lt:
+            # pdb.set_trace()
+            for v_rgb in var_lt_res:
+                if v.name[9:]==v_rgb.name:
+                    print ("assign weights:%s"%v.name)
+                    v.assign(v_rgb)
 
         # var_lt_vgg=[v for v in tf.trainable_variables() if v.name.startswith('vgg')]
         # var_lt_vgg.pop(0)
@@ -390,6 +390,9 @@ def run_train():
             # pdb.set_trace()
             batch_gt_top_boxes = box3d_to_top_box(batch_gt_boxes3d)
             batch_gt_boxesZ=get_boxes3d_z(batch_gt_boxes3d)
+
+            gen_top_rois, gen_proposals_z=generate_3d_boxes_samples(batch_gt_top_boxes,batch_gt_boxesZ)
+            gen_rois3D = top_z_to_box3d(gen_top_rois[:,1:5],gen_proposals_z)
 
             ## run propsal generation ------------
             fd1={
@@ -576,7 +579,9 @@ def run_train():
 
                 ## show rcnn(fuse) nms
                 img_rcnn     = draw_rcnn (top_image, batch_fuse_probs, batch_fuse_deltas, batch_top_rois, batch_rois3d,darker=1)
-                img_rcnn_nms = draw_rcnn_nms(rgb, boxes3d, probs)
+                rgb1 = draw_rcnn_nms(rgb, boxes3d, probs)
+                projections=box3d_to_rgb_projections(gen_rois3D)
+                img_rcnn_nms = draw_rgb_projections(rgb1, projections, color=(0,0,255), thickness=1)
                 if vis :
                     imshow('img_rcnn',img_rcnn)
                     imshow('img_rcnn_nms',img_rcnn_nms)

@@ -2,6 +2,30 @@ from net.common import *
 
 
 ##extension for 3d
+def generate_3d_boxes_samples(gt_top_boxes,gt_boxesZ):
+    gt_nums = len(gt_top_boxes)
+    top_rois = np.zeros((gt_nums*10,5))
+    proposals_z = np.zeros((gt_nums*10,2))
+    inds = 0
+    # np.random.seed(None)
+    for i in range(gt_nums):
+        top_box = gt_top_boxes[i]
+        z0, zn= gt_boxesZ[i]
+        z_height = zn-z0
+        width = top_box[2]- top_box[0]
+        height = top_box[3]- top_box[1]
+        for j in range(10):
+            x1 = top_box[0]+np.random.uniform(-0.2,0.2)*width
+            x2 = top_box[2]+np.random.uniform(-0.2,0.2)*width
+            y1 = top_box[1]+np.random.uniform(-0.2,0.2)*height
+            y2 = top_box[3]+np.random.uniform(-0.2,0.2)*height
+            z0_ = z0 +np.random.uniform(-0.15,0.15)*z_height
+            zn_ = zn +np.random.uniform(-0.15,0.15)*z_height
+            top_rois[inds,1:] = np.array([x1,y1,x2,y2])#,dtype=np.int32)
+            proposals_z[inds,:] = np.array([z0_,zn_])
+            inds = inds+1
+    return top_rois, proposals_z
+
 def get_boxes3d_z(boxes3d):
     boxes3d_z=np.zeros((len(boxes3d),2), dtype=np.float32)
     for num in np.arange(len(boxes3d)):

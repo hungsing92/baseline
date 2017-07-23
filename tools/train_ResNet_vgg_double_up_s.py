@@ -87,8 +87,8 @@ def load_dummy_datas(index):
     return  rgbs, tops, fronts, gt_labels, gt_boxes3d, gt_boxes2d, top_images, front_images, rgbs_norm, index#, lidars
 
 
-train_data_root='/home/users/hhs/4T/datasets/dummy_datas/seg'
-kitti_dir='/mnt/disk_4T/KITTI/training'
+# train_data_root='/home/users/hhs/4T/datasets/dummy_datas/seg'
+# kitti_dir='/mnt/disk_4T/KITTI/training'
 vis=0
 ohem=0
 def run_train():
@@ -296,7 +296,7 @@ def run_train():
                 frame_range=frame_range1
 
             #load 500 samples every 2000 iterations
-            freq=int(10)
+            freq=int(200)
             if idx%freq==0 :
                 count+=idx
                 if count%(2*freq)==0:
@@ -338,7 +338,10 @@ def run_train():
             # pdb.set_trace()
             batch_gt_top_boxes = box3d_to_top_box(batch_gt_boxes3d)
             batch_gt_boxesZ=get_boxes3d_z(batch_gt_boxes3d)
-            
+            # pdb.set_trace()
+            gen_top_rois, gen_proposals_z=generate_3d_boxes_samples(batch_gt_top_boxes,batch_gt_boxesZ)
+            gen_rois3D = top_z_to_box3d(gen_top_rois[:,1:5],gen_proposals_z)
+            print('nums of gt targets :%d'%len(batch_gt_boxes3d))
             ## run propsal generation ------------
             fd1={
                 top_images:      batch_top_images,
@@ -424,7 +427,8 @@ def run_train():
             else:
                 pass
             batch_top_rois, batch_fuse_labels, batch_fuse_targets, batch_fuse_targets_2d, batch_rois3d,p_inds  = \
-                    rcnn_target_2d_z(  batch_proposals, batch_gt_labels, batch_gt_top_boxes, batch_gt_boxes3d, batch_gt_boxes2d, rgb_shape[1], rgb_shape[0],batch_top_proposals_z)             
+                    rcnn_target_2d_z(  batch_proposals, batch_gt_labels, batch_gt_top_boxes, batch_gt_boxes3d,\
+                     batch_gt_boxes2d, rgb_shape[1], rgb_shape[0],batch_top_proposals_z, gen_top_rois, gen_rois3D)             
             # pdb.set_trace()
             # batch_rois3d     = project_to_roi3d    (batch_top_rois)
             batch_front_rois = project_to_front_roi(batch_rois3d  ) 
@@ -472,7 +476,7 @@ def run_train():
                 train_writer.add_summary(summary, iter)
             # save: ------------------------------------
             if (iter)%5000==0 and (iter!=0):
-                saver.save(sess, out_dir + '/check_points/snap_R2R_new_fusesion%06d.ckpt'%iter)  #iter
+                saver.save(sess, out_dir + '/check_points/snap_R2R_new_fusesion_augment_pos_samples%06d.ckpt'%iter)  #iter
                 # saver.save(sess, out_dir + '/check_points/snap_R2R_new_resolution_%06d.ckpt'%iter)  #iter
 
 

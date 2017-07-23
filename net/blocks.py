@@ -227,6 +227,7 @@ def concat(input, axis=3, name='cat'):
     cat = tf.concat(axis=axis, values=input, name=name)
     return cat
 
+
 def flatten(input, name='flat'):
     input_shape = input.get_shape().as_list()        # list: [None, 9, 2]
     dim   = np.prod(input_shape[1:])                 # dim = prod(9,2) = 18
