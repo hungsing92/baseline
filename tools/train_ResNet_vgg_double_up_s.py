@@ -277,7 +277,7 @@ def run_train():
         batch_top_reg_loss =0
         batch_fuse_cls_loss=0
         batch_fuse_reg_loss=0
-        rate=0.0002
+        rate=0.0003
         frame_range = np.arange(num_frames)
         idx=0
         frame=0
@@ -296,7 +296,7 @@ def run_train():
                 frame_range=frame_range1
 
             #load 500 samples every 2000 iterations
-            freq=int(200)
+            freq=int(10)
             if idx%freq==0 :
                 count+=idx
                 if count%(2*freq)==0:
@@ -472,7 +472,7 @@ def run_train():
                 train_writer.add_summary(summary, iter)
             # save: ------------------------------------
             if (iter)%5000==0 and (iter!=0):
-                saver.save(sess, out_dir + '/check_points/snap_R2R_%06d.ckpt'%iter)  #iter
+                saver.save(sess, out_dir + '/check_points/snap_R2R_new_fusesion%06d.ckpt'%iter)  #iter
                 # saver.save(sess, out_dir + '/check_points/snap_R2R_new_resolution_%06d.ckpt'%iter)  #iter
 
 
