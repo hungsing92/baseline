@@ -150,13 +150,14 @@ def rcnn_target_2d_z(rois, gt_labels, gt_boxes, gt_boxes3d, gt_boxes2d, width, h
     rois = rois.reshape(-1,5)  # Proposal (i, x1, y1, x2, y2) coming from RPN
     num           = len(gt_boxes)
     zeros         = np.zeros((num, 1), dtype=np.float32)
-    extended_rois = np.vstack((rois,gen_top_rois, np.hstack((zeros, gt_boxes))))
-    rois3D = top_z_to_box3d(rois[:,1:5],proposals_z)
-    extended_rois3D = np.vstack((rois3D, gen_rois3D, gt_boxes3d))
-
-    # extended_rois = np.vstack((rois, np.hstack((zeros, gt_boxes))))
-    # rois3D = top_z_to_box3d(rois[:,1:5],proposals_z)
-    # extended_rois3D = np.vstack((rois3D, gt_boxes3d))
+    if 1:
+        extended_rois = np.vstack((rois,gen_top_rois, np.hstack((zeros, gt_boxes))))
+        rois3D = top_z_to_box3d(rois[:,1:5],proposals_z)
+        extended_rois3D = np.vstack((rois3D, gen_rois3D, gt_boxes3d))
+    else:
+        extended_rois = np.vstack((rois, np.hstack((zeros, gt_boxes))))
+        rois3D = top_z_to_box3d(rois[:,1:5],proposals_z)
+        extended_rois3D = np.vstack((rois3D, gt_boxes3d))
     assert np.all(extended_rois[:, 0] == 0), 'Only single image batches are supported'
 
 
