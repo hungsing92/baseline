@@ -466,7 +466,7 @@ def run_train():
             speed=time.time()-start_time
             log.write('%5.1f   %5d    %0.4fs   %0.6f   |   %0.5f   %0.5f   %0.5f   |   %0.5f   %0.5f  |%0.5f   \n' %\
                 (epoch, iter, speed, rate, batch_top_cls_loss, batch_top_reg_loss, batch_top_reg_loss_z , batch_fuse_cls_loss, batch_fuse_reg_loss, batch_fuse_reg_loss_2d))
-            pdb.set_trace()
+            # pdb.set_trace()
             if (iter)%10==0:
                 summary = sess.run(merged,fd2)
                 train_writer.add_summary(summary, iter)
