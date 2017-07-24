@@ -197,12 +197,19 @@ def run_test():
         )
         ratios=np.array([1.7,2.4])
         scales=np.array([1.7,2.4])
-        bases=np.array([[-19.5, -8, 19.5, 8],
-                        [-8, -19.5, 8, 19.5],
-                        [-27.5, -11, 27.5, 11],
-                        [-11, -27.5, 11, 27.5],
-                        [-5, -3, 5, 3],
-                        [-3, -5, 3, 5]
+        bases=np.array([
+            [-12,-6,12,6],
+            [-6,-12,6,12],
+            [-17,-8,17,8],
+            [-8,-17,8,17],
+            [-22,-8,22,8],
+            [-8,-22,8,22],
+            [-17,-9,17,9],
+            [-9,-17,9,17],
+            [-22,-9,22,9],
+            [-9,-22,9,22],
+            [-27,-10,27,10],
+            [-10,-27,10,27],
                         ])
         num_bases = len(bases)
         num_bases_rgb = len(bases_rgb)
@@ -251,7 +258,7 @@ def run_test():
     front_rois   = tf.placeholder(shape=[None, 5], dtype=tf.float32,   name ='front_rois' )
     rgb_rois     = tf.placeholder(shape=[None, 5], dtype=tf.float32,   name ='rgb_rois'   )
 
-    top_features, top_scores, top_probs, top_deltas, proposals, proposal_scores,deltasZ,proposals_z = \
+    top_features, top_scores, top_probs, top_deltas, proposals, proposal_scores,deltasZ,proposals_z,inside_inds_nms  = \
         top_feature_net(top_images, top_anchors, top_inside_inds, num_bases)
    
     front_features = front_feature_net(front_images)
@@ -277,7 +284,7 @@ def run_test():
         # sess = tf_debug.LocalCLIDebugWrapperSession(sess)
         summary_writer = tf.summary.FileWriter(out_dir+'/tf', sess.graph)
         saver  = tf.train.Saver()  
-        saver.restore(sess, './outputs/check_points/snap_R2R_Nfpn_with_rgb040000.ckpt')
+        saver.restore(sess, './outputs/check_points/snap_R2R_new_fusesion_augment_pos_samples005000.ckpt')
 
         batch_top_cls_loss =0
         batch_top_reg_loss =0
@@ -318,7 +325,8 @@ def run_test():
                 IS_TRAIN_PHASE:  False
             }
             batch_proposals, batch_proposal_scores, batch_top_features, batch_top_proposals_z = sess.run([proposals, proposal_scores, top_features,proposals_z],fd1)
-
+            # pdb.set_trace()
+            print('nums of proposals:%d'%len(batch_proposals))
             batch_top_rois = batch_proposals
             batch_rois3d = top_z_to_box3d(batch_top_rois[:,1:5],batch_top_proposals_z)
             

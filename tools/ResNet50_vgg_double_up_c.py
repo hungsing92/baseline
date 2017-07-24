@@ -18,8 +18,8 @@ keep_prob=0.75
 nms_pre_topn_=5000
 nms_post_topn_=2000
 
-# keep_prob=1
-# nms_pre_topn_=500
+# keep_prob=0.5
+# nms_pre_topn_=2000
 # nms_post_topn_=300
 
 is_training=True
