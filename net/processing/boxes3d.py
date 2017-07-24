@@ -4,8 +4,9 @@ from net.common import *
 ##extension for 3d
 def generate_3d_boxes_samples(gt_top_boxes,gt_boxesZ):
     gt_nums = len(gt_top_boxes)
-    top_rois = np.zeros((gt_nums*10,5))
-    proposals_z = np.zeros((gt_nums*10,2))
+    nums_of_augment = 3
+    top_rois = np.zeros((gt_nums*nums_of_augment,5))
+    proposals_z = np.zeros((gt_nums*nums_of_augment,2))
     inds = 0
     # np.random.seed(None)
     for i in range(gt_nums):
@@ -14,7 +15,7 @@ def generate_3d_boxes_samples(gt_top_boxes,gt_boxesZ):
         z_height = zn-z0
         width = top_box[2]- top_box[0]
         height = top_box[3]- top_box[1]
-        for j in range(10):
+        for j in range(nums_of_augment):
             x1 = top_box[0]+np.random.uniform(-0.2,0.2)*width
             x2 = top_box[2]+np.random.uniform(-0.2,0.2)*width
             y1 = top_box[1]+np.random.uniform(-0.2,0.2)*height

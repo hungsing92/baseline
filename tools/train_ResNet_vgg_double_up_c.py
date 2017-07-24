@@ -279,7 +279,7 @@ def run_train():
     merged = tf.summary.merge_all()
 
     sess = tf.InteractiveSession()  
-    train_writer = tf.summary.FileWriter( './outputs/tensorboard/R2R_3drpn_rgb_rpn',
+    train_writer = tf.summary.FileWriter( './outputs/tensorboard/R2R_augment_samples',
                                       sess.graph)
     with sess.as_default():
         sess.run( tf.global_variables_initializer(), { IS_TRAIN_PHASE : True } )

@@ -194,7 +194,7 @@ def rpn_target( anchors, inside_inds, gt_labels,  gt_boxes):
     return inds, pos_inds, labels, targets
 
 def rpn_target_Z( anchors, inside_inds, gt_boxes, gt_boxesZ,probs):
-    bg_ohem=1
+    bg_ohem=0
     balance_pos_sample=1
 
     inside_anchors = anchors[inside_inds, :]
