@@ -259,7 +259,7 @@ def run_test():
 
     fuse_scores, fuse_probs, fuse_deltas, fuse_deltas_2d = \
         fusion_net(
-            ( [top_features,     top_rois,     7,7,1./stride],
+            ( [top_features,     top_rois,     7,7,1./2],
               [front_features,   front_rois,   0,0,1./stride],  #disable by 0,0
               [rgb_features,     rgb_rois,     7,7,1./(1*stride)],
               # [top_features,     top_rois,     7,7,1./(0.75*stride)],
@@ -277,7 +277,7 @@ def run_test():
         # sess = tf_debug.LocalCLIDebugWrapperSession(sess)
         summary_writer = tf.summary.FileWriter(out_dir+'/tf', sess.graph)
         saver  = tf.train.Saver()  
-        saver.restore(sess, './outputs/check_points/snap_R2R_Nfpn_with_rgb040000.ckpt')
+        saver.restore(sess, './outputs/check_points/snap_R2R_new_resolution075000.ckpt')
 
         batch_top_cls_loss =0
         batch_top_reg_loss =0
