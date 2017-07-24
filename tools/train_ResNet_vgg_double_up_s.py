@@ -218,7 +218,7 @@ def run_train():
     tf.summary.scalar('rgb_reg_loss', rgb_reg_loss)
 
     #solver
-    l2 = l2_regulariser(decay=0.00005)
+    l2 = l2_regulariser(decay=0.0001)
     tf.summary.scalar('l2', l2)
     learning_rate = tf.placeholder(tf.float32, shape=[])
     solver = tf.train.AdamOptimizer(learning_rate)
