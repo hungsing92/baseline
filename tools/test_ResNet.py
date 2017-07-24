@@ -179,7 +179,7 @@ def run_test():
     log = Logger(out_dir+'/log_%s.txt'%(time.strftime('%Y-%m-%d %H:%M:%S')),mode='a')
 
     # index=np.load(train_data_root+'/val_list.npy')
-    index_file=open(train_data_root+'/val.txt')
+    index_file=open(train_data_root+'/train.txt')
     index = [ int(i.strip()) for i in index_file]
     index_file.close()
     
@@ -277,7 +277,7 @@ def run_test():
         # sess = tf_debug.LocalCLIDebugWrapperSession(sess)
         summary_writer = tf.summary.FileWriter(out_dir+'/tf', sess.graph)
         saver  = tf.train.Saver()  
-        saver.restore(sess, './outputs/check_points/snap_R2R_Nfpn_with_rgb040000.ckpt')
+        saver.restore(sess, './outputs/check_points/snap_R2R_040000.ckpt')
 
         batch_top_cls_loss =0
         batch_top_reg_loss =0
