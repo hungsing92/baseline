@@ -241,21 +241,21 @@ def run_train():
         # sess = tf_debug.LocalCLIDebugWrapperSession(sess)
         # summary_writer = tf.summary.FileWriter(out_dir+'/tf', sess.graph)
         saver  = tf.train.Saver() 
-        # saver.restore(sess, './outputs/check_points/snap_R2R_Nfpn_with_rgb050000.ckpt') 
+        saver.restore(sess, './outputs/check_points/snap_R2R_new_resolution075000.ckpt') 
 
-        var_lt_res=[v for v in tf.trainable_variables() if v.name.startswith('resnet_v1')]#resnet_v1_50
-        saver_0=tf.train.Saver(var_lt_res)        
-        saver_0.restore(sess, './outputs/check_points/resnet_v1_50.ckpt')
-        # # pdb.set_trace()
-        top_lt=[v for v in tf.trainable_variables() if v.name.startswith('top_base')]
-        top_lt.pop(0)
-        # # top_lt.pop(0)
-        for v in top_lt:
-            # pdb.set_trace()
-            for v_rgb in var_lt_res:
-                if v.name[9:]==v_rgb.name:
-                    print ("assign weights:%s"%v.name)
-                    v.assign(v_rgb)
+        # var_lt_res=[v for v in tf.trainable_variables() if v.name.startswith('resnet_v1')]#resnet_v1_50
+        # saver_0=tf.train.Saver(var_lt_res)        
+        # saver_0.restore(sess, './outputs/check_points/resnet_v1_50.ckpt')
+        # # # pdb.set_trace()
+        # top_lt=[v for v in tf.trainable_variables() if v.name.startswith('top_base')]
+        # top_lt.pop(0)
+        # # # top_lt.pop(0)
+        # for v in top_lt:
+        #     # pdb.set_trace()
+        #     for v_rgb in var_lt_res:
+        #         if v.name[9:]==v_rgb.name:
+        #             print ("assign weights:%s"%v.name)
+        #             v.assign(v_rgb)
 
         # # var_lt_vgg=[v for v in tf.trainable_variables() if v.name.startswith('vgg')]
         # # var_lt_vgg.pop(0)
@@ -266,10 +266,10 @@ def run_train():
 
         # var_lt_rgb=[v for v in tf.trainable_variables() if v.name.startswith('res')]
         # var_lt_top=[v for v in tf.trainable_variables() if v.name.startswith('top')]
-        var_lt_rgb=[v for v in tf.trainable_variables() if v.name.startswith('res')]
-        var_lt_top=[v for v in tf.trainable_variables() if v.name.startswith('top')]
-        saver_rgb=tf.train.Saver(var_lt_rgb)
-        saver_top=tf.train.Saver(var_lt_top)
+        # var_lt_rgb=[v for v in tf.trainable_variables() if v.name.startswith('res')]
+        # var_lt_top=[v for v in tf.trainable_variables() if v.name.startswith('top')]
+        # saver_rgb=tf.train.Saver(var_lt_rgb)
+        # saver_top=tf.train.Saver(var_lt_top)
         # saver_rgb.restore(sess, './outputs/check_points/pretrained_Res_rgb_model090000.ckpt')
         # saver_top.restore(sess, './outputs/check_points/pretrained_Res_top_model090000.ckpt')
 
