@@ -296,7 +296,7 @@ def run_train():
                 frame_range=frame_range1
 
             #load 500 samples every 2000 iterations
-            freq=int(10)
+            freq=int(200)
             if idx%freq==0 :
                 count+=idx
                 if count%(2*freq)==0:
