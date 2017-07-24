@@ -87,8 +87,8 @@ def load_dummy_datas(index):
     return  rgbs, tops, fronts, gt_labels, gt_boxes3d, gt_boxes2d, top_images, front_images, rgbs_norm, index#, lidars
 
 
-# train_data_root='/home/users/hhs/4T/datasets/dummy_datas/seg'
-# kitti_dir='/mnt/disk_4T/KITTI/training'
+train_data_root='/home/users/hhs/4T/datasets/dummy_datas/seg'
+kitti_dir='/mnt/disk_4T/KITTI/training'
 vis=0
 ohem=0
 def run_train():
@@ -218,7 +218,7 @@ def run_train():
     tf.summary.scalar('rgb_reg_loss', rgb_reg_loss)
 
     #solver
-    l2 = l2_regulariser(decay=0.00001)
+    l2 = l2_regulariser(decay=0.00005)
     tf.summary.scalar('l2', l2)
     learning_rate = tf.placeholder(tf.float32, shape=[])
     solver = tf.train.AdamOptimizer(learning_rate)

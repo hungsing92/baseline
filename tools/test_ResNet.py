@@ -179,7 +179,7 @@ def run_test():
     log = Logger(out_dir+'/log_%s.txt'%(time.strftime('%Y-%m-%d %H:%M:%S')),mode='a')
 
     # index=np.load(train_data_root+'/val_list.npy')
-    index_file=open(train_data_root+'/train.txt')
+    index_file=open(train_data_root+'/val.txt')
     index = [ int(i.strip()) for i in index_file]
     index_file.close()
     
