@@ -19,7 +19,7 @@ from fpn import build_pyramid
 # nms_post_topn_=2000
 
 keep_prob=0.5
-nms_pre_topn_=1000
+nms_pre_topn_=2000
 nms_post_topn_=500
 
 is_training=True
