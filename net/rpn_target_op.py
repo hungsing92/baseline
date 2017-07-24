@@ -193,8 +193,8 @@ def rpn_target( anchors, inside_inds, gt_labels,  gt_boxes):
 
     return inds, pos_inds, labels, targets
 
-def rpn_target_Z( anchors, inside_inds, gt_boxes, gt_boxesZ,probs):
-    bg_ohem=0
+def rpn_target_Z( anchors, inside_inds, gt_boxes, gt_boxesZ,probs,batch_top_inside_inds_nms):
+    bg_ohem=1
     balance_pos_sample=1
 
     inside_anchors = anchors[inside_inds, :]
@@ -254,15 +254,22 @@ def rpn_target_Z( anchors, inside_inds, gt_boxes, gt_boxesZ,probs):
 
 
     # subsample negative labels
-    num_bg = CFG.TRAIN.RPN_BATCHSIZE - np.sum(labels == 1)
+    # num_bg = CFG.TRAIN.RPN_BATCHSIZE - np.sum(labels == 1)
+    num_bg = int((1-CFG.TRAIN.RPN_FG_FRACTION )* CFG.TRAIN.RPN_BATCHSIZE)
     # num_bg = int(min(1.5*np.sum(labels == 1),num_bg))
     bg_inds = np.where(labels == 0)[0]
+
+    nms_bg_inds = np.intersect1d(bg_inds, batch_top_inside_inds_nms)
     # pdb.set_trace()
     if bg_ohem==1:
         if len(bg_inds) > num_bg:
-            bg_probs = neg_probs[bg_inds]
-            bg_probs_argsort = np.argsort(bg_probs)
-            disable_inds = bg_inds[bg_probs_argsort][num_bg:]
+            if len(nms_bg_inds)>0.2*num_bg:
+                bg_probs = neg_probs[nms_bg_inds]
+                bg_probs_argsort = np.argsort(bg_probs)
+                nms_bg_inds = nms_bg_inds[bg_probs_argsort][:int(0.2*num_bg)]
+            disable_inds = np.setdiff1d(bg_inds,nms_bg_inds)
+            disable_inds = np.random.choice(disable_inds, size=(len(disable_inds) - num_bg + len(nms_bg_inds)), replace=False)
+            # pdb.set_trace()
             labels[disable_inds] = -1
     else:
         if len(bg_inds) > num_bg:

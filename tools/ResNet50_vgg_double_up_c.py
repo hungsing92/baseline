@@ -58,12 +58,12 @@ def top_feature_net(input, anchors, inds_inside, num_bases):
     batch_size, img_height, img_width, img_channel = input.get_shape().as_list()
     img_scale = 1
     # pdb.set_trace()
-    rois, roi_scores,proposals_z = tf_rpn_nms( probs, deltas, anchors, inds_inside,
+    rois, roi_scores,proposals_z, inside_inds_nms = tf_rpn_nms( probs, deltas, anchors, inds_inside,
                                      stride, img_width, img_height, img_scale, deltasZ,
                                      nms_thresh=0.7, min_size=stride, nms_pre_topn=nms_pre_topn_, nms_post_topn=nms_post_topn_,
                                      name ='nms')
   feature = block
-  return feature, scores, probs, deltas, rois, roi_scores,deltasZ, proposals_z
+  return feature, scores, probs, deltas, rois, roi_scores,deltasZ, proposals_z, inside_inds_nms
 
 
 # def top_feature_net(input, anchors, inds_inside, num_bases):

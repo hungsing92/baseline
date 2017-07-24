@@ -4,7 +4,9 @@ from net.common import *
 ##extension for 3d
 def generate_3d_boxes_samples(gt_top_boxes,gt_boxesZ):
     gt_nums = len(gt_top_boxes)
-    nums_of_augment = 3
+    nums_of_augment = 5
+    top_box_thresh = 0.3
+    proposals_z_thresh = 0.15
     top_rois = np.zeros((gt_nums*nums_of_augment,5))
     proposals_z = np.zeros((gt_nums*nums_of_augment,2))
     inds = 0
@@ -16,12 +18,12 @@ def generate_3d_boxes_samples(gt_top_boxes,gt_boxesZ):
         width = top_box[2]- top_box[0]
         height = top_box[3]- top_box[1]
         for j in range(nums_of_augment):
-            x1 = top_box[0]+np.random.uniform(-0.2,0.2)*width
-            x2 = top_box[2]+np.random.uniform(-0.2,0.2)*width
-            y1 = top_box[1]+np.random.uniform(-0.2,0.2)*height
-            y2 = top_box[3]+np.random.uniform(-0.2,0.2)*height
-            z0_ = z0 +np.random.uniform(-0.15,0.15)*z_height
-            zn_ = zn +np.random.uniform(-0.15,0.15)*z_height
+            x1 = top_box[0]+np.random.uniform(-top_box_thresh,top_box_thresh)*width
+            x2 = top_box[2]+np.random.uniform(-top_box_thresh,top_box_thresh)*width
+            y1 = top_box[1]+np.random.uniform(-top_box_thresh,top_box_thresh)*height
+            y2 = top_box[3]+np.random.uniform(-top_box_thresh,top_box_thresh)*height
+            z0_ = z0 +np.random.uniform(-proposals_z_thresh,proposals_z_thresh)*z_height
+            zn_ = zn +np.random.uniform(-proposals_z_thresh,proposals_z_thresh)*z_height
             top_rois[inds,1:] = np.array([x1,y1,x2,y2])#,dtype=np.int32)
             proposals_z[inds,:] = np.array([z0_,zn_])
             inds = inds+1

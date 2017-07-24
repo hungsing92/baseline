@@ -89,6 +89,7 @@ def load_dummy_datas(index):
 
 train_data_root='/home/users/hhs/4T/datasets/dummy_datas/seg'
 kitti_dir='/mnt/disk_4T/KITTI/training'
+
 vis=0
 ohem=0
 def run_train():
@@ -149,6 +150,7 @@ def run_train():
         # set anchor boxes
         num_class = 2 #incude background
         anchors, inside_inds =  make_anchors(bases, stride, top_shape[0:2], top_feature_shape[0:2])
+        # pdb.set_trace()
         anchors_rgb, inside_inds_rgb =  make_anchors(bases_rgb, stride, rgb_shape[0:2], rgb_feature_shape[0:2])
         print ('out_shape=%s'%str(out_shape))
         print ('num_frames=%d'%num_frames)
@@ -168,7 +170,7 @@ def run_train():
     front_rois   = tf.placeholder(shape=[None, 5], dtype=tf.float32,   name ='front_rois' )
     rgb_rois     = tf.placeholder(shape=[None, 5], dtype=tf.float32,   name ='rgb_rois'   )
 
-    top_features, top_scores, top_probs, top_deltas, proposals, proposal_scores,deltasZ,proposals_z = \
+    top_features, top_scores, top_probs, top_deltas, proposals, proposal_scores,deltasZ,proposals_z,inside_inds_nms = \
         top_feature_net(top_images, top_anchors, top_inside_inds, num_bases)
     # pdb.set_trace()
     front_features = front_feature_net(front_images)
@@ -225,7 +227,7 @@ def run_train():
     tf.summary.scalar('rgb_reg_loss', rgb_reg_loss)
 
     #solver
-    l2 = l2_regulariser(decay=0.00001)
+    l2 = l2_regulariser(decay=0.0001)
     tf.summary.scalar('l2', l2)
     learning_rate = tf.placeholder(tf.float32, shape=[])
     solver = tf.train.AdamOptimizer(learning_rate)
@@ -248,7 +250,7 @@ def run_train():
         # sess = tf_debug.LocalCLIDebugWrapperSession(sess)
         # summary_writer = tf.summary.FileWriter(out_dir+'/tf', sess.graph)
         saver  = tf.train.Saver() 
-        saver.restore(sess, './outputs/check_points/snap_R2R_new_fusesion_augment_pos_samples025000.ckpt') 
+        saver.restore(sess, './outputs/check_points/snap_R2R_new_fusesion_augment_pos_samples015000.ckpt') 
 
         # var_lt_res=[v for v in tf.trainable_variables() if v.name.startswith('resnet_v1')]#resnet_v1_50
         # saver_0=tf.train.Saver(var_lt_res)        
@@ -284,7 +286,7 @@ def run_train():
         batch_top_reg_loss =0
         batch_fuse_cls_loss=0
         batch_fuse_reg_loss=0
-        rate=0.0001
+        rate=0.00008
         frame_range = np.arange(num_frames)
         idx=0
         frame=0
@@ -362,11 +364,11 @@ def run_train():
                 learning_rate:   rate,
                 IS_TRAIN_PHASE:  True
             }
-            batch_top_probs, batch_proposals, batch_proposal_scores, batch_top_features, batch_top_proposals_z= sess.run([top_probs,proposals, proposal_scores, top_features,proposals_z],fd1)            
+            batch_top_probs, batch_proposals, batch_proposal_scores, batch_top_features, batch_top_proposals_z,batch_top_inside_inds_nms= sess.run([top_probs,proposals, proposal_scores, top_features,proposals_z,inside_inds_nms],fd1)            
             ## generate  train rois  ------------
             # pdb.set_trace()
             batch_top_inds, batch_top_pos_inds, batch_top_labels, batch_top_targets, batch_top_targetsZ  = \
-                rpn_target_Z ( anchors, inside_inds_filtered,  batch_gt_top_boxes, batch_gt_boxesZ,batch_top_probs)
+                rpn_target_Z ( anchors, inside_inds_filtered,  batch_gt_top_boxes, batch_gt_boxesZ,batch_top_probs,batch_top_inside_inds_nms)
             # pdb.set_trace()
             batch_rgb_inds, batch_rgb_pos_inds, batch_rgb_labels, batch_rgb_targets  = \
                 rpn_target ( anchors_rgb, inside_inds_filtered_rgb, batch_gt_labels,  batch_gt_boxes2d)
