@@ -278,7 +278,7 @@ def run_test():
         # sess = tf_debug.LocalCLIDebugWrapperSession(sess)
         summary_writer = tf.summary.FileWriter(out_dir+'/tf', sess.graph)
         saver  = tf.train.Saver()  
-        saver.restore(sess, './outputs/check_points/snap_R2R_new_resolution025000.ckpt')
+        saver.restore(sess, './outputs/check_points/snap_R2R_new_resolution040000.ckpt')
 
         batch_top_cls_loss =0
         batch_top_reg_loss =0

@@ -57,11 +57,11 @@ def load_dummy_datas(index):
         rgbs_norm0=(rgb-PIXEL_MEANS)/255
         # rgbs_norm0   = np.load(train_data_root+'/image_stack_lidar/image_stack_lidar%05d .npy'%int(index[n]))
         # lidar = np.load(train_data_root+'/lidar/lidar_%05d.npy'%index[n]
-        top   = np.load(train_data_root+'/top_70/top_70%05d.npy'%int(index[n]))
+        top   = np.load(train_data_root+'/top_70_16/top_70%05d.npy'%int(index[n]))
         front = np.zeros((1,1),dtype=np.float32)
-        gt_label  = np.load(train_data_root+'/gt_labels/gt_labels_%05d.npy'%int(index[n]))
-        gt_box3d = np.load(train_data_root+'/gt_boxes3d/gt_boxes3d_%05d.npy'%int(index[n]))
-        gt_box2d = np.load(train_data_root+'/gt_boxes2d/gt_boxes2d_%05d.npy'%int(index[n]))
+        gt_label  = np.load(train_data_root+'/gt_labels_16/gt_labels_%05d.npy'%int(index[n]))
+        gt_box3d = np.load(train_data_root+'/gt_boxes3d_16/gt_boxes3d_%05d.npy'%int(index[n]))
+        gt_box2d = np.load(train_data_root+'/gt_boxes2d_16/gt_boxes2d_%05d.npy'%int(index[n]))
 
         # rgb_shape   = rgb.shape
         # gt_rgb   = project_to_rgb_roi  (gt_box3d, rgb_shape[1], rgb_shape[0])
@@ -69,7 +69,7 @@ def load_dummy_datas(index):
         # gt_label=gt_label[keep]
         # gt_box3d=gt_box3d[keep]
 
-        top_image   = cv2.imread(train_data_root+'/density_image_70/density_image_70%05d.png'%int(index[n]))
+        top_image   = cv2.imread(train_data_root+'/density_image_70_16/density_image_70%05d.png'%int(index[n]))
         front_image = np.zeros((1,1,3),dtype=np.float32)
 
         rgbs.append(rgb)
@@ -126,6 +126,20 @@ def run_train():
                         [-5, -3, 5, 3],
                         [-3, -5, 3, 5]
                         ])
+        # bases=np.array([
+        #     [-12,-6,12,6],
+        #     [-6,-12,6,12],
+        #     [-17,-8,17,8],
+        #     [-8,-17,8,17],
+        #     [-22,-8,22,8],
+        #     [-8,-22,8,22],
+        #     [-17,-9,17,9],
+        #     [-9,-17,9,17],
+        #     [-22,-9,22,9],
+        #     [-9,-22,9,22],
+        #     [-27,-10,27,10],
+        #     [-10,-27,10,27],
+        #                 ])
         # pdb.set_trace()
         num_bases = len(bases)
         num_bases_rgb = len(bases_rgb)
@@ -218,7 +232,7 @@ def run_train():
     tf.summary.scalar('rgb_reg_loss', rgb_reg_loss)
 
     #solver
-    l2 = l2_regulariser(decay=0.0001)
+    l2 = l2_regulariser(decay=0.00001)
     tf.summary.scalar('l2', l2)
     learning_rate = tf.placeholder(tf.float32, shape=[])
     solver = tf.train.AdamOptimizer(learning_rate)
@@ -472,7 +486,7 @@ def run_train():
                 train_writer.add_summary(summary, iter)
             # save: ------------------------------------
             if (iter)%5000==0 and (iter!=0):
-                saver.save(sess, out_dir + '/check_points/snap_R2R_new_resolution%06d.ckpt'%iter)  #iter
+                saver.save(sess, out_dir + '/check_points/snap_R2R_new_resolution_16_%06d.ckpt'%iter)  #iter
                 # saver_rgb.save(sess, out_dir + '/check_points/pretrained_Res_rgb_model_Nfpn%06d.ckpt'%iter)
                 # saver_top.save(sess, out_dir + '/check_points/pretrained_Res_top_model_Nfpn%06d.ckpt'%iter)
                 pass
