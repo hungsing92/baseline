@@ -122,13 +122,14 @@ lidar_dir = train_data_root+'/lidar16'
 top_dir = train_data_root+'/top_70_16'
 density_image_dir = train_data_root+'/density_image_70_16'
 
-# makedirs(lidar_dir)
-# makedirs(top_dir)
-# makedirs(density_image_dir)
-
 empty(lidar_dir)
 empty(top_dir)
 empty(density_image_dir)
+makedirs(lidar_dir)
+makedirs(top_dir)
+makedirs(density_image_dir)
+
+pdb.set_trace()
 
 file=[i.strip().split('/')[-1] for i in files_list]
 ind=[int(i.strip().split('.')[0]) for i in file]

@@ -73,15 +73,20 @@ def load_kitti_calib(calib_path,index):
 label_path = os.path.join(kitti_dir, "label_2/")
 calib_path = os.path.join(kitti_dir, "calib/")
 # train_data_root='/home/hhs/4T/datasets/dummy_datas/seg'
-classes = {'__background__':0, 'Car':1}#, ' Van':1, 'Truck':1, 'Tram':1}
+classes = {'__background__':0, 'Car':1, ' Van':1}#, ' Van':1, 'Truck':1, 'Tram':1}
 # result_path='./evaluate_object/val_gt/'
-gt_boxes3d_path = train_data_root + '/gt_boxes3d'
-gt_boxes2d_path = train_data_root + '/gt_boxes2d'
-gt_labels_path = train_data_root + '/gt_labels'
+gt_boxes3d_path = train_data_root + '/gt_boxes3d_16'
+gt_boxes2d_path = train_data_root + '/gt_boxes2d_16'
+gt_labels_path = train_data_root + '/gt_labels_16'
 
-# empty(gt_boxes3d_path)
-# empty(gt_boxes2d_path)
-# empty(gt_labels_path)
+empty(gt_boxes3d_path)
+empty(gt_boxes2d_path)
+empty(gt_labels_path)
+
+makedirs(gt_boxes3d_path)
+makedirs(gt_boxes2d_path)
+makedirs(gt_labels_path)
+
 width = []
 length = []
 ratio = []
@@ -164,39 +169,39 @@ for i in range(7481):
 	gt_boxes2d = np.array(gt_boxes2d,dtype=np.float32)
 	gt_labels  = np.array(gt_labels ,dtype=np.uint8)
 	
-plt.hist(width,50,normed=1,facecolor='g',alpha=0.75)
-plt.grid(True)
-plt.show()
-pdb.set_trace()
-plt.hist(length,50,normed=1,facecolor='g',alpha=0.75)
-plt.grid(True)
-plt.show()
-pdb.set_trace()
-plt.hist(ratio,50,normed=1,facecolor='g',alpha=0.75)
-plt.grid(True)
-plt.show()
-pdb.set_trace()
+# plt.hist(width,50,normed=1,facecolor='g',alpha=0.75)
+# plt.grid(True)
+# plt.show()
+# pdb.set_trace()
+# plt.hist(length,50,normed=1,facecolor='g',alpha=0.75)
+# plt.grid(True)
+# plt.show()
+# pdb.set_trace()
+# plt.hist(ratio,50,normed=1,facecolor='g',alpha=0.75)
+# plt.grid(True)
+# plt.show()
+# pdb.set_trace()
 
-from mpl_toolkits.mplot3d import Axes3D
-ax=plt.subplot(111,projection='3d')
-hist, xedges, yedges = np.histogram2d(width, length, bins=50)
-elements = (len(xedges) - 1) * (len(yedges) - 1)
-xpos, ypos = np.meshgrid(xedges[:-1]+.25, yedges[:-1]+.25)
-xpos = xpos.flatten()
-ypos = ypos.flatten()
-zpos = np.zeros(elements)
-dx = .1 * np.ones_like(zpos)
-dy = dx.copy()
-dz = hist.flatten()
-ax.bar3d(xpos, ypos, zpos, dx, dy, dz, color='b', alpha=0.4)
-ax.set_xlabel('X Axis')
-ax.set_ylabel('Y Axis')
-ax.set_zlabel('Z Axis')
-plt.show()
+# from mpl_toolkits.mplot3d import Axes3D
+# ax=plt.subplot(111,projection='3d')
+# hist, xedges, yedges = np.histogram2d(width, length, bins=50)
+# elements = (len(xedges) - 1) * (len(yedges) - 1)
+# xpos, ypos = np.meshgrid(xedges[:-1]+.25, yedges[:-1]+.25)
+# xpos = xpos.flatten()
+# ypos = ypos.flatten()
+# zpos = np.zeros(elements)
+# dx = .1 * np.ones_like(zpos)
+# dy = dx.copy()
+# dz = hist.flatten()
+# ax.bar3d(xpos, ypos, zpos, dx, dy, dz, color='b', alpha=0.4)
+# ax.set_xlabel('X Axis')
+# ax.set_ylabel('Y Axis')
+# ax.set_zlabel('Z Axis')
+# plt.show()
 
-	# np.save(gt_boxes3d_path+'/gt_boxes3d_%05d.npy'%i,gt_boxes3d)
-	# np.save(gt_boxes2d_path+'/gt_boxes2d_%05d.npy'%i,gt_boxes2d)
-	# np.save(gt_labels_path+'/gt_labels_%05d.npy'%i,gt_labels)
+	np.save(gt_boxes3d_path+'/gt_boxes3d_%05d.npy'%i,gt_boxes3d)
+	np.save(gt_boxes2d_path+'/gt_boxes2d_%05d.npy'%i,gt_boxes2d)
+	np.save(gt_labels_path+'/gt_labels_%05d.npy'%i,gt_labels)
 
 
 # #Generate train and val list
