@@ -294,7 +294,7 @@ def run_train():
             epoch=iter//num_frames+1
             # rate=0.001
             start_time=time.time()
-            if iter%(num_frames*2)==0:
+            if iter%(num_frames*1)==0:
                 idx=0
                 frame=0
                 count=0
@@ -305,10 +305,10 @@ def run_train():
                 frame_range=frame_range1
 
             #load 500 samples every 2000 iterations
-            freq=int(200)
+            freq=int(10)
             if idx%freq==0 :
                 count+=idx
-                if count%(2*freq)==0:
+                if count%(1*freq)==0:
                     frame+=idx
                     frame_end=min(frame+freq,num_frames)
                     if frame_end==num_frames:
