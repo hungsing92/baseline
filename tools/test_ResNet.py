@@ -40,7 +40,7 @@ from tensorflow.python import debug as tf_debug
 #<todo>
 
 def generat_test_reslut(probs, boxes3d, rgb_shape, index, boxes2d=None ):
-    result_path='./evaluate_object/val_R/data/'
+    result_path='./evaluate_object/val_R_new_fpn/data/'
     makedirs(result_path)
     # empty(result_path)
     if len(boxes3d)==0:
@@ -167,7 +167,7 @@ def load_dummy_datas(index):
     return  rgbs, tops, fronts, gt_labels, gt_boxes3d, top_images, front_images, lidars, rgbs_norm
 
 
-is_show=1
+is_show=0
 # MM_PER_VIEW1 = 120, 30, 70, [1,1,0]
 MM_PER_VIEW1 = 180, 70, 60, [1,1,0]#[ 12.0909996 , -1.04700089, -2.03249991]
 def run_test():
@@ -345,7 +345,7 @@ def run_test():
             batch_fuse_probs, batch_fuse_deltas, batch_fuse_deltas_2d =  sess.run([ fuse_probs, fuse_deltas, fuse_deltas_2d ],fd2)
             probs, boxes3d, boxes2d = rcnn_nms_2d(batch_fuse_probs, batch_fuse_deltas, batch_rois3d_old, batch_fuse_deltas_2d, batch_rgb_rois_old[:,1:], rgb_shape, threshold=0.05)
             # print('nums of boxes3d : %d'%len(boxes3d))
-            # generat_test_reslut(probs, boxes3d, rgb_shape, int(index[iter]), boxes2d)
+            generat_test_reslut(probs, boxes3d, rgb_shape, int(index[iter]))
             speed=time.time()-start_time
             print('speed: %0.4fs'%speed)
             # pdb.set_trace()
