@@ -255,7 +255,7 @@ def run_train():
         # sess = tf_debug.LocalCLIDebugWrapperSession(sess)
         # summary_writer = tf.summary.FileWriter(out_dir+'/tf', sess.graph)
         saver  = tf.train.Saver() 
-        saver.restore(sess, './outputs/check_points/snap_R2R_new_resolution040000.ckpt') 
+        saver.restore(sess, './outputs/check_points/snap_R2R_new_resolution_16_050000.ckpt') 
 
         # var_lt_res=[v for v in tf.trainable_variables() if v.name.startswith('resnet_v1')]#resnet_v1_50
         # saver_0=tf.train.Saver(var_lt_res)        
@@ -291,7 +291,7 @@ def run_train():
         batch_top_reg_loss =0
         batch_fuse_cls_loss=0
         batch_fuse_reg_loss=0
-        rate=0.0001
+        rate=0.00005
         frame_range = np.arange(num_frames)
         idx=0
         frame=0

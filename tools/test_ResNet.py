@@ -121,16 +121,16 @@ def load_dummy_datas(index):
     rgb   = cv2.imread(kitti_dir+'/image_2/%06d.png'%int(index),1).astype(np.float32, copy=False)
     rgbs_norm0=(rgb-PIXEL_MEANS)/255
     lidar = np.load(train_data_root+'/lidar/lidar_%05d.npy'%int(index))
-    top   = np.load(train_data_root+'/top_70/top_70%05d.npy'%int(index))
+    top   = np.load(train_data_root+'/top_70_16/top_70%05d.npy'%int(index))
     front = np.zeros((1,1),dtype=np.float32)
-    gt_label  = np.load(train_data_root+'/gt_labels/gt_labels_%05d.npy'%int(index))
-    gt_box3d = np.load(train_data_root+'/gt_boxes3d/gt_boxes3d_%05d.npy'%int(index))
+    gt_label  = np.load(train_data_root+'/gt_labels_16/gt_labels_%05d.npy'%int(index))
+    gt_box3d = np.load(train_data_root+'/gt_boxes3d_16/gt_boxes3d_%05d.npy'%int(index))
     rgb_shape   = rgb.shape
     # gt_rgb   = project_to_rgb_roi  (gt_box3d, rgb_shape[1], rgb_shape[0] )
     # keep = np.where((gt_rgb[:,1]>=-200) & (gt_rgb[:,2]>=-200) & (gt_rgb[:,3]<=(rgb_shape[1]+200)) & (gt_rgb[:,4]<=(rgb_shape[0]+200)))[0]
     # gt_label=gt_label[keep]
     # gt_box3d=gt_box3d[keep]
-    top_image   = cv2.imread(train_data_root+'/density_image_70/density_image_70%05d.png'%int(index))
+    top_image   = cv2.imread(train_data_root+'/density_image_70_16/density_image_70%05d.png'%int(index))
     front_image = np.zeros((1,1,3),dtype=np.float32)
     rgbs.append(rgb)
     lidars.append(lidar)
@@ -278,7 +278,7 @@ def run_test():
         # sess = tf_debug.LocalCLIDebugWrapperSession(sess)
         summary_writer = tf.summary.FileWriter(out_dir+'/tf', sess.graph)
         saver  = tf.train.Saver()  
-        saver.restore(sess, './outputs/check_points/snap_R2R_new_resolution040000.ckpt')
+        saver.restore(sess, './outputs/check_points/snap_R2R_new_resolution_16_050000.ckpt')
 
         batch_top_cls_loss =0
         batch_top_reg_loss =0

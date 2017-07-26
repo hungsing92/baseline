@@ -14,13 +14,13 @@ from tensorflow.contrib.slim.python.slim.nets import resnet_v1
 import vgg
 from fpn import build_pyramid
 
-keep_prob=0.5
-nms_pre_topn_=5000
-nms_post_topn_=2000
+# keep_prob=0.5
+# nms_pre_topn_=5000
+# nms_post_topn_=2000
 
-# keep_prob=1
-# nms_pre_topn_=2000
-# nms_post_topn_=300
+keep_prob=0.5
+nms_pre_topn_=2000
+nms_post_topn_=300
 
 is_training=True
 
@@ -78,7 +78,7 @@ def top_feature_net(input, anchors, inds_inside, num_bases):
     # pdb.set_trace()
     rois, roi_scores,proposals_z = tf_rpn_nms( probs, deltas, anchors, inds_inside,
                                      stride, img_width, img_height, img_scale, deltasZ,
-                                     nms_thresh=0.7, min_size=stride, nms_pre_topn=nms_pre_topn_, nms_post_topn=nms_post_topn_,
+                                     nms_thresh=0.6, min_size=stride, nms_pre_topn=nms_pre_topn_, nms_post_topn=nms_post_topn_,
                                      name ='nms')
   feature = up0
   return feature, scores, probs, deltas, rois, roi_scores,deltasZ, proposals_z
