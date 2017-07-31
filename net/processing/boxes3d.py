@@ -247,11 +247,12 @@ def draw_rgb_projections(image, projections, color=(255,255,255), thickness=2, d
     #     else:
     #         return False
 
-    img = image.copy()*darker
+    img = image.copy()#*darker
     num=len(projections)
     for n in range(num):
         qs = projections[n]
-        # cv2.putText(image,"%d"%n, (qs[6,0],qs[6,1]), cv2.CV_FONT_HERSHEY_SIMPLEX, 2, 255)
+        # pdb.set_trace()
+        cv2.putText(img,"%d"%n, (qs[7,0],qs[7,1]),0, 0.5, (0,0,255),2)
         for k in range(0,4):
             #http://docs.enthought.com/mayavi/mayavi/auto/mlab_helper_functions.html
             i,j=k,(k+1)%4

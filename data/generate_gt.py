@@ -79,13 +79,13 @@ gt_boxes3d_path = train_data_root + '/gt_boxes3d_16'
 gt_boxes2d_path = train_data_root + '/gt_boxes2d_16'
 gt_labels_path = train_data_root + '/gt_labels_16'
 
-empty(gt_boxes3d_path)
-empty(gt_boxes2d_path)
-empty(gt_labels_path)
+# empty(gt_boxes3d_path)
+# empty(gt_boxes2d_path)
+# empty(gt_labels_path)
 
-makedirs(gt_boxes3d_path)
-makedirs(gt_boxes2d_path)
-makedirs(gt_labels_path)
+# makedirs(gt_boxes3d_path)
+# makedirs(gt_boxes2d_path)
+# makedirs(gt_labels_path)
 
 width = []
 length = []
@@ -96,6 +96,7 @@ for i in range(7481):
 	Tr = calib['Tr_velo2cam']
 	P2 = calib['P2']
 	R0 = calib['R0']
+	pdb.set_trace()
 	filename = os.path.join(label_path, str(i).zfill(6) + ".txt")
 	print("Processing: ", filename)
 	with open(filename, 'r') as f:
@@ -199,9 +200,9 @@ for i in range(7481):
 # ax.set_zlabel('Z Axis')
 # plt.show()
 
-	np.save(gt_boxes3d_path+'/gt_boxes3d_%05d.npy'%i,gt_boxes3d)
-	np.save(gt_boxes2d_path+'/gt_boxes2d_%05d.npy'%i,gt_boxes2d)
-	np.save(gt_labels_path+'/gt_labels_%05d.npy'%i,gt_labels)
+	# np.save(gt_boxes3d_path+'/gt_boxes3d_%05d.npy'%i,gt_boxes3d)
+	# np.save(gt_boxes2d_path+'/gt_boxes2d_%05d.npy'%i,gt_boxes2d)
+	# np.save(gt_labels_path+'/gt_labels_%05d.npy'%i,gt_labels)
 
 
 # #Generate train and val list

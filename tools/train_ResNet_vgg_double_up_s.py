@@ -250,21 +250,21 @@ def run_train():
         # sess = tf_debug.LocalCLIDebugWrapperSession(sess)
         # summary_writer = tf.summary.FileWriter(out_dir+'/tf', sess.graph)
         saver  = tf.train.Saver() 
-        # saver.restore(sess, './outputs/check_points/snap_R2R_new_fusesion_augment_pos_samples025000.ckpt') 
+        saver.restore(sess, './outputs/check_points/snap_R2R_new_fusesion_augment_pos_samples_01_065000.ckpt') 
 
-        var_lt_res=[v for v in tf.trainable_variables() if v.name.startswith('resnet_v1')]#resnet_v1_50
-        saver_0=tf.train.Saver(var_lt_res)        
-        saver_0.restore(sess, './outputs/check_points/resnet_v1_50.ckpt')
-        # # pdb.set_trace()
-        top_lt=[v for v in tf.trainable_variables() if v.name.startswith('top_base')]
-        top_lt.pop(0)
-        # # top_lt.pop(0)
-        for v in top_lt:
-            # pdb.set_trace()
-            for v_rgb in var_lt_res:
-                if v.name[9:]==v_rgb.name:
-                    print ("assign weights:%s"%v.name)
-                    v.assign(v_rgb)
+        # var_lt_res=[v for v in tf.trainable_variables() if v.name.startswith('resnet_v1')]#resnet_v1_50
+        # saver_0=tf.train.Saver(var_lt_res)        
+        # saver_0.restore(sess, './outputs/check_points/resnet_v1_50.ckpt')
+        # # # pdb.set_trace()
+        # top_lt=[v for v in tf.trainable_variables() if v.name.startswith('top_base')]
+        # top_lt.pop(0)
+        # # # top_lt.pop(0)
+        # for v in top_lt:
+        #     # pdb.set_trace()
+        #     for v_rgb in var_lt_res:
+        #         if v.name[9:]==v_rgb.name:
+        #             print ("assign weights:%s"%v.name)
+        #             v.assign(v_rgb)
 
         # # var_lt_vgg=[v for v in tf.trainable_variables() if v.name.startswith('vgg')]
         # # var_lt_vgg.pop(0)
@@ -286,7 +286,7 @@ def run_train():
         batch_top_reg_loss =0
         batch_fuse_cls_loss=0
         batch_fuse_reg_loss=0
-        rate=0.0002
+        rate=0.00005
         frame_range = np.arange(num_frames)
         idx=0
         frame=0
