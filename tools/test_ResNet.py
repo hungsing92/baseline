@@ -222,7 +222,7 @@ def run_test():
         num_bases_rgb = len(bases_rgb)
         stride = 4
 
-        rgbs, tops, fronts, gt_labels, gt_boxes3d, top_imgs, front_imgs, lidars,rgbs_norm0 = load_dummy_datas(index[0])
+        rgbs, tops, fronts, gt_labels, gt_boxes3d, top_imgs, front_imgs, lidars,rgbs_norm0 = load_dummy_datas(index[10])
         # num_frames = len(rgbs)
 
         top_shape   = tops[0].shape
