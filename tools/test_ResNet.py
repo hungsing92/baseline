@@ -166,7 +166,7 @@ def load_dummy_datas(index):
     return  rgbs, tops, fronts, gt_labels, gt_boxes3d, top_images, front_images, lidars, rgbs_norm
 
 
-is_show=0
+is_show=1
 # MM_PER_VIEW1 = 120, 30, 70, [1,1,0]
 MM_PER_VIEW1 = 180, 70, 60, [1,1,0]#[ 12.0909996 , -1.04700089, -2.03249991]
 result_path='./evaluate_object/val_R_v/data/'
@@ -185,8 +185,8 @@ def run_test():
     log = Logger(out_dir+'/log_%s.txt'%(time.strftime('%Y-%m-%d %H:%M:%S')),mode='a')
 
     # index=np.load(train_data_root+'/val_list.npy')
-    index_file=open(train_data_root+'/val.txt')
-    # index_file=open(train_data_root+'/train.txt')
+    # index_file=open(train_data_root+'/val.txt')
+    index_file=open(train_data_root+'/train.txt')
     index = [ int(i.strip()) for i in index_file]
     index_file.close()
     
@@ -291,7 +291,7 @@ def run_test():
         # sess = tf_debug.LocalCLIDebugWrapperSession(sess)
         summary_writer = tf.summary.FileWriter(out_dir+'/tf', sess.graph)
         saver  = tf.train.Saver()  
-        saver.restore(sess, './outputs/check_points/snap_R2R_new_fusesion_augment_pos_samples_01_065000.ckpt')
+        saver.restore(sess, './outputs/check_points/snap_R2R_new_fusesion_augment_pos_samples_01_025000.ckpt')
 
         batch_top_cls_loss =0
         batch_top_reg_loss =0
