@@ -47,7 +47,8 @@ MM_PER_VIEW1 = 180, None, 60, [1,1,0]#[ 12.0909996 , -1.04700089, -2.03249991]
 #http://3dimage.ee.tsinghua.edu.cn/cxz
 # "Multi-View 3D Object Detection Network for Autonomous Driving" - Xiaozhi Chen, CVPR 2017
 
-def load_dummy_datas():
+
+def load_dummy_datas(i):
 
     num_frames = []
     rgbs      =[]
@@ -67,6 +68,7 @@ def load_dummy_datas():
     # num_frames=len(files_list)
     # num_frames=50
     index=sorted(index)
+    index = index[i]
     print('len(index):%d'%len(index))
     # pdb.set_trace()
     if num_frames==[]:
@@ -78,12 +80,12 @@ def load_dummy_datas():
         rgb=np.float32(rgb)
         rgbs_norm0=(rgb-PIXEL_MEANS)/255
         lidar = np.load(tracklet_root+'seg/lidar/lidar_%05d.npy'%n)
-        top   = np.load(tracklet_root+'seg/top_70/top_70%05d.npy'%n)
+        top   = np.load(tracklet_root+'seg/top_70_0.1/top_70%05d.npy'%n)
         front = np.zeros((1,1),dtype=np.float32)
         # gt_label  = np.load('/home/hhs/4T/datasets/dummy_datas/seg/gt_labels/gt_labels_%s.npy'%str(index[n]))
         # gt_box3d = np.load('/home/hhs/4T/datasets/dummy_datas/seg/gt_boxes3d/gt_boxes3d_%s.npy'%str(index[n]))
 
-        top_image   = cv2.imread(tracklet_root+'seg/density_image_70/density_image_70%05d.png'%n,1)
+        top_image   = cv2.imread(tracklet_root+'seg/density_image_70_0.1/density_image_70%05d.png'%n,1)
         # top_image   = np.int32(top_image)
         front_image = np.zeros((1,1,3),dtype=np.float32)
 
@@ -178,6 +180,9 @@ def run_test():
     makedirs(out_dir +'/check_points')
     log = Logger(out_dir+'/log_%s.txt'%(time.strftime('%Y-%m-%d %H:%M:%S')),mode='a')
 
+    files_list=glob.glob(tracklet_root+'seg/rgb/*.png')
+    index=np.array([file_index.strip().split('/')[-1][10:10+5] for file_index in files_list ])   
+    num_frames = len(index)
     #lidar data -----------------
     if 1:
         ratios_rgb=np.array([0.3,0.6,.75,1], dtype=np.float32)
@@ -189,19 +194,26 @@ def run_test():
         )
         ratios=np.array([1.7,2.4,3])
         scales=np.array([1.7,2.4])
-        bases=np.array([[-19.5, -8, 19.5, 8],
-                        [-8, -19.5, 8, 19.5],
-                        [-27.5, -11, 27.5, 11],
-                        [-11, -27.5, 11, 27.5],
-                        [-5, -3, 5, 3],
-                        [-3, -5, 3, 5]
+        bases=np.array([
+            [-12,-6,12,6],
+            [-6,-12,6,12],
+            [-17,-8,17,8],
+            [-8,-17,8,17],
+            [-22,-8,22,8],
+            [-8,-22,8,22],
+            [-17,-9,17,9],
+            [-9,-17,9,17],
+            [-22,-9,22,9],
+            [-9,-22,9,22],
+            [-27,-10,27,10],
+            [-10,-27,10,27],
                         ])
         num_bases = len(bases)
         num_bases_rgb = len(bases_rgb)
         stride = 4
 
-        rgbs, tops, fronts, top_imgs, front_imgs, lidars,rgbs_norm0 = load_dummy_datas()
-        num_frames = len(rgbs)
+        rgbs, tops, fronts, top_imgs, front_imgs, lidars,rgbs_norm0 = load_dummy_datas(0)
+        
 
         top_shape   = tops[0].shape
         front_shape = fronts[0].shape
@@ -244,11 +256,11 @@ def run_test():
     front_rois   = tf.placeholder(shape=[None, 5], dtype=tf.float32,   name ='front_rois' )
     rgb_rois     = tf.placeholder(shape=[None, 5], dtype=tf.float32,   name ='rgb_rois'   )
 
-    top_features, top_scores, top_probs, top_deltas, proposals, proposal_scores,deltasZ,proposals_z = \
+    top_features, top_scores, top_probs, top_deltas, proposals, proposal_scores,deltasZ,proposals_z,inside_inds_nms  = \
         top_feature_net(top_images, top_anchors, top_inside_inds, num_bases)
 
     front_features = front_feature_net(front_images)
-    rgb_features   = rgb_feature_net(rgb_images)
+    rgb_features, rgb_scores, rgb_probs, rgb_deltas  = rgb_feature_net(rgb_images, num_bases_rgb)
 
     fuse_scores, fuse_probs, fuse_deltas, fuse_deltas_2d = \
         fusion_net(
@@ -269,13 +281,13 @@ def run_test():
 
     sess = tf.InteractiveSession()
     with sess.as_default():
-        sess.run( tf.global_variables_initializer(), { IS_TRAIN_PHASE : True } )
-        # sess = tf_debug.LocalCLIDebugWrapperSession(sess)
+        sess.run( tf.global_variables_initializer(), { IS_TRAIN_PHASE : True } 
+)        # sess = tf_debug.LocalCLIDebugWrapperSession(sess)
         summary_writer = tf.summary.FileWriter(out_dir+'/tf', sess.graph)
         saver  = tf.train.Saver()  
 
 
-        saver.restore(sess, './outputs/check_points/snap_R2R_Nfpn_with_rgb070000.ckpt')  
+        saver.restore(sess, './outputs/check_points/snap_R2R_new_fusesion_augment_pos_samples_01_035000.ckpt')  
 
 
         batch_top_cls_loss =0
@@ -292,8 +304,12 @@ def run_test():
             # iter=iter+50
             ## generate train image -------------
             # idx = np.random.choice(num_frames)     #*10   #num_frames)  #0
-            frame_range = np.arange(num_frames)
-            idx = frame_range[iter%num_frames]    #*10   #num_frames)  #0
+
+            gbs, tops, fronts, top_imgs, front_imgs, lidars,rgbs_norm0 = load_dummy_datas(iter)
+
+            # frame_range = np.arange(num_frames)
+            # idx = frame_range[iter%num_frames]    #*10   #num_frames)  #0
+            idx = 0
             rgb_shape   = rgbs[idx].shape
             # top_img=top_imgs[idx]
 
@@ -327,12 +343,12 @@ def run_test():
             print(batch_proposal_scores[:10])
             ## generate  train rois  ------------
             batch_top_rois = batch_proposals
-            batch_rois3d = top_z_to_box3d(batch_top_rois[:,1:5],proposals_z)
+            batch_rois3d = top_z_to_box3d(batch_top_rois[:,1:5],batch_top_proposals_z)
             # pdb.set_trace()
             batch_rois3d_old        = project_to_roi3d(batch_top_rois)
             batch_front_rois = project_to_front_roi(batch_rois3d )
             batch_rgb_rois      = project_to_rgb_roi     (batch_rois3d, rgb_shape[1], rgb_shape[0])
-
+            batch_rgb_rois_old      = project_to_rgb_roi     (batch_rois3d_old , rgb_shape[1], rgb_shape[0] )
             ## run classification and regression  -----------
 
             fd2={
