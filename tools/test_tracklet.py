@@ -66,7 +66,7 @@ def load_dummy_datas():
     index=np.array([file_index.strip().split('/')[-1][10:10+5] for file_index in files_list ])
     # num_frames=len(files_list)
     # num_frames=50
-    index=sorted(index)
+    index=sorted(index)[:50]
     print('len(index):%d'%len(index))
     # pdb.set_trace()
     if num_frames==[]:
@@ -74,6 +74,7 @@ def load_dummy_datas():
         print('num_frames:%d'%num_frames)
     for n in range(num_frames):
         print(n)
+        n=n+50
         rgb   = cv2.imread(tracklet_root+'seg/rgb/rgb_%05d.png'%n,1)
         rgb=np.float32(rgb)
         rgbs_norm0=(rgb-PIXEL_MEANS)/255
@@ -248,7 +249,7 @@ def run_test():
         top_feature_net(top_images, top_anchors, top_inside_inds, num_bases)
 
     front_features = front_feature_net(front_images)
-    rgb_features   = rgb_feature_net(rgb_images)
+    rgb_features, rgb_scores, rgb_probs, rgb_deltas  = rgb_feature_net(rgb_images, num_bases_rgb)
 
     fuse_scores, fuse_probs, fuse_deltas, fuse_deltas_2d = \
         fusion_net(
@@ -275,7 +276,7 @@ def run_test():
         saver  = tf.train.Saver()  
 
 
-        saver.restore(sess, './outputs/check_points/snap_R2R_040000.ckpt')  
+        saver.restore(sess, './outputs/check_points/snap_R2R_030000.ckpt')  
 
 
         batch_top_cls_loss =0
@@ -327,11 +328,12 @@ def run_test():
             print(batch_proposal_scores[:10])
             ## generate  train rois  ------------
             batch_top_rois = batch_proposals
-            batch_rois3d = top_z_to_box3d(batch_top_rois[:,1:5],proposals_z)
+            batch_rois3d = top_z_to_box3d(batch_top_rois[:,1:5],batch_top_proposals_z)
             # pdb.set_trace()
             batch_rois3d_old        = project_to_roi3d(batch_top_rois)
             batch_front_rois = project_to_front_roi(batch_rois3d )
             batch_rgb_rois      = project_to_rgb_roi     (batch_rois3d, rgb_shape[1], rgb_shape[0])
+            batch_rgb_rois_old      = project_to_rgb_roi     (batch_rois3d_old , rgb_shape[1], rgb_shape[0] )
 
             ## run classification and regression  -----------
 
@@ -351,7 +353,7 @@ def run_test():
             batch_fuse_probs, batch_fuse_deltas, batch_fuse_deltas_2d =  sess.run([ fuse_probs, fuse_deltas, fuse_deltas_2d],fd2)
             # pdb.set_trace()
 
-            probs, boxes3d, boxes2d = rcnn_nms_2d(batch_fuse_probs, batch_fuse_deltas, batch_rois3d, batch_fuse_deltas_2d, batch_rgb_rois[:,1:], rgb_shape, threshold=0.05)
+            probs, boxes3d, boxes2d = rcnn_nms_2d(batch_fuse_probs, batch_fuse_deltas, batch_rois3d_old, batch_fuse_deltas_2d, batch_rgb_rois_old[:,1:], rgb_shape, threshold=0.05)
             speed=time.time()-start_time
             print('speed: %0.4fs'%speed)
             # pdb.set_trace()
@@ -407,7 +409,7 @@ def run_test():
                 
                 imshow('img_rgb_2d_detection',img_rgb_2d_detection)
                 imshow('img_rgb_3d_2_2d',img_rgb_3d_2_2d)
-                # cv2.waitKey(0)
+                cv2.waitKey(0)
                 # plt.pause(0.55)
 
                 cv2.imwrite(rgb_save_path+'/rgb_%05d.png'%iter,rgb1)
