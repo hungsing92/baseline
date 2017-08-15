@@ -66,7 +66,7 @@ def load_dummy_datas():
     index=np.array([file_index.strip().split('/')[-1][10:10+5] for file_index in files_list ])
     # num_frames=len(files_list)
     # num_frames=50
-    index=sorted(index)[:50]
+    index=sorted(index)
     print('len(index):%d'%len(index))
     # pdb.set_trace()
     if num_frames==[]:
@@ -74,7 +74,7 @@ def load_dummy_datas():
         print('num_frames:%d'%num_frames)
     for n in range(num_frames):
         print(n)
-        n=n+50
+        # n=n+50
         rgb   = cv2.imread(tracklet_root+'seg/rgb/rgb_%05d.png'%n,1)
         rgb=np.float32(rgb)
         rgbs_norm0=(rgb-PIXEL_MEANS)/255
@@ -87,6 +87,28 @@ def load_dummy_datas():
         top_image   = cv2.imread(tracklet_root+'seg/density_image_70/density_image_70%05d.png'%n,1)
         # top_image   = np.int32(top_image)
         front_image = np.zeros((1,1,3),dtype=np.float32)
+
+        # X0, Xn = 0, int((TOP_X_MAX-TOP_X_MIN)//TOP_X_DIVISION)+1
+        # Y0, Yn = 0, int((TOP_Y_MAX-TOP_Y_MIN)//TOP_Y_DIVISION)+1
+        # Z0, Zn = 0, int((TOP_Z_MAX-TOP_Z_MIN)//TOP_Z_DIVISION)+1
+        # width  = Yn - Y0
+        # height   = Xn - X0
+        # channel = Zn - Z0  + 2  
+        # pxs=lidar[:,0]
+        # pys=lidar[:,1]
+        # pzs=lidar[:,2]
+        # prs=lidar[:,3]   
+        # filter_x=np.where((pxs>=TOP_X_MIN) & (pxs<=TOP_X_MAX))[0]
+        # filter_y=np.where((pys>=TOP_Y_MIN) & (pys<=TOP_Y_MAX))[0]
+        # filter_z=np.where((pzs>=TOP_Z_MIN) & (pzs<=TOP_Z_MAX))[0]
+        # filter_xy=np.intersect1d(filter_x,filter_y)
+        # filter_xyz=np.intersect1d(filter_xy,filter_z)
+        # pxs=pxs[filter_xyz]
+        # pys=pys[filter_xyz]
+        # pzs=pzs[filter_xyz]
+        # prs=prs[filter_xyz]   
+        # lidar = np.hstack([pxs.reshape(-1,1),pys.reshape(-1,1),pzs.reshape(-1,1),prs.reshape(-1,1)])
+
 
         rgbs.append(rgb)
         lidars.append(lidar)
@@ -371,11 +393,12 @@ def run_test():
                 # show on lidar
                 mlab.clf(mfig)
                 # draw_didi_lidar(mfig, lidar, is_grid=1, is_axis=1)
-                draw_lidar(lidar, fig=mfig)
+                draw_lidar(lidar, is_top_region=False, fig=mfig)
                 if len(boxes3d)!=0:
                     # draw_didi_boxes3d(mfig, boxes3d)
-                    draw_target_boxes3d(boxes3d, fig=mfig)
+                    # draw_target_boxes3d(boxes3d, fig=mfig)
                     # draw_gt_boxes3d(batch_gt_boxes3d, fig=mfig)
+                    pass
                 azimuth,elevation,distance,focalpoint = MM_PER_VIEW1
                 mlab.view(azimuth,elevation,distance,focalpoint)
                 mlab.show(1)
@@ -409,7 +432,7 @@ def run_test():
                 
                 imshow('img_rgb_2d_detection',img_rgb_2d_detection)
                 imshow('img_rgb_3d_2_2d',img_rgb_3d_2_2d)
-                cv2.waitKey(0)
+                # cv2.waitKey(0)
                 # plt.pause(0.55)
 
                 cv2.imwrite(rgb_save_path+'/rgb_%05d.png'%iter,rgb1)

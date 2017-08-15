@@ -132,6 +132,7 @@ def load_dummy_datas(index):
     # gt_box3d=gt_box3d[keep]
     top_image   = cv2.imread(train_data_root+'/density_image_70/density_image_70%05d.png'%int(index))
     front_image = np.zeros((1,1,3),dtype=np.float32)
+
     rgbs.append(rgb)
     lidars.append(lidar)
     tops.append(top)
@@ -180,6 +181,7 @@ def run_test():
 
     # index=np.load(train_data_root+'/val_list.npy')
     index_file=open(train_data_root+'/val.txt')
+    # index_file=open(train_data_root+'/train.txt')
     index = [ int(i.strip()) for i in index_file]
     index_file.close()
     

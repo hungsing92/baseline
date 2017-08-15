@@ -167,7 +167,7 @@ def draw_lidar(lidar, is_grid=False, is_top_region=True, fig=None):
             mlab.plot3d([x1, x2], [y1, y2], [z1,z2], color=(0.5,0.5,0.5), tube_radius=None, line_width=1, figure=fig)
 
     #draw axis
-    if 1:
+    if 0:
         mlab.points3d(0, 0, 0, color=(1,1,1), mode='sphere', scale_factor=0.2)
 
         axes=np.array([

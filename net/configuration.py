@@ -10,6 +10,13 @@ CFG = EasyDict()
 #train -----------------------------------------
 CFG.TRAIN = EasyDict()
 
+CFG.TRAIN.VISUALIZATION = False
+CFG.TRAIN.WEIGHT_DECAY = 0.00001
+CFG.TRAIN.LEARNING_RATE = 0.00005
+CFG.TRAIN.LEARNING_RATE_DECAY_STEP= 20000
+CFG.TRAIN.LEARNING_RATE_DECAY_SCALE= 0.8
+CFG.TRAIN.SNAPSHOT_STEP = 5000
+
 #all
 CFG.TRAIN.IMS_PER_BATCH = 1  # Images to use per minibatch
 
@@ -27,7 +34,7 @@ CFG.TRAIN.RPN_NMS_POST_TOPN = 1200
 
 #rcnn
 CFG.TRAIN.RCNN_BATCH_SIZE   = 128
-CFG.TRAIN.RCNN_FG_FRACTION  = 0.4
+CFG.TRAIN.RCNN_FG_FRACTION  = 0.25
 CFG.TRAIN.RCNN_BG_THRESH_HI = 0.5
 CFG.TRAIN.RCNN_BG_THRESH_LO = 0
 CFG.TRAIN.RCNN_FG_THRESH_LO = 0.5
@@ -40,6 +47,18 @@ CFG.TEST  = EasyDict()
 CFG.TEST.RCNN_NMS_AFTER = 0.3
 CFG.TEST.RCNN_box_NORMALIZE_STDS = CFG.TRAIN.RCNN_box_NORMALIZE_STDS
 CFG.TEST.USE_box_VOTE = 1
+
+#PATH
+CFG.PATH =  EasyDict()
+CFG.PATH.TRAIN =  EasyDict()
+#path for loading images
+CFG.PATH.TRAIN.KITTI=  "/home/hhs/4T/datasets/KITTI/object/training"
+#path that saved the gts and labels  , 
+CFG.PATH.TRAIN.TARGET = '/home/hhs/4T/datasets/dummy_datas/seg'
+# output dir  for tensorboard, checkpoints and log file
+CFG.PATH.TRAIN.OUTPUT = './outputs'
+
+CFG.PATH.TRAIN.CHECKPOINT_NAME = 'Snap_2d_to_3d_'
 
 
 
