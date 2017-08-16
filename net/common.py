@@ -38,11 +38,11 @@ MATRIX_TR = ([[6.927964000000e-03, -9.999722000000e-01, -2.757829000000e-03, -2.
 			 [9.999753000000e-01, 6.931141000000e-03, -1.143899000000e-03, -3.321029000000e-01],
 			 [0.0				, 0.0				, 0.0				, 1.0				]])
 
-kitti_dir = "/home/hhs/4T/datasets/KITTI/object/training"
-train_data_root= '/home/hhs/4T/datasets/dummy_datas/seg'
+# kitti_dir = "/home/hhs/4T/datasets/KITTI/object/training"
+# train_data_root= '/home/hhs/4T/datasets/dummy_datas/seg'
 
 from net.utility.file import *
-makedirs(train_data_root)
+# makedirs(train_data_root)
 import pdb
 
 #----------------------------------

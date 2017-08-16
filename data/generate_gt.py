@@ -70,14 +70,14 @@ def load_kitti_calib(calib_path,index):
 
 
 # kitti_dir = "/home/hhs/4T/datasets/KITTI/object/training"
-label_path = os.path.join(kitti_dir, "label_2/")
-calib_path = os.path.join(kitti_dir, "calib/")
+label_path = os.path.join(CFG.PATH.TRAIN.KITTI, "label_2/")
+calib_path = os.path.join(CFG.PATH.TRAIN.KITTI, "calib/")
 # train_data_root='/home/hhs/4T/datasets/dummy_datas/seg'
 classes = {'__background__':0, 'Car':1}#, ' Van':1, 'Truck':1, 'Tram':1}
 # result_path='./evaluate_object/val_gt/'
-gt_boxes3d_path = train_data_root + '/gt_boxes3d'
-gt_boxes2d_path = train_data_root + '/gt_boxes2d'
-gt_labels_path = train_data_root + '/gt_labels'
+gt_boxes3d_path = CFG.PATH.TRAIN.TARGET + '/gt_boxes3d'
+gt_boxes2d_path = CFG.PATH.TRAIN.TARGET + '/gt_boxes2d'
+gt_labels_path = CFG.PATH.TRAIN.TARGET + '/gt_labels'
 
 empty(gt_boxes3d_path)
 empty(gt_boxes2d_path)
@@ -165,16 +165,16 @@ for i in range(7481):
 
 # #Generate train and val list
 # #3DOP train val list http://www.cs.toronto.edu/objprop3d/data/ImageSets.tar.gz
-# files_list=glob.glob(gt_labels_path+"/gt_labels_*.npy")
-# index=np.array([file_index.strip().split('_')[-1].split('.')[0] for file_index in files_list ])
-# num_frames=len(files_list)
-# train_num=int(np.round(num_frames*0.7))
-# random_index=np.random.permutation(index)
-# train_list=random_index[:train_num]
-# val_list=random_index[train_num:]
-# np.save(train_data_root+'/train_list.npy',train_list)
-# np.save(train_data_root+'/val_list.npy',val_list)
-# np.save(train_data_root+'/train_val_list.npy',random_index)
+files_list=glob.glob(gt_labels_path+"/gt_labels_*.npy")
+index=np.array([file_index.strip().split('_')[-1].split('.')[0] for file_index in files_list ])
+num_frames=len(files_list)
+train_num=int(np.round(num_frames*0.7))
+random_index=np.random.permutation(index)
+train_list=random_index[:train_num]
+val_list=random_index[train_num:]
+np.save(CFG.PATH.TRAIN.TARGET+'/train_list.npy',train_list)
+np.save(CFG.PATH.TRAIN.TARGET+'/val_list.npy',val_list)
+np.save(CFG.PATH.TRAIN.TARGET+'/train_val_list.npy',random_index)
 
 
 

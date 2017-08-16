@@ -20,7 +20,7 @@ def draw_rcnn_berfore_nms(image, probs,  deltas, rois, rois3d, threshold=0.8):
 
     num = len(rois)
     for n in range(num):
-        a   = rois[n,1:5]
+        a   = rois[n,1:5].astype(np.int32)
         cv2.rectangle(image,(a[0], a[1]), (a[2], a[3]), (255,0,255), 1)
 
 
@@ -63,7 +63,7 @@ def draw_rcnn(image, probs,  deltas, rois, rois3d, threshold=0.1, darker=0.7):
 
     num = len(rois)
     for n in range(num):
-        a   = rois[n,1:5]
+        a   = rois[n,1:5].astype(np.int32)
         cv2.rectangle(img_rcnn,(a[0], a[1]), (a[2], a[3]), (255,0,255), 1)
 
 
@@ -87,8 +87,6 @@ def draw_rcnn_nms(rgb, boxes3d, probs, darker=0.7):
     img_rcnn_nms = draw_rgb_projections(img_rcnn_nms,  projections, color=(255,255,255), thickness=1)
 
     return img_rcnn_nms
-
-
 
 
 ## temporay post-processing ....

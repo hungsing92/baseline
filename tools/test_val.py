@@ -118,19 +118,19 @@ def load_dummy_datas(index):
     top_images  =[]
     front_images=[]
 
-    rgb   = cv2.imread(kitti_dir+'/image_2/%06d.png'%int(index),1).astype(np.float32, copy=False)
+    rgb   = cv2.imread(CFG.PATH.TRAIN.KITTI+'/image_2/%06d.png'%int(index),1).astype(np.float32, copy=False)
     rgbs_norm0=(rgb-PIXEL_MEANS)/255
-    lidar = np.load(train_data_root+'/lidar/lidar_%05d.npy'%int(index))
-    top   = np.load(train_data_root+'/top_70/top_70%05d.npy'%int(index))
+    lidar = np.load(CFG.PATH.TRAIN.TARGET+'/lidar/lidar_%05d.npy'%int(index))
+    top   = np.load(CFG.PATH.TRAIN.TARGET+'/top_70/top_70%05d.npy'%int(index))
     front = np.zeros((1,1),dtype=np.float32)
-    gt_label  = np.load(train_data_root+'/gt_labels/gt_labels_%05d.npy'%int(index))
-    gt_box3d = np.load(train_data_root+'/gt_boxes3d/gt_boxes3d_%05d.npy'%int(index))
+    gt_label  = np.load(CFG.PATH.TRAIN.TARGET+'/gt_labels/gt_labels_%05d.npy'%int(index))
+    gt_box3d = np.load(CFG.PATH.TRAIN.TARGET+'/gt_boxes3d/gt_boxes3d_%05d.npy'%int(index))
     rgb_shape   = rgb.shape
     # gt_rgb   = project_to_rgb_roi  (gt_box3d, rgb_shape[1], rgb_shape[0] )
     # keep = np.where((gt_rgb[:,1]>=-200) & (gt_rgb[:,2]>=-200) & (gt_rgb[:,3]<=(rgb_shape[1]+200)) & (gt_rgb[:,4]<=(rgb_shape[0]+200)))[0]
     # gt_label=gt_label[keep]
     # gt_box3d=gt_box3d[keep]
-    top_image   = cv2.imread(train_data_root+'/density_image_70/density_image_70%05d.png'%int(index))
+    top_image   = cv2.imread(CFG.PATH.TRAIN.TARGET+'/density_image_70/density_image_70%05d.png'%int(index))
     front_image = np.zeros((1,1,3),dtype=np.float32)
 
     rgbs.append(rgb)
@@ -172,18 +172,15 @@ is_show=1
 # MM_PER_VIEW1 = 120, 30, 70, [1,1,0]
 MM_PER_VIEW1 = 180, 70, 60, [1,1,0]#[ 12.0909996 , -1.04700089, -2.03249991]
 def run_test():
-
+    CFG.KEEPPROBS=1
     # output dir, etc
     out_dir = './outputs'
-    makedirs(out_dir +'/tf')
-    makedirs(out_dir +'/check_points')
-    log = Logger(out_dir+'/log_%s.txt'%(time.strftime('%Y-%m-%d %H:%M:%S')),mode='a')
 
-    # index=np.load(train_data_root+'/val_list.npy')
-    index_file=open(train_data_root+'/val.txt')
-    # index_file=open(train_data_root+'/train.txt')
-    index = [ int(i.strip()) for i in index_file]
-    index_file.close()
+    index=np.load(CFG.PATH.TRAIN.TARGET+'/val_list.npy')
+    # index_file=open(CFG.PATH.TRAIN.TARGET+'/val.txt')
+    # # index_file=open(CFG.PATH.TRAIN.TARGET+'/train.txt')
+    # index = [ int(i.strip()) for i in index_file]
+    # index_file.close()
     
     index=sorted(index)
     print('len(index):%d'%len(index))
@@ -210,7 +207,7 @@ def run_test():
         num_bases_rgb = len(bases_rgb)
         stride = 4
 
-        rgbs, tops, fronts, gt_labels, gt_boxes3d, top_imgs, front_imgs, lidars,rgbs_norm0 = load_dummy_datas(index[0])
+        rgbs, tops, fronts, gt_labels, gt_boxes3d, top_images, front_images, lidars, rgbs_norm = load_dummy_datas(index[0])
         # num_frames = len(rgbs)
 
         top_shape   = tops[0].shape
@@ -229,8 +226,6 @@ def run_test():
             draw_gt_boxes3d(gt_boxes3d[0], fig=fig)
             mlab.show(1)
             cv2.waitKey(0)
-
-
 
     # set anchor boxes
     num_class = 2 #incude background
@@ -253,7 +248,7 @@ def run_test():
     front_rois   = tf.placeholder(shape=[None, 5], dtype=tf.float32,   name ='front_rois' )
     rgb_rois     = tf.placeholder(shape=[None, 5], dtype=tf.float32,   name ='rgb_rois'   )
 
-    top_features, top_scores, top_probs, top_deltas, proposals, proposal_scores,deltasZ,proposals_z = \
+    top_features, top_scores, top_probs, top_deltas, proposals, proposal_scores,deltasZ,proposals_z,inside_inds_nms = \
         top_feature_net(top_images, top_anchors, top_inside_inds, num_bases)
    
     front_features = front_feature_net(front_images)

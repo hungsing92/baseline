@@ -4,23 +4,17 @@ from __future__ import print_function
 
 import tensorflow as tf
 import tensorflow.contrib.slim as slim
-
 from net.utility.file import *
 from net.blocks import *
 from net.rpn_nms_op import tf_rpn_nms
 from net.roipooling_op import roi_pool as tf_roipooling
+from net.configuration import *
 import pdb
 from tensorflow.contrib.slim.python.slim.nets import resnet_v1
 import vgg
 from fpn import build_pyramid
 
-# keep_prob=0.75
-# nms_pre_topn_=5000
-# nms_post_topn_=2000
 
-keep_prob=1
-nms_pre_topn_=2000
-nms_post_topn_=300
 
 is_training=True
 
@@ -58,12 +52,12 @@ def top_feature_net(input, anchors, inds_inside, num_bases):
     batch_size, img_height, img_width, img_channel = input.get_shape().as_list()
     img_scale = 1
     # pdb.set_trace()
-    rois, roi_scores,proposals_z = tf_rpn_nms( probs, deltas, anchors, inds_inside,
+    rois, roi_scores,proposals_z, inside_inds_nms = tf_rpn_nms( probs, deltas, anchors, inds_inside,
                                      stride, img_width, img_height, img_scale, deltasZ,
-                                     nms_thresh=0.7, min_size=stride, nms_pre_topn=nms_pre_topn_, nms_post_topn=nms_post_topn_,
+                                     nms_thresh=0.7, min_size=stride, nms_pre_topn=CFG.TRAIN.RPN_NMS_PRE_TOPN , nms_post_topn=CFG.TRAIN.RPN_NMS_POST_TOPN,
                                      name ='nms')
   feature = block
-  return feature, scores, probs, deltas, rois, roi_scores,deltasZ, proposals_z
+  return feature, scores, probs, deltas, rois, roi_scores,deltasZ, proposals_z, inside_inds_nms
 
 
 # def top_feature_net(input, anchors, inds_inside, num_bases):
@@ -213,7 +207,7 @@ def fusion_net(feature_list, num_class, out_shape=(8,3)):
           tf.summary.histogram('fuse-block_input_%d'%n, roi_features)
           block = linear_bn_relu(roi_features, num_hiddens=2048, name='1')#512, so small?
           tf.summary.histogram('fuse-block1_%d'%n, block)
-          block = tf.nn.dropout(block, keep_prob, name='drop1')
+          block = tf.nn.dropout(block, CFG.KEEPPROBS, name='drop1')
   
         if input is None:
             input = block
@@ -223,7 +217,7 @@ def fusion_net(feature_list, num_class, out_shape=(8,3)):
   #include background class
   with tf.variable_scope('fuse') as scope:
     block = linear_bn_relu(input, num_hiddens=512, name='4')#512, so small?
-    # block = tf.nn.dropout(block, keep_prob, name='drop4')
+    # block = tf.nn.dropout(block, CFG.KEEPPROBS, name='drop4')
     with tf.variable_scope('3D') as sc:
       dim = np.product([*out_shape])
       scores_3d  = linear(block, num_hiddens=num_class,     name='score')

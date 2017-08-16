@@ -164,6 +164,7 @@ def rpn_nms_generator(
         proposals = proposals[keep, :]
         proposals_z = proposals_z[keep, :]
         scores    = scores[keep]
+        inside_inds = inside_inds[keep]
 
         # 4. sort all (proposal, score) pairs by score from highest to lowest
         # 5. take top pre_nms_topN (e.g. 6000)
@@ -173,6 +174,7 @@ def rpn_nms_generator(
             proposals = proposals[order, :]
             proposals_z = proposals_z[order, :]
             scores = scores[order]
+            inside_inds = inside_inds[order]
 
         # 6. apply nms (e.g. threshold = 0.7)
         # 7. take after_nms_topN (e.g. 300)
@@ -183,6 +185,7 @@ def rpn_nms_generator(
         proposals = proposals[keep, :]
         proposals_z = proposals_z[keep, :]
         scores = scores[keep]
+        inside_inds = inside_inds[keep]
 
         # Output rois blob
         # Our RPN implementation only supports a single input image, so all
@@ -193,7 +196,7 @@ def rpn_nms_generator(
         batch_inds = np.zeros((num_proposals, 1), dtype=np.float32)
         rois = np.hstack((batch_inds, proposals))
 
-        return rois, roi_scores, proposals_z
+        return rois, roi_scores, proposals_z, inside_inds
     return rpn_nms
 
 
@@ -212,7 +215,7 @@ def tf_rpn_nms(
         tf.py_func(
             rpn_nms,
             [scores, deltas, anchors, inside_inds,deltasZ],
-            [tf.float32, tf.float32, tf.float32],
+            [tf.float32, tf.float32, tf.float32, tf.int32],
         name = name)
 
 ## main ##----------------------------------------------------------------

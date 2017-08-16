@@ -193,9 +193,13 @@ def rpn_target( anchors, inside_inds, gt_labels,  gt_boxes):
 
     return inds, pos_inds, labels, targets
 
-def rpn_target_Z( anchors, inside_inds, gt_labels,  gt_boxes, gt_boxesZ):
+def rpn_target_Z( anchors, inside_inds, gt_boxes, gt_boxesZ,probs,batch_top_inside_inds_nms):
 
     inside_anchors = anchors[inside_inds, :]
+    inside_probs = probs[inside_inds, :]
+    inside_probs = inside_probs.reshape((-1, 2,1))
+    neg_probs = inside_probs[:,0,:].reshape((-1))
+    gt_nums = len(gt_boxes)
 
     # label: 1 is positive, 0 is negative, -1 is dont care
     labels = np.empty((len(inside_inds), ), dtype=np.int32)
@@ -218,19 +222,55 @@ def rpn_target_Z( anchors, inside_inds, gt_labels,  gt_boxes, gt_boxesZ):
 
 
     # subsample positive labels
-    num_fg = int(CFG.TRAIN.RPN_FG_FRACTION * CFG.TRAIN.RPN_BATCHSIZE)
+    #Balance pos number
     fg_inds = np.where(labels == 1)[0]
-    if len(fg_inds) > num_fg:
-        disable_inds = np.random.choice( fg_inds, size=(len(fg_inds) - num_fg), replace=False)
-        labels[disable_inds] = -1
+    num_fg = int(CFG.TRAIN.RPN_FG_FRACTION * CFG.TRAIN.RPN_BATCHSIZE)
+    # pdb.set_trace()
+    if CFG.TRAIN.RPN_BALANCE_POS_NUMS==1:
+        print('nums of pos_rpn : %d'%fg_inds.size)
+        if len(fg_inds) > num_fg:
+            nums_every_targets = 0.8*num_fg//gt_nums
+            fg_inds_assigments = argmax_overlaps[fg_inds]
+            inds_every_target=[]
+            for i in range(gt_nums):
+                target_inds = fg_inds[np.where(fg_inds_assigments==i)[0]]
+                if target_inds.size > 0:
+                    target_inds = np.random.choice(target_inds, size=int(min(nums_every_targets, target_inds.size)), replace=False)
+                    inds_every_target.append(target_inds.reshape(-1,1))
+            inds_every_target=np.vstack(inds_every_target)
+            fg_inds = np.setdiff1d(fg_inds, inds_every_target)
+            if fg_inds.size > 0:
+                disable_inds = np.random.choice(fg_inds, size=(len(fg_inds) - num_fg), replace=False)
+                labels[disable_inds] = -1
+    else:
+        print('nums of pos_rpn : %d'%fg_inds.size)
+        if len(fg_inds) > num_fg:
+            disable_inds = np.random.choice( fg_inds, size=(len(fg_inds) - num_fg), replace=False)
+            labels[disable_inds] = -1
+
 
     # subsample negative labels
-    num_bg = CFG.TRAIN.RPN_BATCHSIZE - np.sum(labels == 1)
+    # num_bg = CFG.TRAIN.RPN_BATCHSIZE - np.sum(labels == 1)
+    num_bg = int((1-CFG.TRAIN.RPN_FG_FRACTION )* CFG.TRAIN.RPN_BATCHSIZE)
     # num_bg = int(min(1.5*np.sum(labels == 1),num_bg))
     bg_inds = np.where(labels == 0)[0]
-    if len(bg_inds) > num_bg:
-        disable_inds = np.random.choice(bg_inds, size=(len(bg_inds) - num_bg), replace=False)
-        labels[disable_inds] = -1
+
+    nms_bg_inds = np.intersect1d(bg_inds, batch_top_inside_inds_nms)
+    # pdb.set_trace()
+    if CFG.TRAIN.RPN_OHEM ==1:
+        if len(bg_inds) > num_bg:
+            if len(nms_bg_inds)>0.2*num_bg:
+                bg_probs = neg_probs[nms_bg_inds]
+                bg_probs_argsort = np.argsort(bg_probs)
+                nms_bg_inds = nms_bg_inds[bg_probs_argsort][:int(0.2*num_bg)]
+            disable_inds = np.setdiff1d(bg_inds,nms_bg_inds)
+            disable_inds = np.random.choice(disable_inds, size=(len(disable_inds) - num_bg + len(nms_bg_inds)), replace=False)
+            # pdb.set_trace()
+            labels[disable_inds] = -1
+    else:
+        if len(bg_inds) > num_bg:
+            disable_inds = np.random.choice(bg_inds, size=(len(bg_inds) - num_bg), replace=False)
+            labels[disable_inds] = -1
 
     idx_label  = np.where(labels != -1)[0]
     idx_target = np.where(labels ==  1)[0]
@@ -246,6 +286,7 @@ def rpn_target_Z( anchors, inside_inds, gt_labels,  gt_boxes, gt_boxesZ):
     targets = box_transform(pos_anchors, pos_gt_boxes)
 
     return inds, pos_inds, labels, targets,targetsZ
+
 
 
 
