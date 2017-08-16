@@ -2,7 +2,7 @@
 net/roipooling_op/
 *.py[cod]
 # Python:
-*.so
+#*.so
 *.egg
 *.egg-info
 *.pyc
