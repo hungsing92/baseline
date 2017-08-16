@@ -1,5 +1,5 @@
-outputs/
-net/roipooling_op/__pycache__/
+#outputs/
+net/roipooling_op/
 *.py[cod]
 # Python:
 *.so
